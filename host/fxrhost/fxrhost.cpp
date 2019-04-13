@@ -3,21 +3,18 @@
 
 void FxRHostWindow::OnCreate()
 {
-  RECT rc;
-  ::GetClientRect(hwndMain, &rc);
-  ovrHelper.Init(hwndMain, Window(), rc);
+  ovrHelper.Init(Window());
 
-  WCHAR ffCmd[MAX_PATH + MAX_PATH] = { 0 };
+  WCHAR ffCmd[MAX_PATH] = { 0 };
   int err = swprintf_s(
     ffCmd,
     ARRAYSIZE(ffCmd),
-    L"%s", //L"%s -fxr 0x%p -overlayid 0x%p",
-    L"e:\\src2\\gecko_build_debug\\dist\\bin\\firefox.exe -no-remote -wait-for-browser -profile e:\\src2\\gecko_build_debug\\tmp\\profile-default "
-    //Window(),
-    //ovrHelper.GetOverlayHandle()
+    L"%s -fxr 0x%p -overlayid 0x%p",
+    L"e:\\src2\\gecko_build_debug\\dist\\bin\\firefox.exe -no-remote -wait-for-browser -profile e:\\src2\\gecko_build_debug\\tmp\\profile-default ",
+    Window(),
+    ovrHelper.GetOverlayHandle()
   );
   assert(err > 0);
-
 
   STARTUPINFO startupInfoFx = { 0 };
   bool fCreateContentProc = ::CreateProcess(

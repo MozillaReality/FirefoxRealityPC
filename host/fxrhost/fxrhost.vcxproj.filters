@@ -61,4 +61,7 @@
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="openvr\lib\win64\openvr_api.lib" />
+  </ItemGroup>
 </Project>
