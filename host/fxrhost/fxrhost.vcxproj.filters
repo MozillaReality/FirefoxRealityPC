@@ -27,12 +27,21 @@
     <ClInclude Include="fxrhost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OpenVRHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="fxrhost.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenVRHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
