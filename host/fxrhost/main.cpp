@@ -1,3 +1,7 @@
+// main.cpp
+//
+// Processes command line args and invokes everything to make FxRHost work.
+
 #include "stdafx.h"
 #include "fxrhost.h"
 

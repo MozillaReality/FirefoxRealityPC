@@ -1,3 +1,8 @@
+// fxrhost.h
+//
+// Contains definition of FxRHostWindow (derived from BaseWindow) to
+// interact with Win32.
+
 #pragma once
 
 #include "resource.h"

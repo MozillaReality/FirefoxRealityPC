@@ -1,7 +1,6 @@
 // OpenVRHelper.cpp
 //
-// This file contains code to interact with OpenVR, specifically to set the texture
-// used for the VROverlay.
+// This file contains code to interact with OpenVR overlays.
 
 #include "stdafx.h"
 #include "OpenVRHelper.h"
@@ -9,6 +8,7 @@
 // Class-wide override to enable calls made to OpenVR
 bool OpenVRHelper::s_isEnabled = true;
 
+// Setup the initial interaction with OpenVR
 void OpenVRHelper::Init(HWND hwndHost)
 {
   if (s_isEnabled)
@@ -24,6 +24,7 @@ void OpenVRHelper::Init(HWND hwndHost)
       // between the two products.
       m_pHMD->GetDXGIOutputInfo(&m_dxgiAdapterIndex);
       assert(m_dxgiAdapterIndex != -1);
+
       CreateOverlay();
     }
     else
@@ -37,7 +38,7 @@ void OpenVRHelper::Init(HWND hwndHost)
   }
 }
 
-
+// Create the VROverlay and set the properties
 void OpenVRHelper::CreateOverlay()
 {
   if (s_isEnabled)
@@ -89,17 +90,21 @@ void OpenVRHelper::CreateOverlay()
   }
 }
 
+// Set the HWND passed from Firefox, which will be used to pass window messages (typicaly,
+// input messages) back to Firefox. 
 void OpenVRHelper::SetFxHwnd(HWND fx)
 {
-  // Need to understand which HWND to send from the Fx side. There can be multiple allocated, but not sure which is the right one.
+  // TODO: Need to understand which HWND to send from the Fx side. Firefox sends multiple unique
+  // HWNDs. Seems to be that the 2nd one is the right one to use.
   if (++m_cHwndFx == 1) {
     m_hwndFx = fx;
   }
 }
 
+// Show the Virtual Keyboard in the HMD
 void OpenVRHelper::ShowVirtualKeyboard()
 {
-  // Note: bUseMinimalMode set to true so that each char arrives as an event.
+  // Note: bUseMinimalMode set to true so that each char arrives as a separate event.
   vr::VROverlayError overlayError = vr::VROverlay()->ShowKeyboardForOverlay(
     m_ulOverlayHandle,
     vr::k_EGamepadTextInputModeNormal,
@@ -144,108 +149,123 @@ void OpenVRHelper::StartInputThread() {
   }
 }
 
+// ThreadProc to handle Overlay event messages
 DWORD OpenVRHelper::InputThreadProc(_In_ LPVOID lpParameter) {
   OpenVRHelper* pInstance = static_cast<OpenVRHelper*>(lpParameter);
+
+  ::SetFocus(pInstance->m_hwndFx);
 
   while (true) {
     pInstance->OverlayPump();
   }
 }
 
+// Serves as a simple way to retrieve the size of the Firefox window/texture/client area for
+// relevant translation of input events.
+void OpenVRHelper::CheckOverlayMouseScale() {
+  // Need to find a better place to put this. The problem that needs to be
+  // solved is knowing the texture size so that mouse coords can be translated
+  // late. This is put in this function because it won't block the UI thread.
+  // .right is compared to <= 1 because
+  // - if == 0, then uninitialized
+  // - if == 1, then mousescale hasn't been set by GPU process yet (default
+  // normalizes to 1.0f)
+  if (m_rcFx.right <= 1) {
+    vr::HmdVector2_t vecWindowSize = { 0 };
+    vr::EVROverlayError error = vr::VROverlay()->GetOverlayMouseScale(
+      m_ulOverlayHandle, &vecWindowSize);
+
+    if (error == vr::VROverlayError_None) {
+      m_rcFx.right = vecWindowSize.v[0];
+      m_rcFx.bottom = vecWindowSize.v[1];
+    }
+    else {
+      DebugBreak();
+    }
+  }
+}
+
+// This function polls the Overlay for any events that are pending. Some events are
+// forwarded to Firefox as window messages for UI interaction.
 void OpenVRHelper::OverlayPump()
 {
   assert(s_isEnabled);
+  assert(vr::VROverlay() != nullptr && m_hwndFx != nullptr);
+  
+  CheckOverlayMouseScale();
 
-  if (vr::VROverlay() != nullptr && m_hwndFx != nullptr)
+  vr::VREvent_t vrEvent;
+  while (vr::VROverlay()->PollNextOverlayEvent(m_ulOverlayHandle, &vrEvent, sizeof(vrEvent)))
   {
-    // Need to find a better place to put this. The problem that needs to be
-    // solved is knowing the texture size so that mouse coords can be translated
-    // late. This is put in this function because it won't block the UI thread.
-    // .right is compared to <= 1 because
-    // - if == 0, then uninitialized
-    // - if == 1, then mousescale hasn't been set by GPU process yet (default
-    // normalizes to 1.0f)
-    if (m_rcFx.right <= 1) {
-      vr::HmdVector2_t vecWindowSize = { 0 };
-      vr::EVROverlayError error = vr::VROverlay()->GetOverlayMouseScale(
-        m_ulOverlayHandle, &vecWindowSize);
-
-      if (error == vr::VROverlayError_None) {
-        m_rcFx.right = vecWindowSize.v[0];
-        m_rcFx.bottom = vecWindowSize.v[1];
-      }
-      else {
-        DebugBreak();
-      }
+    // _RPTF1(_CRT_WARN, "VREvent_t.eventType: %s\n", vr::VRSystem()->GetEventTypeNameFromEnum((vr::EVREventType)(vrEvent.eventType)));
+    switch (vrEvent.eventType)
+    {
+    case vr::VREvent_MouseMove:
+    case vr::VREvent_MouseButtonUp:
+    case vr::VREvent_MouseButtonDown: {
+      ProcessMouseEvent(vrEvent);
+      break;
     }
 
+    case vr::VREvent_Scroll: {
+      vr::VREvent_Scroll_t data = vrEvent.data.scroll;
+      SHORT scrollDelta = WHEEL_DELTA * (short)data.ydelta;
 
-    vr::VREvent_t vrEvent;
-    while (vr::VROverlay()->PollNextOverlayEvent(m_ulOverlayHandle, &vrEvent, sizeof(vrEvent)))
+      // Route this back to the Firefox window for processing
+      ::PostMessage(m_hwndFx, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
+      break;
+    }
+
+    case vr::VREvent_KeyboardCharInput:
     {
-      // _RPTF1(_CRT_WARN, "VREvent_t.eventType: %s\n", vr::VRSystem()->GetEventTypeNameFromEnum((vr::EVREventType)(vrEvent.eventType)));
-      switch (vrEvent.eventType)
-      {
-      case vr::VREvent_MouseMove:
-      case vr::VREvent_MouseButtonUp:
-      case vr::VREvent_MouseButtonDown: {
-        vr::VREvent_Mouse_t data = vrEvent.data.mouse;
+      vr::VREvent_Keyboard_t data = vrEvent.data.keyboard;
+      _RPTF1(_CRT_WARN, "  VREvent_t.data.keyboard.cNewInput --%s--\n", data.cNewInput);
 
-        // Windows' origin is top-left, whereas OpenVR's origin is
-        // bottom-left, so transform the y-coordinate.
-        m_ptLastMouse.x = (LONG)(data.x);
-        m_ptLastMouse.y = m_rcFx.bottom - (LONG)(data.y);
+      // Route this back to the Firefox window for processing
+      ::PostMessage(m_hwndFx, WM_CHAR, data.cNewInput[0], 0);
+      break;
+    }
 
-        UINT nMsg;
-        if (vrEvent.eventType == vr::VREvent_MouseMove) {
-          nMsg = WM_MOUSEMOVE;
-        }
-        else if (vrEvent.eventType == vr::VREvent_MouseButtonDown) {
-          nMsg = WM_LBUTTONDOWN;
-        }
-        else if (vrEvent.eventType == vr::VREvent_MouseButtonUp) {
-          nMsg = WM_LBUTTONUP;
-        }
-        else {
-          DebugBreak();
-        }
-
-        // Route this back to the Firefox window for processing
-        ::PostMessage(m_hwndFx, nMsg, 0, POINTTOPOINTS(m_ptLastMouse));
-
-        break;
+    case vr::VREvent_ButtonPress:
+    {
+      // This button press causes the virtual keyboard to be manually invoked.
+      vr::VREvent_Controller_t data = vrEvent.data.controller;
+      if (data.button == 2) {
+        ShowVirtualKeyboard();
       }
 
-      case vr::VREvent_Scroll: {
-        vr::VREvent_Scroll_t data = vrEvent.data.scroll;
-        SHORT scrollDelta = WHEEL_DELTA * (short)data.ydelta;
+      break;
+    }
 
-        ::PostMessage(m_hwndFx, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
-        break;
-      }
-
-      case vr::VREvent_KeyboardCharInput:
-      {
-        vr::VREvent_Keyboard_t data = vrEvent.data.keyboard;
-        _RPTF1(_CRT_WARN, "  VREvent_t.data.keyboard.cNewInput --%s--\n", data.cNewInput);
-
-        // Route this back to main window for processing
-        ::PostMessage(m_hwndFx, WM_CHAR, data.cNewInput[0], 0);
-        break;
-      }
-
-      case vr::VREvent_ButtonPress:
-      {
-        vr::VREvent_Controller_t data = vrEvent.data.controller;
-        if (data.button == 2) {
-          ShowVirtualKeyboard();
-        }
-
-        break;
-      }
-      }
     }
   }
+}
+
+// This function handles the common code for processing Mouse events from the Overlay
+void OpenVRHelper::ProcessMouseEvent(vr::VREvent_t vrEvent) {
+  vr::VREvent_Mouse_t data = vrEvent.data.mouse;
+
+  // Windows' origin is top-left, whereas OpenVR's origin is
+  // bottom-left, so transform the y-coordinate.
+  m_ptLastMouse.x = (LONG)(data.x);
+  m_ptLastMouse.y = m_rcFx.bottom - (LONG)(data.y);
+
+  UINT nMsg;
+  if (vrEvent.eventType == vr::VREvent_MouseMove) {
+    nMsg = WM_MOUSEMOVE;
+  }
+  else if (vrEvent.eventType == vr::VREvent_MouseButtonDown) {
+    nMsg = WM_LBUTTONDOWN;
+  }
+  else if (vrEvent.eventType == vr::VREvent_MouseButtonUp) {
+    nMsg = WM_LBUTTONUP;
+  }
+  else {
+    DebugBreak();
+  }
+
+  // Route this back to the Firefox window for processing
+  ::PostMessage(m_hwndFx, nMsg, 0, POINTTOPOINTS(m_ptLastMouse));
 }
 
 // In order to draw from a process that didn't create the overlay, SetOverlayRenderingPid must be called

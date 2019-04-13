@@ -1,6 +1,10 @@
+// OpenVRHelper.h
+//
+// This file contains the declaration of OpenVRHelper, which manages
+// interaction with an OpenVR overlay
+
 #pragma once
 
-#include "Resource.h"
 #include "openvr/headers/openvr.h"
 
 class OpenVRHelper {
@@ -19,22 +23,27 @@ public:
   }
 
   void Init(HWND hwndHost);
-  void CreateOverlay();
 
-  void ShowVirtualKeyboard();
+  void StartInputThread();
 
   void SetDrawPID(DWORD pid);
-
-  void OverlayPump();
-  void StartInputThread();
-  static DWORD WINAPI InputThreadProc(_In_ LPVOID lpParameter);
-
   void SetFxHwnd(HWND fx);
 
   int32_t GetAdapterIndex() const { return m_dxgiAdapterIndex; }
   vr::VROverlayHandle_t GetOverlayHandle() const { return m_ulOverlayHandle; }
 
 private:
+  void CreateOverlay();
+
+  void ShowVirtualKeyboard();
+
+  static DWORD WINAPI InputThreadProc(_In_ LPVOID lpParameter);
+
+  void OverlayPump();
+  void CheckOverlayMouseScale();
+  void ProcessMouseEvent(vr::VREvent_t vrEvent);
+
+
   vr::IVRSystem* m_pHMD;
   int32_t m_dxgiAdapterIndex;
   vr::VROverlayHandle_t m_ulOverlayHandle;
