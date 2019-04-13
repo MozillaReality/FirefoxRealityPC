@@ -20,6 +20,8 @@ void OpenVRHelper::Init(HWND hwndHost)
     m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Overlay);
     if (eError == vr::VRInitError_None)
     {
+      // TODO: May need to assert a particular index until this is supported
+      // between the two products.
       m_pHMD->GetDXGIOutputInfo(&m_dxgiAdapterIndex);
       assert(m_dxgiAdapterIndex != -1);
       CreateOverlay();
@@ -87,16 +89,6 @@ void OpenVRHelper::CreateOverlay()
   }
 }
 
-// Post a custom VR_POLL msg for asynchronous processing
-void OpenVRHelper::PostVRPollMsg()
-{
-  if (s_isEnabled)
-  {
-    bool success = PostMessage(m_hwndHost, WM_VR_POLL, 0, 0);
-    assert(success || !"Failed to post VR msg");
-  }
-}
-
 void OpenVRHelper::SetFxHwnd(HWND fx)
 {
   // Need to understand which HWND to send from the Fx side. There can be multiple allocated, but not sure which is the right one.
@@ -120,7 +112,46 @@ void OpenVRHelper::ShowVirtualKeyboard()
   );
 }
 
-// COpenVROverlayController::OnTimeoutPumpEvents()
+// Spins up a new thread so that polling of input events can happen without
+// blocking the UI thread.
+void OpenVRHelper::StartInputThread() {
+  if (s_isEnabled) {
+    // Assert that the following variables are already set before spinning
+    // up a new thread
+    assert(m_hwndFx != nullptr);
+    assert(m_ulOverlayHandle != vr::k_ulOverlayHandleInvalid);
+    // Assert that the following variables are not set because they should
+    // only be modified and accessed on the new thread
+    assert(::IsRectEmpty(&m_rcFx));
+    assert(m_ptLastMouse.x == 0 && m_ptLastMouse.y == 0);
+
+    DWORD dwTid = 0;
+    hThreadInput =
+      CreateThread(
+        nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+        0,        // SIZE_T dwStackSize,
+        OpenVRHelper::InputThreadProc,
+        this,  //__drv_aliasesMem LPVOID lpParameter,
+        0,     // DWORD dwCreationFlags,
+        &dwTid);
+
+    if (hThreadInput == nullptr) {
+      DebugBreak();
+    }
+    else {
+      SetThreadDescription(hThreadInput, L"OpenVR Input");
+    }
+  }
+}
+
+DWORD OpenVRHelper::InputThreadProc(_In_ LPVOID lpParameter) {
+  OpenVRHelper* pInstance = static_cast<OpenVRHelper*>(lpParameter);
+
+  while (true) {
+    pInstance->OverlayPump();
+  }
+}
+
 void OpenVRHelper::OverlayPump()
 {
   assert(s_isEnabled);
@@ -180,7 +211,7 @@ void OpenVRHelper::OverlayPump()
         }
 
         // Route this back to the Firefox window for processing
-        PostMessage(m_hwndFx, nMsg, 0, POINTTOPOINTS(m_ptLastMouse));
+        ::PostMessage(m_hwndFx, nMsg, 0, POINTTOPOINTS(m_ptLastMouse));
 
         break;
       }
@@ -189,7 +220,7 @@ void OpenVRHelper::OverlayPump()
         vr::VREvent_Scroll_t data = vrEvent.data.scroll;
         SHORT scrollDelta = WHEEL_DELTA * (short)data.ydelta;
 
-        PostMessage(m_hwndFx, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
+        ::PostMessage(m_hwndFx, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
         break;
       }
 
@@ -199,7 +230,7 @@ void OpenVRHelper::OverlayPump()
         _RPTF1(_CRT_WARN, "  VREvent_t.data.keyboard.cNewInput --%s--\n", data.cNewInput);
 
         // Route this back to main window for processing
-        PostMessage(m_hwndFx, WM_CHAR, data.cNewInput[0], 0);
+        ::PostMessage(m_hwndFx, WM_CHAR, data.cNewInput[0], 0);
         break;
       }
 
@@ -215,8 +246,6 @@ void OpenVRHelper::OverlayPump()
       }
     }
   }
-
-  PostVRPollMsg();
 }
 
 // In order to draw from a process that didn't create the overlay, SetOverlayRenderingPid must be called

@@ -47,19 +47,16 @@ LRESULT FxRHostWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
   case WM_DESTROY:
     PostQuitMessage(0);
+
     return 0;
 
   case WM_OVR_DRAWPID:
     ovrHelper.SetDrawPID(wParam);
-    ovrHelper.PostVRPollMsg();
+    ovrHelper.StartInputThread();
     return 0;
 
   case WM_OVR_FXHWND:
     ovrHelper.SetFxHwnd((HWND)wParam);
-    return 0;
-
-  case WM_VR_POLL:
-    ovrHelper.OverlayPump();
     return 0;
   }
   return DefWindowProc(m_hwnd, uMsg, wParam, lParam);

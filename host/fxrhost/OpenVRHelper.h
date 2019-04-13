@@ -5,6 +5,19 @@
 
 class OpenVRHelper {
 public:
+  OpenVRHelper() :
+    m_pHMD(nullptr),
+    m_dxgiAdapterIndex(-1),
+    m_ulOverlayHandle(vr::k_ulOverlayHandleInvalid),
+    m_ulOverlayThumbnailHandle(vr::k_ulOverlayHandleInvalid),
+    m_hwndHost(nullptr),
+    m_hwndFx(nullptr),
+    m_cHwndFx(0),
+    m_rcFx(),
+    m_ptLastMouse()
+  {
+  }
+
   void Init(HWND hwndHost);
   void CreateOverlay();
 
@@ -12,8 +25,9 @@ public:
 
   void SetDrawPID(DWORD pid);
 
-  void PostVRPollMsg();
   void OverlayPump();
+  void StartInputThread();
+  static DWORD WINAPI InputThreadProc(_In_ LPVOID lpParameter);
 
   void SetFxHwnd(HWND fx);
 
@@ -29,8 +43,10 @@ private:
   HWND m_hwndHost;
   HWND m_hwndFx;
   UINT m_cHwndFx;
-  RECT m_rcFx;
 
+  HANDLE hThreadInput;
+  // Note: the following 2 variable should only be accessed on OpenVR polling thread
+  RECT m_rcFx;
   // OpenVR scroll event doesn't provide the position of the controller on the
   // overlay, so keep track of the last-known position to use with the scroll
   // event
