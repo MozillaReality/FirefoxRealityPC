@@ -1,16 +1,17 @@
 #include "stdafx.h"
 #include "fxrhost.h"
 
-void FxRHostWindow::OnCreate()
+void FxRHostWindow::OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile)
 {
   ovrHelper.Init(Window());
 
-  WCHAR ffCmd[MAX_PATH] = { 0 };
+  WCHAR fxCmd[MAX_PATH] = { 0 };
   int err = swprintf_s(
-    ffCmd,
-    ARRAYSIZE(ffCmd),
-    L"%s -fxr 0x%p -overlayid 0x%p",
-    L"e:\\src2\\gecko_build_debug\\dist\\bin\\firefox.exe -no-remote -wait-for-browser -profile e:\\src2\\gecko_build_debug\\tmp\\profile-default ",
+    fxCmd,
+    ARRAYSIZE(fxCmd),
+    L"%s -no-remote -wait-for-browser -profile %s -fxr 0x%p -overlayid 0x%p",
+    pszFxPath,
+    pszFxProfile,
     Window(),
     ovrHelper.GetOverlayHandle()
   );
@@ -18,17 +19,19 @@ void FxRHostWindow::OnCreate()
 
   STARTUPINFO startupInfoFx = { 0 };
   bool fCreateContentProc = ::CreateProcess(
-    nullptr, // lpApplicationName,
-    ffCmd,
-    nullptr, // lpProcessAttributes,
-    nullptr, // lpThreadAttributes,
-    TRUE, // bInheritHandles,
-    0, // dwCreationFlags,
-    nullptr, // lpEnvironment,
-    nullptr, // lpCurrentDirectory,
+    nullptr,  // lpApplicationName,
+    fxCmd,
+    nullptr,  // lpProcessAttributes,
+    nullptr,  // lpThreadAttributes,
+    TRUE,     // bInheritHandles,
+    0,        // dwCreationFlags,
+    nullptr,  // lpEnvironment,
+    nullptr,  // lpCurrentDirectory,
     &startupInfoFx,
     &procInfoFx
   );
+
+  assert(fCreateContentProc);
 }
 
 // Synchronously terminate the new processes

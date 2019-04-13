@@ -32,10 +32,14 @@ template <class T> void SafeRelease(T **ppT)
 #include <crtdbg.h>
 #include <shellapi.h>
 
-#define OVR_PROC	L"--ovr"
-#define DRAW_PROC	L"--draw"
+
+#define FXRHOST_NAME      "FxRHost"
+#define FXRHOST_NAME_WIDE L"FxRHost"
+#define ARG_FXPATH        L"--fxpath"
+#define ARG_FXPROFILE     L"--fxprofile"
+
 
 // https://stackoverflow.com/questions/293723/how-could-i-create-a-custom-windows-message
 #define WM_VR_POLL				(WM_USER+0)
 #define WM_OVR_DRAWPID    (WM_USER+9)
-#define WM_OVR_FXHWND (WM_USER + 10)
+#define WM_OVR_FXHWND     (WM_USER + 10)

@@ -42,7 +42,7 @@ void OpenVRHelper::CreateOverlay()
   {
     if (vr::VROverlay() != nullptr)
     {
-      std::string sKey = std::string("FxRHost");
+      std::string sKey = std::string(FXRHOST_NAME);
       vr::VROverlayError overlayError = vr::VROverlayError_None;
 
       overlayError = vr::VROverlay()->CreateDashboardOverlay(
@@ -112,7 +112,7 @@ void OpenVRHelper::ShowVirtualKeyboard()
     m_ulOverlayHandle,
     vr::k_EGamepadTextInputModeNormal,
     vr::k_EGamepadTextInputLineModeSingleLine,
-    "FxRHost", // pchDescription,
+    FXRHOST_NAME, // pchDescription,
     100, // unCharMax,
     "", // pchExistingText,
     true, // bUseMinimalMode

@@ -75,27 +75,16 @@ protected:
 
 class FxRHostWindow : public BaseWindow<FxRHostWindow>
 {
-  PROCESS_INFORMATION procInfoFx = { 0 };
-  HWND hwndOVR;
-  HWND hwndDraw;
-  HWND hwndMain;
-  OpenVRHelper			ovrHelper;
-
-  void OnCreate();
-
-
 public:
-  FxRHostWindow() :
-    hwndOVR(nullptr),
-    hwndDraw(nullptr),
-    hwndMain(nullptr)
-  {
-  }
-
-  PCWSTR  ClassName() const { return L"FxRHost"; }
+  PCWSTR  ClassName() const { return FXRHOST_NAME_WIDE; }
   LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-  void	TerminateChildProcs();
 
+  void	TerminateChildProcs();
+  void OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile);
   static int wWinMain(int nCmdShow);
+
+private:
+  PROCESS_INFORMATION procInfoFx = { 0 };
+  OpenVRHelper			ovrHelper;
 };
 
