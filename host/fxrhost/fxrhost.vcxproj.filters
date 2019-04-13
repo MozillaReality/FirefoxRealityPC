@@ -30,6 +30,9 @@
     <ClInclude Include="OpenVRHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="openvr\headers\openvr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

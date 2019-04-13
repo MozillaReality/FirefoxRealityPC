@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Resource.h"
-
+#include "openvr/headers/openvr.h"
 
 class OpenVRHelper {
 public:

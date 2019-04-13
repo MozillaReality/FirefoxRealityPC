@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClInclude Include="fxrhost.h" />
     <ClInclude Include="OpenVRHelper.h" />
+    <ClInclude Include="openvr\headers\openvr.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
