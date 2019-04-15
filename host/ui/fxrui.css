@@ -1,0 +1,92 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    padding: 10px;
+}
+
+.nav-bar {
+    min-width: 975px;
+    width: 975px;
+    height: 40px;
+    display: block;
+    background-color: hotpink;
+    margin-bottom: 10px;
+    padding: 0px;
+}
+
+.nav-sidemargin {
+    margin: 0px 7.5px;
+}
+
+.nav-endmargin-left {
+    margin: 0px 7.5px 0px 0px;
+}
+
+.nav-endmargin-right {
+    margin: 0px 0px 0px 7.5px;
+}
+
+.nav-border {
+    height: 20px;
+    border-radius: 20px;
+    padding: 10px;
+    
+}
+
+.nav-button {
+    background-color: limegreen;
+ }
+
+.nav-urlbar {
+    border-radius: 20px;
+    height: 30px;
+    width: 660px;
+    padding: 5px;
+    background-color: aquamarine;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.nav-urlinput {
+    border: none;
+    background: yellow;
+    vertical-align: top;
+    width: 600px;
+    height: 30px;
+    font-size: 20px;
+}
+
+.nav-favicon, .nav-urlclear {
+    height: 20px;
+    padding: 5px;
+    border-radius: 20px;
+    border: none;
+    background-color: bisque;    
+    xvertical-align: middle;
+}
+
+.nav-menu {
+    height: 40px;
+    border-radius: 20px;
+    display: inline-block;
+    background-color: yellowgreen;
+    vertical-align: top;
+}
+
+.nav-menu-button {
+    height:20px;
+    padding: 10px 0px;
+}
+
+.content-web {
+    min-width: 975px;
+    width: 975px;
+    height: 555px;
+
+    border: none;
+    border-radius: 5px;
+    background-color: chocolate;
+}
