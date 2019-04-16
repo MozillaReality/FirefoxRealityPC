@@ -1,3 +1,14 @@
+
+
+:root {
+    --void:     #232426;
+    --asphalt:  #3d3d3d;
+    --fog:      #e2e6eb;
+    --dusk:     #556f8e;
+    --azure:    #518fe1;
+}
+
+
 * {
     margin: 0px;
     padding: 0px;
@@ -5,14 +16,16 @@
 
 body {
     padding: 10px;
+    background-color: var(--void);
 }
 
+/* Styles available for all parts of UI */
 .nav-bar {
     min-width: 975px;
     width: 975px;
     height: 40px;
     display: block;
-    background-color: hotpink;
+    background-color: var(--void);
     margin-bottom: 10px;
     padding: 0px;
 }
@@ -32,31 +45,61 @@ body {
 .nav-border {
     height: 20px;
     border-radius: 20px;
-    padding: 10px;
-    
+    padding: 10px;   
 }
 
+
+/* Button styles */
 .nav-button {
-    background-color: limegreen;
+    background-color: var(--asphalt);
  }
 
+.nav-button:hover {
+    background-color: var(--fog);
+}
+
+svg {
+    fill: var(--fog);
+}
+svg:hover {
+    fill: var(--asphalt);
+}
+
+
+/* URL bar styles */
 .nav-urlbar {
     border-radius: 20px;
     height: 30px;
     width: 660px;
     padding: 5px;
-    background-color: aquamarine;
+
+    background-color: var(--asphalt);
+    
     display: inline-block;
     vertical-align: top;
 }
 
+.nav-urlbar:hover {
+    border: 2px solid var(--azure);
+    padding: 3px;
+}
+
 .nav-urlinput {
     border: none;
-    background: yellow;
+    background-color: transparent;
+    color: var(--fog);
     vertical-align: top;
     width: 600px;
     height: 30px;
-    font-size: 20px;
+
+    xxfont-family: "Open Sans", sans-serif;
+    font-size: 18px;
+}
+
+.nav-urlinput::selection{
+    color: var(--fog);
+    background-color: var(--azure);
+
 }
 
 .nav-favicon, .nav-urlclear {
@@ -64,16 +107,20 @@ body {
     padding: 5px;
     border-radius: 20px;
     border: none;
-    background-color: bisque;    
-    xvertical-align: middle;
 }
 
+
+/* Menu styles */
 .nav-menu {
     height: 40px;
     border-radius: 20px;
     display: inline-block;
-    background-color: yellowgreen;
     vertical-align: top;
+    background-color: var(--asphalt);
+}
+
+.nav-menu:hover {
+    background-color: var(--fog);
 }
 
 .nav-menu-button {
@@ -81,6 +128,8 @@ body {
     padding: 10px 0px;
 }
 
+
+/* Tab styles */
 .content-web {
     min-width: 975px;
     width: 975px;
