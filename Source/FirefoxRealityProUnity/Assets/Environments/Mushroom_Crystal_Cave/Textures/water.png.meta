@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5217c1b4d73996f4fa2e501498808b67
+guid: 54f185daf2bab5e4d8777dd337ccec69
 timeCreated: 1555013854
 licenseType: Free
 TextureImporter:
@@ -72,5 +72,5 @@ TextureImporter:
     physicsShape: []
   spritePackingTag: 
   userData: 
-  assetBundleName: 
+  assetBundleName: environment_mushroom_crystal_cave
   assetBundleVariant: 
