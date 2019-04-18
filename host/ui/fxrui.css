@@ -1,5 +1,6 @@
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-
+/* Color palette definitions*/
 :root {
     --void:     #232426;
     --asphalt:  #3d3d3d;
@@ -15,7 +16,7 @@
 }
 
 body {
-    padding: 10px;
+    padding: 4px;
     background-color: var(--void);
 }
 
@@ -48,40 +49,61 @@ body {
     padding: 10px;   
 }
 
+.hide-elem {
+  visibility: hidden;
+}
+
 
 /* Button styles */
 .nav-button {
     background-color: var(--asphalt);
- }
+}
 
 .nav-button:hover {
     background-color: var(--fog);
 }
 
-svg {
+.nav-button-click {
+    background-color: var(--void);
+}
+
+.nav-button-icon {
     fill: var(--fog);
 }
-svg:hover {
+.nav-button-icon:hover {
     fill: var(--asphalt);
+}
+
+.nav-button-icon-click {
+    fill: var(--fog);
 }
 
 
 /* URL bar styles */
-.nav-urlbar {
+.nav-urlbar-container {
     border-radius: 20px;
     height: 30px;
     width: 660px;
     padding: 5px;
-
-    background-color: var(--asphalt);
     
     display: inline-block;
     vertical-align: top;
 }
 
+.nav-urlbar {
+    background-color: var(--asphalt);
+    border: none;
+}
+
 .nav-urlbar:hover {
     border: 2px solid var(--azure);
     padding: 3px;
+}
+
+.nav-urlbar-click {
+    border: 2px solid var(--azure);
+    padding: 3px;
+    background-color: var(--void);
 }
 
 .nav-urlinput {
@@ -99,7 +121,6 @@ svg:hover {
 .nav-urlinput::selection{
     color: var(--fog);
     background-color: var(--azure);
-
 }
 
 .nav-favicon, .nav-urlclear {
@@ -107,6 +128,7 @@ svg:hover {
     padding: 5px;
     border-radius: 20px;
     border: none;
+    fill: var(--fog);
 }
 
 
@@ -128,9 +150,13 @@ svg:hover {
     padding: 10px 0px;
 }
 
+.nav-menu-button-hover {
+    fill: var(--asphalt);
+}
+
 
 /* Tab styles */
-.content-web {
+xul|browser {
     min-width: 975px;
     width: 975px;
     height: 555px;
