@@ -1,7 +1,7 @@
- // fxrui.js
+// fxrui.js
 
 // Configuration vars
-let homeURL = "https://mixedreality.mozilla.org/firefox-reality/"
+let homeURL = "https://www.mozilla.org/"
 
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/browser
@@ -14,32 +14,28 @@ window.addEventListener("DOMContentLoaded", () => {
   setupBrowser();
   setupNavButtons();
   setupUrlBar();
-  setupMenu();
-  
+  setupMenu();  
 }, { once: true });
 
-
+  
 // Create XUL browser object
 function setupBrowser() {
   browser = document.createXULElement("browser");
   browser.setAttribute("type", "content");
+  browser.setAttribute("remote", "true");
   browser.homePage = homeURL;
   document.querySelector("#browser-container").append(browser);
   
   urlInput.value = homeURL;
   browser.setAttribute("src", homeURL);
   
-  /*
-  TODO: figure out how to get URL to update with each navigation
   browser.addProgressListener({
     QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
     onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-      console.log(browser.currentURI.spec);
-      urlInput.value = browser.currentURI.spec;
-    },
-  });
-  */
- 
+      console.log("OLC: " + aLocation.spec);
+       urlInput.value = browser.currentURI.spec;
+    }
+   }, Ci.nsIWebProgress.NOTIFY_LOCATION);
 }
 
 // Setup common behavior for all of the navigation buttons
@@ -82,7 +78,6 @@ function setupUrlBar() {
     container.classList.replace("nav-urlbar", "nav-urlbar-click");
     urlInput.select();
     clearButton.classList.remove("hide-elem");
-    
   });
   
   urlInput.addEventListener("blur", function() {
