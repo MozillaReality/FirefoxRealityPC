@@ -30,6 +30,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
   {
     LPWSTR pszFxPath = nullptr;
     LPWSTR pszFxProfile = nullptr;
+    LPWSTR pszFxrUI = nullptr;
 
     // Skip first arg, which is always this executable
     for (int cArg = 1; cArg < nArgs; cArg++)
@@ -41,6 +42,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
       else if (wcscmp(szArglist[cArg], ARG_FXPROFILE) == 0)
       {
         pszFxProfile = szArglist[++cArg];
+      }
+      else if (wcscmp(szArglist[cArg], ARG_FXRUI) == 0)
+      {
+        pszFxrUI = szArglist[++cArg];
       }
       else
       {
@@ -55,14 +60,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
       FxRHostWindow win;
       if (win.Create(FXRHOST_NAME_WIDE, WS_OVERLAPPEDWINDOW, 0, 50, 50, 400, 100))
       {
-        win.OnCreate(pszFxPath, pszFxProfile);
+        win.OnCreate(pszFxPath, pszFxProfile, pszFxrUI);
 
         ShowWindow(win.Window(), nCmdShow);
 
         Pump();
-
-        // TODO: Need a way to terminate Fx safely without triggering crash recovery
-        //win.TerminateChildProcs();
       }
     }
     else {

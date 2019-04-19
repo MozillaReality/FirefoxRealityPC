@@ -84,12 +84,13 @@ public:
   PCWSTR  ClassName() const { return FXRHOST_NAME_WIDE; }
   LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-  void	TerminateChildProcs();
-  void OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile);
+  void OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile, LPWSTR pszChrome);
+  void OnDestroy();
   static int wWinMain(int nCmdShow);
 
 private:
   PROCESS_INFORMATION procInfoFx = { 0 };
-  OpenVRHelper			ovrHelper;
+  OpenVRHelper			  ovrHelper;
+  bool                fHasCustomUI;
 };
 

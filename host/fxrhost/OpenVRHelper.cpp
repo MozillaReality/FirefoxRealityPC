@@ -8,6 +8,9 @@
 // Class-wide override to enable calls made to OpenVR
 bool OpenVRHelper::s_isEnabled = true;
 
+#define FXR_UI_HWND_COUNT 2
+#define FX_DESKTOP_HWND_COUNT 1
+
 // Setup the initial interaction with OpenVR
 void OpenVRHelper::Init(HWND hwndHost)
 {
@@ -92,11 +95,12 @@ void OpenVRHelper::CreateOverlay()
 
 // Set the HWND passed from Firefox, which will be used to pass window messages (typicaly,
 // input messages) back to Firefox. 
-void OpenVRHelper::SetFxHwnd(HWND fx)
+void OpenVRHelper::SetFxHwnd(HWND fx, bool fHasCustomUI)
 {
   // TODO: Need to understand which HWND to send from the Fx side. Firefox sends multiple unique
-  // HWNDs. Seems to be that the 2nd one is the right one to use.
-  if (++m_cHwndFx == 1) {
+  // HWNDs, which changes depending on if --chrome vs default is used.
+  UINT compareCount = fHasCustomUI ? FXR_UI_HWND_COUNT : FX_DESKTOP_HWND_COUNT;
+  if (++m_cHwndFx == compareCount) {
     m_hwndFx = fx;
   }
 }
@@ -117,10 +121,17 @@ void OpenVRHelper::ShowVirtualKeyboard()
   );
 }
 
+
+
 // Spins up a new thread so that polling of input events can happen without
 // blocking the UI thread.
-void OpenVRHelper::StartInputThread() {
-  if (s_isEnabled) {
+void OpenVRHelper::TryStartInputThread() {
+  // Only spin up the new thread if
+  // - Using OpenVR is enabled
+  // - Both the Fx HWND and GPU PID have been set
+  // - An Input Thread has not already been started
+  // - The Input thread is allowed to run (i.e., should not be exiting)
+  if (s_isEnabled && m_hwndFx != nullptr && m_dwPidGPU != 0 && m_hThreadInput == nullptr && !m_fExitInputThread) {
     // Assert that the following variables are already set before spinning
     // up a new thread
     assert(m_hwndFx != nullptr);
@@ -131,7 +142,7 @@ void OpenVRHelper::StartInputThread() {
     assert(m_ptLastMouse.x == 0 && m_ptLastMouse.y == 0);
 
     DWORD dwTid = 0;
-    hThreadInput =
+    m_hThreadInput =
       CreateThread(
         nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
         0,        // SIZE_T dwStackSize,
@@ -140,11 +151,11 @@ void OpenVRHelper::StartInputThread() {
         0,     // DWORD dwCreationFlags,
         &dwTid);
 
-    if (hThreadInput == nullptr) {
+    if (m_hThreadInput == nullptr) {
       DebugBreak();
     }
     else {
-      SetThreadDescription(hThreadInput, L"OpenVR Input");
+      SetThreadDescription(m_hThreadInput, L"OpenVR Input");
     }
   }
 }
@@ -153,11 +164,20 @@ void OpenVRHelper::StartInputThread() {
 DWORD OpenVRHelper::InputThreadProc(_In_ LPVOID lpParameter) {
   OpenVRHelper* pInstance = static_cast<OpenVRHelper*>(lpParameter);
 
+  // HACK: For now, scrolling only works when the mouse cursor is located
+  // over the window (because scroll code in Fx does a hittest for HWND
+  // under the cursor). So...programmatically make this so.
   ::SetFocus(pInstance->m_hwndFx);
+  RECT rcHwndFx;
+  if (::GetWindowRect(pInstance->m_hwndFx, &rcHwndFx)) {
+    ::SetCursorPos(rcHwndFx.left + 50, rcHwndFx.top + 50);
+  }
 
-  while (true) {
+  while (!pInstance->m_fExitInputThread) {
     pInstance->OverlayPump();
   }
+
+  ::ExitThread(0);
 }
 
 // Serves as a simple way to retrieve the size of the Firefox window/texture/client area for
@@ -209,7 +229,7 @@ void OpenVRHelper::OverlayPump()
 
     case vr::VREvent_Scroll: {
       vr::VREvent_Scroll_t data = vrEvent.data.scroll;
-      SHORT scrollDelta = WHEEL_DELTA * (short)data.ydelta;
+      SHORT scrollDelta = WHEEL_DELTA * (SHORT)data.ydelta;
 
       // Route this back to the Firefox window for processing
       ::PostMessage(m_hwndFx, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
@@ -233,10 +253,8 @@ void OpenVRHelper::OverlayPump()
       if (data.button == 2) {
         ShowVirtualKeyboard();
       }
-
       break;
     }
-
     }
   }
 }
@@ -272,9 +290,10 @@ void OpenVRHelper::ProcessMouseEvent(vr::VREvent_t vrEvent) {
 // for that process to allow it to render to the overlay texture.
 void OpenVRHelper::SetDrawPID(DWORD pid)
 {
+  m_dwPidGPU = pid;
   if (s_isEnabled)
   {
-    vr::VROverlayError error = vr::VROverlay()->SetOverlayRenderingPid(m_ulOverlayHandle, pid);
+    vr::VROverlayError error = vr::VROverlay()->SetOverlayRenderingPid(m_ulOverlayHandle, m_dwPidGPU);
     assert(error == vr::VROverlayError_None);
   }
 }
