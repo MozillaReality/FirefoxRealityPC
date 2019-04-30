@@ -1,0 +1,167 @@
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Color palette definitions*/
+:root {
+    --void:     #232426;
+    --asphalt:  #3d3d3d;
+    --fog:      #e2e6eb;
+    --dusk:     #556f8e;
+    --azure:    #518fe1;
+}
+
+
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    padding: 4px;
+    background-color: var(--void);
+}
+
+/* Styles available for all parts of UI */
+.nav-bar {
+    min-width: 975px;
+    width: 975px;
+    height: 40px;
+    display: block;
+    background-color: var(--void);
+    margin-bottom: 10px;
+    padding: 0px;
+}
+
+.nav-sidemargin {
+    margin: 0px 7.5px;
+}
+
+.nav-endmargin-left {
+    margin: 0px 7.5px 0px 0px;
+}
+
+.nav-endmargin-right {
+    margin: 0px 0px 0px 7.5px;
+}
+
+.nav-border {
+    height: 20px;
+    border-radius: 20px;
+    padding: 10px;   
+}
+
+.hide-elem {
+  visibility: hidden;
+}
+
+
+/* Button styles */
+.nav-button {
+    background-color: var(--asphalt);
+}
+
+.nav-button:hover {
+    background-color: var(--fog);
+}
+
+.nav-button-click {
+    background-color: var(--void);
+}
+
+.nav-button-icon {
+    fill: var(--fog);
+}
+.nav-button-icon:hover {
+    fill: var(--asphalt);
+}
+
+.nav-button-icon-click {
+    fill: var(--fog);
+}
+
+
+/* URL bar styles */
+.nav-urlbar-container {
+    border-radius: 20px;
+    height: 30px;
+    width: 660px;
+    padding: 5px;
+    
+    display: inline-block;
+    vertical-align: top;
+}
+
+.nav-urlbar {
+    background-color: var(--asphalt);
+    border: none;
+}
+
+.nav-urlbar:hover {
+    border: 2px solid var(--azure);
+    padding: 3px;
+}
+
+.nav-urlbar-click {
+    border: 2px solid var(--azure);
+    padding: 3px;
+    background-color: var(--void);
+}
+
+.nav-urlinput {
+    border: none;
+    background-color: transparent;
+    color: var(--fog);
+    vertical-align: top;
+    width: 600px;
+    height: 30px;
+
+    xxfont-family: "Open Sans", sans-serif;
+    font-size: 18px;
+}
+
+.nav-urlinput::selection{
+    color: var(--fog);
+    background-color: var(--azure);
+}
+
+.nav-favicon, .nav-urlclear {
+    height: 20px;
+    padding: 5px;
+    border-radius: 20px;
+    border: none;
+    fill: var(--fog);
+}
+
+
+/* Menu styles */
+.nav-menu {
+    height: 40px;
+    border-radius: 20px;
+    display: inline-block;
+    vertical-align: top;
+    background-color: var(--asphalt);
+}
+
+.nav-menu:hover {
+    background-color: var(--fog);
+}
+
+.nav-menu-button {
+    height:20px;
+    padding: 10px 0px;
+}
+
+.nav-menu-button-hover {
+    fill: var(--asphalt);
+}
+
+
+/* Tab styles */
+xul|browser {
+    min-width: 975px;
+    width: 975px;
+    height: 555px;
+
+    border: none;
+    border-radius: 5px;
+    background-color: chocolate;
+}
