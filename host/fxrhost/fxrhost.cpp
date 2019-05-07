@@ -63,7 +63,7 @@ void FxRHostWindow::OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile, LPWSTR pszCh
   err = swprintf_s(
     fxCmd,
     ARRAYSIZE(fxCmd),
-    L"%s -no-remote -wait-for-browser %s -profile %s -fxr 0x%p -overlayid 0x%p",
+    L"%s -wait-for-browser %s -profile %s -fxr 0x%p -overlayid 0x%p",
     pszFxPath,
     chromeCmd,
     pszFxProfile,

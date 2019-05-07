@@ -58,7 +58,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
       _RPTF0(_CRT_WARN, "  Starting FxRHost main process\n");
 
       FxRHostWindow win;
-      if (win.Create(FXRHOST_NAME_WIDE, WS_OVERLAPPEDWINDOW, 0, 50, 50, 400, 100))
+      if (win.Create(FXRHOST_NAME_WIDE, WS_OVERLAPPEDWINDOW, 0, 800, 50, 400, 100))
       {
         win.OnCreate(pszFxPath, pszFxProfile, pszFxrUI);
 

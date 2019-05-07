@@ -48,12 +48,15 @@ void OpenVRHelper::CreateOverlay()
   {
     if (vr::VROverlay() != nullptr)
     {
-      std::string sKey = std::string(FXRHOST_NAME);
+      char randKey[100] = { 0 };
+      UINT n = ::GetTickCount();
+      sprintf_s(randKey, ARRAYSIZE(randKey), "fxr%u", n);
+
       vr::VROverlayError overlayError = vr::VROverlayError_None;
 
       overlayError = vr::VROverlay()->CreateDashboardOverlay(
-        sKey.c_str(),
-        sKey.c_str(),
+        randKey,
+        FXRHOST_NAME,
         &m_ulOverlayHandle,
         &m_ulOverlayThumbnailHandle
       );
@@ -97,12 +100,7 @@ void OpenVRHelper::CreateOverlay()
 // input messages) back to Firefox. 
 void OpenVRHelper::SetFxHwnd(HWND fx, bool fHasCustomUI)
 {
-  // TODO: Need to understand which HWND to send from the Fx side. Firefox sends multiple unique
-  // HWNDs, which changes depending on if --chrome vs default is used.
-  UINT compareCount = fHasCustomUI ? FXR_UI_HWND_COUNT : FX_DESKTOP_HWND_COUNT;
-  if (++m_cHwndFx == compareCount) {
-    m_hwndFx = fx;
-  }
+  m_hwndFx = fx;
 }
 
 // Show the Virtual Keyboard in the HMD
