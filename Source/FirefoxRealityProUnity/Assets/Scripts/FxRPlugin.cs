@@ -40,7 +40,7 @@ public class FxRPlugin
         }
     }
 
-    public void fxRSetLogLevel(int logLevel)
+    public void fxrSetLogLevel(int logLevel)
     {
         FxRPlugin_pinvoke.fxrSetLogLevel(logLevel);
     }
