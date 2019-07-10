@@ -19,5 +19,6 @@ public:
 	virtual Size size() = 0;
 	virtual void setSize(Size size) = 0;
 	virtual void* getNativeID() = 0;
+	virtual void requestUpdate(float timeDelta) = 0;
 };
 

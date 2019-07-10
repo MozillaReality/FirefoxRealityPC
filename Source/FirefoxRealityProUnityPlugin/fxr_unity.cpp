@@ -81,6 +81,20 @@ static void OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 // FxR plugin implementation.
 //
 
+enum FxRTextureFormat {
+	INVALID = 0,
+	RGBA32 = 1,
+	BGRA32 = 2,
+	ARGB32 = 3,
+	ABGR32 = 4,
+	RGB24 = 5,
+	BGR24 = 6,
+	RGBA4444 = 7,
+	RGBA5551 = 8,
+	RGB565 = 9
+};
+
+
 static std::unique_ptr<FxRWindowGL> gWindow = nullptr;
 
 void fxrRegisterLogCallback(PFN_LOGCALLBACK callback)
@@ -122,10 +136,13 @@ int fxrGetWindowCount(void)
 	return 0;
 }
 
-int fxrNewWindow(void)
+int fxrNewWindow(int widthPixels, int heightPixels, void *nativeTexturePtr)
 {
-	// For now, only one window.
-	gWindow = std::make_unique<FxRWindowGL>();
+	// For now, only one window, and only GL.
+	uint32_t texID = (uint32_t)(nativeTexturePtr);
+	FXRLOGi("fxrNewWindow got texture %d size %dx%d.\n", texID, widthPixels, heightPixels);
+	FxRWindow::Size size = {widthPixels, heightPixels};
+	gWindow = std::make_unique<FxRWindowGL>(size, texID);
 	return (0);
 }
 
@@ -152,7 +169,8 @@ bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *fo
 	FxRWindow::Size size = gWindow->size();
 	if (width) *width = size.w;
 	if (height) *height = size.h;
-	if (mipChain) *mipChain = true;
+	if (format) *format = FxRTextureFormat::RGBA32;
+	if (mipChain) *mipChain = false;
 	if (linear) *linear = true;
 	if (nativeTextureID_p) *nativeTextureID_p = gWindow->getNativeID();
 	return true;
@@ -165,5 +183,13 @@ bool fxrSetWindowSize(int windowIndex, int width, int height)
 	if (!gWindow) return false;
 	gWindow->setSize({width, height});
 	return true;
+}
+
+FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
+{
+	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return;
+
+	if (!gWindow) return;
+	gWindow->requestUpdate(timeDelta);
 }
 

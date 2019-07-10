@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class FxRWindow : MonoBehaviour
 {
@@ -9,7 +10,8 @@ public class FxRWindow : MonoBehaviour
     private Vector2Int videoSize;
     private GameObject _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
     private Texture2D _videoTexture = null;  // Texture object with the video image.
-    private Material _videoMaterial  = null;  // Material which uses our "VideoPlaneNoLight" shader, and paints itself with _videoTexture.
+    public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
+    private int _nativeWindowIndex = 0;
 
     // Use this for initialization
     void Start()
@@ -17,57 +19,51 @@ public class FxRWindow : MonoBehaviour
         size = InitialSize;
         videoSize = InitialVideoSize;
 
-        _videoMeshGO = CreateVideoMesh(size.x, size.y, videoSize.x, videoSize.y, 0, out _videoTexture, out _videoMaterial);
+        float textureScaleU;
+        float textureScaleV;
+        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, out textureScaleU, out textureScaleV);
+
+        _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, size.x, size.y, 0);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
+        _videoMeshGO.transform.localRotation = Quaternion.identity;
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        //fxr_plugin.fxrRequestWindowUpdate(_nativeWindowIndex, Time.deltaTime);
     }
 
-    // Creates a GameObject in layer 'layer' which renders a mesh displaying the video stream.
-    // Places references to the Color array (as required), the texture and the material into the out parameters.
-    private GameObject CreateVideoMesh(float width, float height, int videoWidth, int videoHeight, int layer, out Texture2D vt, out Material vm)
+    //
+    private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, out float textureScaleU, out float textureScaleV)
     {
         // Check parameters.
-        if (videoWidth <= 0 || videoHeight <= 0)
-        {
+        if (videoWidth <= 0 || videoHeight <= 0) {
             Debug.LogError("Error: Cannot configure video texture with invalid video size: " + videoWidth + "x" + videoHeight);
-            vt = null; vm = null;
+            textureScaleU = textureScaleV = 0.0f;
             return null;
         }
-
-        // Create new GameObject to hold mesh.
-        GameObject vmgo = new GameObject("Video source");
-        if (vmgo == null) {
-            Debug.LogError("Error: CreateVideoMesh cannot create GameObject.");
-            vt = null; vm = null;
-            return null;
-        }
-        vmgo.layer = layer;
 
         // Work out size of required texture.
         int textureWidth;
         int textureHeight;
-        /*if (dontUseNPOT) {*/
-        textureWidth = videoWidth;
-        textureHeight = videoHeight;
-        /*} else {
-            textureWidth = Mathf.ClosestPowerOfTwo(videoWidth);
-            if (textureWidth < videoWidth) textureWidth *= 2;
-            textureHeight = Mathf.ClosestPowerOfTwo(videoHeight);
-            if (textureHeight < videoHeight) textureHeight *= 2;
-        }*/
+        //if (dontUseNPOT) {
+            textureWidth = videoWidth;
+            textureHeight = videoHeight;
+        //} else {
+        //    textureWidth = Mathf.ClosestPowerOfTwo(videoWidth);
+        //    if (textureWidth < videoWidth) textureWidth *= 2;
+        //    textureHeight = Mathf.ClosestPowerOfTwo(videoHeight);
+        //    if (textureHeight < videoHeight) textureHeight *= 2;
+        //}
         Debug.Log("Video size " + videoWidth + "x" + videoHeight + " will use texture size " + textureWidth + "x" + textureHeight + ".");
 
-        float textureScaleU = (float)videoWidth / (float)textureWidth;
-        float textureScaleV = (float)videoHeight / (float)textureHeight;
+        textureScaleU = (float)videoWidth / (float)textureWidth;
+        textureScaleV = (float)videoHeight / (float)textureHeight;
         //Debug.Log("Video texture coordinate scaling: " + textureScaleU + ", " + textureScaleV);
 
-        vt = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
+        Texture2D vt = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
         //vt = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false);
         vt.hideFlags = HideFlags.HideAndDontSave;
         vt.filterMode = FilterMode.Bilinear;
@@ -81,10 +77,50 @@ public class FxRWindow : MonoBehaviour
         vt.SetPixels32(arr);
         vt.Apply(); // Pushes all SetPixels*() ops to texture.
         arr = null;
+        /*
+        // Now pass the ID to the native side.
+        IntPtr nativeTexPtr = vt.GetNativeTexturePtr();
+        _nativeWindowIndex = fxr_plugin.fxrNewWindow(textureWidth, textureHeight, nativeTexPtr);
 
-        // Create a material tied to the texture.
+        // Debug.
+        int width, height;
+        TextureFormat texFormat;
+        bool mipChain, linear;
+        IntPtr nativeTexPtr2;
+        if (!fxr_plugin.fxrGetTextureFormat(_nativeWindowIndex, out width, out height, out texFormat, out mipChain, out linear, out nativeTexPtr2)) {
+            Debug.LogError("fxrGetTextureFormat");
+        } else {
+            Debug.Log("native window " + _nativeWindowIndex + " is " + width + "x" + height);
+        }
+        */
+        return vt;
+    }
+
+    private Texture2D CreateWindowTextureFromNativeTexture()
+    {
+        return null;
+    }
+
+    // Creates a GameObject in layer 'layer' which renders a mesh displaying the video stream.
+    private GameObject CreateWindowGameObject(Texture2D vt, float textureScaleU, float textureScaleV, float width, float height, int layer)
+    {
+        // Check parameters.
+        if (!vt) {
+            Debug.LogError("Error: CreateWindowMesh null Texture2D");
+            return null;
+        }
+
+        // Create new GameObject to hold mesh.
+        GameObject vmgo = new GameObject("Video source");
+        if (vmgo == null) {
+            Debug.LogError("Error: CreateWindowMesh cannot create GameObject.");
+            return null;
+        }
+        vmgo.layer = layer;
+
+        // Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
         Shader shaderSource = Shader.Find("VideoPlaneNoLight");
-        vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
+        Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
         vm.hideFlags = HideFlags.HideAndDontSave;
         vm.mainTexture = vt;
         //Debug.Log("Created video material");
@@ -133,16 +169,10 @@ public class FxRWindow : MonoBehaviour
         return vmgo;
     }
 
-    private void DestroyVideoMesh()
+    private void DestroyWindow()
     {
         bool ed = Application.isEditor;
 
-        if (_videoMaterial != null)
-        {
-            if (ed) DestroyImmediate(_videoMaterial);
-            else Destroy(_videoMaterial);
-            _videoMaterial = null;
-        }
         if (_videoTexture != null)
         {
             if (ed) DestroyImmediate(_videoTexture);

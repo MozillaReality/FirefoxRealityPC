@@ -87,7 +87,6 @@
 #  define FXR_CALLBACK
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -121,8 +120,12 @@ FXR_EXTERN void fxrSetOpenVRSessionPtr(void *p);
 
 FXR_EXTERN int fxrGetWindowCount(void);
 
-// Returns windowIndex;
-FXR_EXTERN int fxrNewWindow(void);
+// Pass NULL nativeTexturePtr to allocate the texture on the native side, otherwise uses the passed-in texture.
+// On Direct3D-like devices pass a pointer to the base texture type (IDirect3DBaseTexture9 on D3D9, ID3D11Resource on D3D11),
+// or on OpenGL-like devices pass the texture "name", casting the integer to a pointer.
+// Returns windowIndex.
+// Must be called from rendering thread with active rendering context.
+FXR_EXTERN int fxrNewWindowFromTexture(int widthPixels, int heightPixels, void *nativeTexturePtr);
 
 FXR_EXTERN bool fxrCloseWindow(int windowIndex);
 
@@ -130,8 +133,11 @@ FXR_EXTERN bool fxrCloseAllWindows(void);
 
 FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
 
+// Must be called from rendering thread with active rendering context.
 // Must be followed by a call to fxrGetWindowTextureFormat to check for updated format (including nativeTexureID).
 FXR_EXTERN bool fxrSetWindowSize(int windowIndex, int width, int height);
+
+FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
 
 #ifdef __cplusplus
 }

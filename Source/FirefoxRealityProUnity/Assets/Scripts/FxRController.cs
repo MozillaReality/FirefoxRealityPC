@@ -56,12 +56,24 @@ public class FxRController : MonoBehaviour
                 break;
         }
 
+        // Set the reference to the plugin in any other objects in the scene that need it.
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow w in fxrwindows) {
+            w.fxr_plugin = fxr_plugin;
+        }
     }
 
     void OnDisable()
     {
         Debug.Log("FxRController.OnDisable()");
- 
+
+        // Clear the references to the plugin in any other objects in the scene that have it.
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow w in fxrwindows)
+        {
+            w.fxr_plugin = null;
+        }
+
         // Since we might be going away, tell users of our Log function
         // to stop calling it.
         switch (Application.platform)

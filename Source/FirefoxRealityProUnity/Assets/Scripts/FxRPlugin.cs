@@ -68,6 +68,11 @@ public class FxRPlugin
         return FxRPlugin_pinvoke.fxrGetWindowCount();
     }
 
+    public int fxrNewWindow(int width, int height, IntPtr nativeTexturePtr)
+    {
+        return FxRPlugin_pinvoke.fxrNewWindow(width, height, nativeTexturePtr);
+    }
+
     public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
     {
         int formatNative;
@@ -98,7 +103,10 @@ public class FxRPlugin
             case 7:
                 format = TextureFormat.RGBA4444;
                 break;
-            case 8:
+            //case 8:
+            //    format = TextureFormat.RGBA5551;
+            //    break;
+            case 9:
                 format = TextureFormat.RGB565;
                 break;
             default:
@@ -107,4 +115,10 @@ public class FxRPlugin
         }
         return true;
     }
+
+    public void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
+    {
+        FxRPlugin_pinvoke.fxrRequestWindowUpdate(windowIndex, timeDelta);
+    }
+
 }

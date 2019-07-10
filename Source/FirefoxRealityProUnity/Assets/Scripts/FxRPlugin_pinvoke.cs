@@ -42,7 +42,7 @@ public static class FxRPlugin_pinvoke
     public static extern int fxrGetWindowCount();
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int fxrNewWindow();
+    public static extern int fxrNewWindow(int width, int height, IntPtr nativeTexturePtr);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
@@ -59,5 +59,8 @@ public static class FxRPlugin_pinvoke
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
     public static extern bool fxrSetWindowSize(int windowIndex, int width, int height);
-    
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
+
 }
