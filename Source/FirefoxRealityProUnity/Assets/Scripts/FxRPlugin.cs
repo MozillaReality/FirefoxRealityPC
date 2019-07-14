@@ -68,6 +68,38 @@ public class FxRPlugin
         return FxRPlugin_pinvoke.fxrGetWindowCount();
     }
 
+    public int fxrNewWindowFromTexture(IntPtr nativeTexturePtr, int width, int height, TextureFormat textureFormat)
+    {
+        int formatNative = 0;
+        switch (textureFormat) {
+            case TextureFormat.RGBA32:
+                formatNative = 1;
+                break;
+            case TextureFormat.BGRA32:
+                formatNative = 2;
+                break;
+            case TextureFormat.ARGB32:
+                formatNative = 3;
+                break;
+            case TextureFormat.RGB24:
+                formatNative = 5;
+                break;
+            case TextureFormat.RGBA4444:
+                formatNative = 7;
+                break;
+            case TextureFormat.RGB565:
+                formatNative = 9;
+                break;
+            default:
+                break;
+        }
+        if (textureFormat == 0) {
+            Debug.LogError("Unsupported texture format " + textureFormat);
+            return -1;
+        }
+        return FxRPlugin_pinvoke.fxrNewWindowFromTexture(nativeTexturePtr, width, height, formatNative);
+    }
+
     public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
     {
         int formatNative;
@@ -98,7 +130,10 @@ public class FxRPlugin
             case 7:
                 format = TextureFormat.RGBA4444;
                 break;
-            case 8:
+            //case 8:
+            //    format = TextureFormat.RGBA5551;
+            //    break;
+            case 9:
                 format = TextureFormat.RGB565;
                 break;
             default:
@@ -107,4 +142,12 @@ public class FxRPlugin
         }
         return true;
     }
+
+    public void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
+    {
+        //FxRPlugin_pinvoke.fxrRequestWindowUpdate(windowIndex, timeDelta);
+        //FxRPlugin_pinvoke.fxrUnitySetParams_RequestWindowUpdate(windowIndex, timeDelta);
+        GL.IssuePluginEvent(FxRPlugin_pinvoke.GetRenderEventFunc(), 1);
+    }
+
 }

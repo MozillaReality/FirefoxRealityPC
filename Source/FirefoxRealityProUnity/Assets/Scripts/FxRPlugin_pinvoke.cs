@@ -21,6 +21,8 @@ public static class FxRPlugin_pinvoke
     // The name of the external library containing the native functions
     private const string LIBRARY_NAME = "fxr_unity";
 
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.StdCall)]
+    public static extern IntPtr GetRenderEventFunc();
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrRegisterLogCallback(FxRPluginLogCallback callback);
@@ -42,7 +44,7 @@ public static class FxRPlugin_pinvoke
     public static extern int fxrGetWindowCount();
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int fxrNewWindow();
+    public static extern int fxrNewWindowFromTexture(IntPtr nativeTexturePtr, int width, int height, int format);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
@@ -59,5 +61,8 @@ public static class FxRPlugin_pinvoke
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
     public static extern bool fxrSetWindowSize(int windowIndex, int width, int height);
-    
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
+
 }

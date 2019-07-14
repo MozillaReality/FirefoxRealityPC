@@ -9,7 +9,7 @@
 				Diffuse [_Color]
 			}
 			Lighting Off
-			ZWrite Off
+			ZWrite On
 			Blend SrcAlpha OneMinusSrcAlpha
 			SeparateSpecular Off
 			SetTexture [_MainTex] {

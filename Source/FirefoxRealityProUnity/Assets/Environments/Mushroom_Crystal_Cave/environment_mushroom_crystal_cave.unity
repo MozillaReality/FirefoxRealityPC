@@ -14585,8 +14585,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5431483de53804cb7ce7276f93d791, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  InitialSize: {x: 4, y: 2.25}
-  InitialVideoSize: {x: 1920, y: 1080}
+  InitialSize: {x: 4, y: 2}
+  InitialVideoSize: {x: 2048, y: 1024}
 --- !u!4 &1011347982
 Transform:
   m_ObjectHideFlags: 0

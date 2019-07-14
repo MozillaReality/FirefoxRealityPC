@@ -12,6 +12,10 @@
 // Declarations of plugin interfaces which are invoked from Unity via P/Invoke.
 //
 
+
+#ifndef __fxr_unity_c_h__
+#define __fxr_unity_c_h__
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -87,10 +91,22 @@
 #  define FXR_CALLBACK
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+enum  {
+	FxRTextureFormat_Invalid = 0,
+	FxRTextureFormat_RGBA32 = 1,
+	FxRTextureFormat_BGRA32 = 2,
+	FxRTextureFormat_ARGB32 = 3,
+	FxRTextureFormat_ABGR32 = 4,
+	FxRTextureFormat_RGB24 = 5,
+	FxRTextureFormat_BGR24 = 6,
+	FxRTextureFormat_RGBA4444 = 7,
+	FxRTextureFormat_RGBA5551 = 8,
+	FxRTextureFormat_RGB565 = 9
+};
 
 //
 // FxR custom plugin interface API.
@@ -121,8 +137,12 @@ FXR_EXTERN void fxrSetOpenVRSessionPtr(void *p);
 
 FXR_EXTERN int fxrGetWindowCount(void);
 
-// Returns windowIndex;
-FXR_EXTERN int fxrNewWindow(void);
+// Pass NULL nativeTexturePtr to allocate the texture on the native side, otherwise uses the passed-in texture.
+// On Direct3D-like devices pass a pointer to the base texture type (IDirect3DBaseTexture9 on D3D9, ID3D11Resource on D3D11),
+// or on OpenGL-like devices pass the texture "name", casting the integer to a pointer.
+// Returns windowIndex.
+// Must be called from rendering thread with active rendering context.
+FXR_EXTERN int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightPixels, int format);
 
 FXR_EXTERN bool fxrCloseWindow(int windowIndex);
 
@@ -130,9 +150,13 @@ FXR_EXTERN bool fxrCloseAllWindows(void);
 
 FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
 
+// Must be called from rendering thread with active rendering context.
 // Must be followed by a call to fxrGetWindowTextureFormat to check for updated format (including nativeTexureID).
 FXR_EXTERN bool fxrSetWindowSize(int windowIndex, int width, int height);
+
+FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
 
 #ifdef __cplusplus
 }
 #endif
+#endif // !__fxr_unity_c_h__

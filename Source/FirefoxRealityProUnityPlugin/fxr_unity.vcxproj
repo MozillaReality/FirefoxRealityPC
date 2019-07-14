@@ -73,19 +73,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)</OutDir>
+    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)</OutDir>
+    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)</OutDir>
+    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)</OutDir>
+    <OutDir>$(ProjectDir)..\FirefoxRealityProUnity\Assets\Plugins\$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -102,6 +102,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,6 +120,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -139,6 +141,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -159,9 +162,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="depends\windows\include\gl3w\gl3w.c" />
     <ClCompile Include="fxr_log.c" />
     <ClCompile Include="fxr_unity.cpp" />
     <ClCompile Include="FxRWindowGL.cpp" />
@@ -170,9 +175,11 @@
     <Text Include=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="depends\windows\include\gl3w\gl3w.h" />
     <ClInclude Include="FxRWindow.h" />
     <ClInclude Include="FxRWindowGL.h" />
     <ClInclude Include="fxr_log.h" />
+    <ClInclude Include="fxr_unity_c.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin_pinvoke.cs">

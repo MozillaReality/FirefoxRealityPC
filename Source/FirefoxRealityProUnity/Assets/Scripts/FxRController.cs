@@ -15,7 +15,7 @@ public class FxRController : MonoBehaviour
     [SerializeField]
     private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
 
-    // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDestroy().
+    // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
 
     //
@@ -25,6 +25,12 @@ public class FxRController : MonoBehaviour
     void Awake()
     {
         Debug.Log("FxRController.Awake())");
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
+    public static void Log(System.String msg)
+    {
+        Debug.Log(msg);
     }
 
     void OnEnable()
@@ -47,21 +53,32 @@ public class FxRController : MonoBehaviour
             case RuntimePlatform.WSAPlayerX86:                     // Unity Player on Windows Store X86.
             case RuntimePlatform.WSAPlayerX64:                     // Unity Player on Windows Store X64.
             case RuntimePlatform.WSAPlayerARM:                     // Unity Player on Windows Store ARM.
-                fxr_plugin.fxrRegisterLogCallback(Debug.Log);
-                break;
             case RuntimePlatform.Android:                          // Unity Player on Android.
             case RuntimePlatform.IPhonePlayer:                     // Unity Player on iOS.
+                fxr_plugin.fxrRegisterLogCallback(Log);
                 break;
             default:
                 break;
         }
 
+        // Set the reference to the plugin in any other objects in the scene that need it.
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow w in fxrwindows) {
+            w.fxr_plugin = fxr_plugin;
+        }
     }
 
     void OnDisable()
     {
         Debug.Log("FxRController.OnDisable()");
- 
+
+        // Clear the references to the plugin in any other objects in the scene that have it.
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow w in fxrwindows)
+        {
+            w.fxr_plugin = null;
+        }
+
         // Since we might be going away, tell users of our Log function
         // to stop calling it.
         switch (Application.platform)
