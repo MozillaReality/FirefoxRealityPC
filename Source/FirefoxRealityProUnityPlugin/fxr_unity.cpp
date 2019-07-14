@@ -32,7 +32,7 @@ static IUnityInterfaces* s_UnityInterfaces = NULL;
 static IUnityGraphics* s_Graphics = NULL;
 static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
 
-extern "C" void UnityPluginLoad(IUnityInterfaces* unityInterfaces)
+extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 {
 	s_UnityInterfaces = unityInterfaces;
 	s_Graphics = unityInterfaces->Get<IUnityGraphics>();
@@ -42,57 +42,81 @@ extern "C" void UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 	OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
 }
 
-extern "C" void UnityPluginUnload()
+extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload()
 {
 	s_Graphics->UnregisterDeviceEventCallback(OnGraphicsDeviceEvent);
 }
 
 static UnityGfxRenderer s_RendererType = kUnityGfxRendererNull;
 
-static void OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
+static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 {
 	switch (eventType) {
 		case kUnityGfxDeviceEventInitialize:
 		{
 			s_RendererType = s_Graphics->GetRenderer();
-			//TODO: user initialization code
+			switch (s_RendererType) {
+			case kUnityGfxRendererD3D11:
+				FXRLOGi("Using Direct 3D v11 renderer.\n");
+				break;
+			case kUnityGfxRendererOpenGLCore:
+				FXRLOGi("Using OpenGL Core renderer.\n");
+				FxRWindowGL::init();
+				break;
+			default:
+				FXRLOGe("Unsupported renderer.\n");
+				return;
+			}
 			break;
 		}
 		case kUnityGfxDeviceEventShutdown:
 		{
+			switch (s_RendererType) {
+			case kUnityGfxRendererD3D11:
+				break;
+			case kUnityGfxRendererOpenGLCore:
+				FxRWindowGL::finalize();
+				break;
+			}
 			s_RendererType = kUnityGfxRendererNull;
-			//TODO: user shutdown code
-			break;
-		}
-		case kUnityGfxDeviceEventBeforeReset:
-		{
-			//TODO: user Direct3D 9 code
-			break;
-		}
-		case kUnityGfxDeviceEventAfterReset:
-		{
-			//TODO: user Direct3D 9 code
 			break;
 		}
 	};
 }
 
+static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
+{
+	// Unknown / unsupported graphics device type? Do nothing
+	switch (s_RendererType) {
+	case kUnityGfxRendererD3D11:
+		break;
+	case kUnityGfxRendererOpenGLCore:
+		FxRWindowGL::finalize();
+		break;
+	default:
+		FXRLOGe("Unsupported renderer.\n");
+		return;
+	}
+
+	switch (eventID) {
+	case 1:
+		fxrRequestWindowUpdate(0, 0.0f);
+		break;
+	default:
+		break;
+	}
+}
+
+
+// GetRenderEventFunc, a function we export which is used to get a rendering event callback function.
+extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRenderEventFunc()
+{
+	return OnRenderEvent;
+}
+
 //
 // FxR plugin implementation.
 //
-
-enum FxRTextureFormat {
-	INVALID = 0,
-	RGBA32 = 1,
-	BGRA32 = 2,
-	ARGB32 = 3,
-	ABGR32 = 4,
-	RGB24 = 5,
-	BGR24 = 6,
-	RGBA4444 = 7,
-	RGBA5551 = 8,
-	RGB565 = 9
-};
 
 
 static std::unique_ptr<FxRWindowGL> gWindow = nullptr;
@@ -136,13 +160,13 @@ int fxrGetWindowCount(void)
 	return 0;
 }
 
-int fxrNewWindow(int widthPixels, int heightPixels, void *nativeTexturePtr)
+int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightPixels, int format)
 {
 	// For now, only one window, and only GL.
 	uint32_t texID = (uint32_t)(nativeTexturePtr);
-	FXRLOGi("fxrNewWindow got texture %d size %dx%d.\n", texID, widthPixels, heightPixels);
+	FXRLOGi("fxrNewWindowFromTexture got texture %d size %dx%d, format %d.\n", texID, widthPixels, heightPixels, format);
 	FxRWindow::Size size = {widthPixels, heightPixels};
-	gWindow = std::make_unique<FxRWindowGL>(size, texID);
+	gWindow = std::make_unique<FxRWindowGL>(size, texID, format);
 	return (0);
 }
 
@@ -169,7 +193,7 @@ bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *fo
 	FxRWindow::Size size = gWindow->size();
 	if (width) *width = size.w;
 	if (height) *height = size.h;
-	if (format) *format = FxRTextureFormat::RGBA32;
+	if (format) *format = gWindow->format();
 	if (mipChain) *mipChain = false;
 	if (linear) *linear = true;
 	if (nativeTextureID_p) *nativeTextureID_p = gWindow->getNativeID();
@@ -192,4 +216,3 @@ FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
 	if (!gWindow) return;
 	gWindow->requestUpdate(timeDelta);
 }
-

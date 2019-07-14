@@ -15,7 +15,7 @@ public class FxRController : MonoBehaviour
     [SerializeField]
     private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
 
-    // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDestroy().
+    // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
 
     //
@@ -25,6 +25,12 @@ public class FxRController : MonoBehaviour
     void Awake()
     {
         Debug.Log("FxRController.Awake())");
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
+    public static void Log(System.String msg)
+    {
+        Debug.Log(msg);
     }
 
     void OnEnable()
@@ -47,10 +53,9 @@ public class FxRController : MonoBehaviour
             case RuntimePlatform.WSAPlayerX86:                     // Unity Player on Windows Store X86.
             case RuntimePlatform.WSAPlayerX64:                     // Unity Player on Windows Store X64.
             case RuntimePlatform.WSAPlayerARM:                     // Unity Player on Windows Store ARM.
-                fxr_plugin.fxrRegisterLogCallback(Debug.Log);
-                break;
             case RuntimePlatform.Android:                          // Unity Player on Android.
             case RuntimePlatform.IPhonePlayer:                     // Unity Player on iOS.
+                fxr_plugin.fxrRegisterLogCallback(Log);
                 break;
             default:
                 break;

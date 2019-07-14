@@ -32,7 +32,7 @@ public class FxRWindow : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //fxr_plugin.fxrRequestWindowUpdate(_nativeWindowIndex, Time.deltaTime);
+        fxr_plugin.fxrRequestWindowUpdate(_nativeWindowIndex, Time.deltaTime);
     }
 
     //
@@ -77,11 +77,13 @@ public class FxRWindow : MonoBehaviour
         vt.SetPixels32(arr);
         vt.Apply(); // Pushes all SetPixels*() ops to texture.
         arr = null;
-        /*
+
         // Now pass the ID to the native side.
         IntPtr nativeTexPtr = vt.GetNativeTexturePtr();
-        _nativeWindowIndex = fxr_plugin.fxrNewWindow(textureWidth, textureHeight, nativeTexPtr);
+        Debug.Log("nativeTexPtr=" + nativeTexPtr.ToString("x"));
+        _nativeWindowIndex = fxr_plugin.fxrNewWindowFromTexture(nativeTexPtr, textureWidth, textureHeight, vt.format);
 
+        /*
         // Debug.
         int width, height;
         TextureFormat texFormat;

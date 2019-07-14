@@ -8,21 +8,87 @@
 #endif
 #include <stdlib.h>
 #include "FxRWindowGL.h"
+#include "fxr_unity_c.h"
 
-FxRWindowGL::FxRWindowGL(Size size, uint32_t texID) :
-	m_size(size),
-	m_texID(texID),
-	m_generatedTex(false),
-	m_buf(NULL)
-{
+void FxRWindowGL::init() {
 #ifdef _WIN32
 	gl3wInit();
 #endif
+}
 
-	if (m_texID == 0) {
-		glGenTextures(1, &m_texID);
-		m_generatedTex = true;
+void FxRWindowGL::finalize() {
+}
+
+FxRWindowGL::FxRWindowGL(Size size, uint32_t texID, int format) :
+	m_size(size),
+	m_texID(texID),
+	m_generatedTex(false),
+	m_buf(NULL),
+	m_format(format),
+	m_pixelIntFormatGL(0),
+	m_pixelFormatGL(0),
+	m_pixelTypeGL(0),
+	m_pixelSize(0)
+{
+	switch (format) {
+	case FxRTextureFormat_RGBA32:
+		m_pixelIntFormatGL = GL_RGBA;
+		m_pixelFormatGL = GL_RGBA;
+		m_pixelTypeGL = GL_UNSIGNED_BYTE;
+		m_pixelSize = 4;
+		break;
+	case FxRTextureFormat_BGRA32:
+		m_pixelIntFormatGL = GL_RGBA;
+		m_pixelFormatGL = GL_BGRA;
+		m_pixelTypeGL = GL_UNSIGNED_BYTE;
+		m_pixelSize = 4;
+		break;
+	case FxRTextureFormat_ARGB32:
+		m_pixelIntFormatGL = GL_RGBA;
+		m_pixelFormatGL = GL_BGRA;
+		m_pixelTypeGL = GL_UNSIGNED_INT_8_8_8_8; // GL_UNSIGNED_INT_8_8_8_8_REV on big-endian.
+		m_pixelSize = 4;
+		break;
+	//case FxRTextureFormat_ABGR32: // Needs GL_EXT_abgr
+	//	m_pixelIntFormatGL = GL_RGBA;
+	//	m_pixelFormatGL = GL_ABGR_EXT;
+	//	m_pixelTypeGL = GL_UNSIGNED_BYTE;
+	//	m_pixelSize = 4;
+	//	break;
+	case FxRTextureFormat_RGB24:
+		m_pixelIntFormatGL = GL_RGB;
+		m_pixelFormatGL = GL_RGB;
+		m_pixelTypeGL = GL_UNSIGNED_BYTE;
+		m_pixelSize = 3;
+		break;
+	case FxRTextureFormat_BGR24:
+		m_pixelIntFormatGL = GL_RGBA;
+		m_pixelFormatGL = GL_BGR;
+		m_pixelTypeGL = GL_UNSIGNED_BYTE;
+		m_pixelSize = 3;
+		break;
+	case FxRTextureFormat_RGBA4444:
+		m_pixelIntFormatGL = GL_RGBA;
+		m_pixelFormatGL = GL_RGBA;
+		m_pixelTypeGL = GL_UNSIGNED_SHORT_4_4_4_4;
+		m_pixelSize = 2;
+		break;
+	case FxRTextureFormat_RGBA5551:
+		m_pixelIntFormatGL = GL_RGBA;
+		m_pixelFormatGL = GL_RGBA;
+		m_pixelTypeGL = GL_UNSIGNED_SHORT_5_5_5_1;
+		m_pixelSize = 2;
+		break;
+	case FxRTextureFormat_RGB565:
+		m_pixelIntFormatGL = GL_RGB;
+		m_pixelFormatGL = GL_RGB;
+		m_pixelTypeGL = GL_UNSIGNED_SHORT_5_6_5;
+		m_pixelSize = 2;
+		break;
+	default:
+		break;
 	}
+
 	setSize(size);
 }
 
@@ -45,11 +111,7 @@ FxRWindow::Size FxRWindowGL::size() {
 void FxRWindowGL::setSize(FxRWindow::Size size) {
 	m_size = size;
 	if (m_buf) free(m_buf);
-	m_buf = (uint8_t *)calloc(1, m_size.w * m_size.h * 4); // Always RGBA 4Bpp.
-	glBindTexture(GL_TEXTURE_2D, m_texID);
-	glActiveTexture(GL_TEXTURE0);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_size.w, m_size.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
-	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, m_size.w, m_size.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
+	m_buf = (uint8_t *)calloc(1, m_size.w * m_size.h * m_pixelSize);
 }
 
 void* FxRWindowGL::getNativeID() {
@@ -63,7 +125,8 @@ void FxRWindowGL::requestUpdate(float timeDelta) {
 	int i, j;
 	k++;
 	if (k > 100) k = -100;
-	memset(m_buf, 255, m_size.w * m_size.h * 4); // Clear to white.
+	memset(m_buf, 255, m_size.w * m_size.h * m_pixelSize); // Clear to white.
+	// Assumes RGBA32!
 	for (j = m_size.h / 2 - 50; j < m_size.h / 2 - 25; j++) {
 		for (i = m_size.w / 2 - 50 + k; i < m_size.w / 2 + 50 + k; i++) {
 			m_buf[(j*m_size.w + i) * 4 + 0] = m_buf[(j*m_size.w + i) * 4 + 1] = m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
@@ -97,8 +160,17 @@ void FxRWindowGL::requestUpdate(float timeDelta) {
 		}
 	}
 
+	if (m_texID == 0) {
+		glGenTextures(1, &m_texID);
+		m_generatedTex = true;
+		glBindTexture(GL_TEXTURE_2D, m_texID);
+		glActiveTexture(GL_TEXTURE0);
+		glTexImage2D(GL_TEXTURE_2D, 0, m_pixelIntFormatGL, m_size.w, m_size.h, 0, m_pixelFormatGL, m_pixelTypeGL, m_buf);
+		//glTexImage2D(GL_TEXTURE_RECTANGLE, 0, m_pixelIntFormatGL, m_size.w, m_size.h, 0, m_pixelFormatGL, m_pixelTypeGL, m_buf);
+	}
+
 	glBindTexture(GL_TEXTURE_2D, m_texID);
 	glActiveTexture(GL_TEXTURE0);
-	//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
+	//glTexSubImage2D(GL_TEXTURE_RECTANGLE, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
 }
