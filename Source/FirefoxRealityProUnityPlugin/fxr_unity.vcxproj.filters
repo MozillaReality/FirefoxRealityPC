@@ -47,6 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin_pinvoke.cs" />
+    <None Include="FxRWindowDX11.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="FxRWindowDX11.h">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include=".editorconfig">

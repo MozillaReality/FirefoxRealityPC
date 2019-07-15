@@ -1,4 +1,4 @@
-//
+﻿//
 // fxr_unity.cpp
 // 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -15,6 +15,7 @@
 #include "fxr_unity_c.h"
 #include "fxr_log.h"
 
+#include "FxRWindowDX11.h"
 #include "FxRWindowGL.h"
 #include <memory>
 
@@ -57,10 +58,11 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 			s_RendererType = s_Graphics->GetRenderer();
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
-				FXRLOGi("Using Direct 3D v11 renderer.\n");
+				FXRLOGi("Using DirectX 11 renderer.\n");
+                FxRWindowDX11::init(s_UnityInterfaces);
 				break;
 			case kUnityGfxRendererOpenGLCore:
-				FXRLOGi("Using OpenGL Core renderer.\n");
+				FXRLOGi("Using OpenGL renderer.\n");
 				FxRWindowGL::init();
 				break;
 			default:
@@ -73,6 +75,7 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 		{
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
+                FxRWindowDX11::finalize();
 				break;
 			case kUnityGfxRendererOpenGLCore:
 				FxRWindowGL::finalize();
@@ -91,7 +94,6 @@ static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
 	case kUnityGfxRendererD3D11:
 		break;
 	case kUnityGfxRendererOpenGLCore:
-		FxRWindowGL::finalize();
 		break;
 	default:
 		FXRLOGe("Unsupported renderer.\n");
@@ -119,7 +121,7 @@ extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRen
 //
 
 
-static std::unique_ptr<FxRWindowGL> gWindow = nullptr;
+static std::unique_ptr<FxRWindow> gWindow = nullptr;
 
 void fxrRegisterLogCallback(PFN_LOGCALLBACK callback)
 {
@@ -162,11 +164,18 @@ int fxrGetWindowCount(void)
 
 int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightPixels, int format)
 {
-	// For now, only one window, and only GL.
-	uint32_t texID = (uint32_t)(nativeTexturePtr);
-	FXRLOGi("fxrNewWindowFromTexture got texture %d size %dx%d, format %d.\n", texID, widthPixels, heightPixels, format);
-	FxRWindow::Size size = {widthPixels, heightPixels};
-	gWindow = std::make_unique<FxRWindowGL>(size, texID, format);
+    if (s_RendererType != kUnityGfxRendererD3D11 && s_RendererType != kUnityGfxRendererOpenGLCore) {
+        FXRLOGe("Unsupported renderer.\n");
+        return -1;
+    }
+   
+    FXRLOGi("fxrNewWindowFromTexture got texturePtr %p size %dx%d, format %d.\n", nativeTexturePtr, widthPixels, heightPixels, format);
+    FxRWindow::Size size = {widthPixels, heightPixels};
+    if (s_RendererType == kUnityGfxRendererD3D11) {
+        gWindow = std::make_unique<FxRWindowDX11>(size, nativeTexturePtr, format);
+    } else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
+        gWindow = std::make_unique<FxRWindowGL>(size, nativeTexturePtr, format);
+    }
 	return (0);
 }
 
@@ -196,7 +205,7 @@ bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *fo
 	if (format) *format = gWindow->format();
 	if (mipChain) *mipChain = false;
 	if (linear) *linear = true;
-	if (nativeTextureID_p) *nativeTextureID_p = gWindow->getNativeID();
+	if (nativeTextureID_p) *nativeTextureID_p = gWindow->getNativePtr();
 	return true;
 }
 
