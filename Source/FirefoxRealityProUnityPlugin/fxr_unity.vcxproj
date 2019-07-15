@@ -185,6 +185,8 @@
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin_pinvoke.cs">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </None>
+    <ClCompile Include="FxRWindowDX11.cpp" />
+    <None Include="FxRWindowDX11.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

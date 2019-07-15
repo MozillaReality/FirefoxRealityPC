@@ -1,5 +1,5 @@
 ﻿//
-// FxRWindowGL.cpp
+// FxRWindowDX11.cpp
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0.If a copy of the MPL was not distributed with this
@@ -10,95 +10,56 @@
 // Author(s): Philip Lamb
 //
 
-#ifdef __APPLE__
-#  include <OpenGL/gl3.h>
-#elif defined(_WIN32)
-#  include <gl3w/gl3w.h>
-#else 
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/glcorearb.h>
-#endif
 #include <stdlib.h>
-#include "FxRWindowGL.h"
+#include "FxRWindowDX11.h"
 #include "fxr_unity_c.h"
+#include <d3d11.h>
+#include "IUnityGraphicsD3D11.h"
 
-void FxRWindowGL::init() {
-#ifdef _WIN32
-	gl3wInit();
-#endif
+static ID3D11Device* s_D3D11Device = nullptr;
+
+void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
+    IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
+    s_D3D11Device = ud3d->GetDevice();
 }
 
-void FxRWindowGL::finalize() {
+void FxRWindowDX11::finalize() {
+    s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowGL::FxRWindowGL(Size size, void* texPtr, int format) :
+FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format) :
 	m_size(size),
-#pragma warning(disable:4302) // Disable truncation warnings, it's the desired behaviour.
-#pragma warning(disable:4311)
-	m_texID((uint32_t)texPtr),
-#pragma warning(default:4302)
-#pragma warning(default:4311)
-    m_generatedTex(false),
+	m_texPtr(texPtr),
 	m_buf(NULL),
 	m_format(format),
-	m_pixelIntFormatGL(0),
-	m_pixelFormatGL(0),
-	m_pixelTypeGL(0),
 	m_pixelSize(0)
 {
 	switch (format) {
 	case FxRTextureFormat_RGBA32:
-		m_pixelIntFormatGL = GL_RGBA;
-		m_pixelFormatGL = GL_RGBA;
-		m_pixelTypeGL = GL_UNSIGNED_BYTE;
 		m_pixelSize = 4;
 		break;
 	case FxRTextureFormat_BGRA32:
-		m_pixelIntFormatGL = GL_RGBA;
-		m_pixelFormatGL = GL_BGRA;
-		m_pixelTypeGL = GL_UNSIGNED_BYTE;
 		m_pixelSize = 4;
 		break;
 	case FxRTextureFormat_ARGB32:
-		m_pixelIntFormatGL = GL_RGBA;
-		m_pixelFormatGL = GL_BGRA;
-		m_pixelTypeGL = GL_UNSIGNED_INT_8_8_8_8; // GL_UNSIGNED_INT_8_8_8_8_REV on big-endian.
 		m_pixelSize = 4;
 		break;
-	//case FxRTextureFormat_ABGR32: // Needs GL_EXT_abgr
-	//	m_pixelIntFormatGL = GL_RGBA;
-	//	m_pixelFormatGL = GL_ABGR_EXT;
-	//	m_pixelTypeGL = GL_UNSIGNED_BYTE;
-	//	m_pixelSize = 4;
-	//	break;
+	case FxRTextureFormat_ABGR32:
+		m_pixelSize = 4;
+		break;
 	case FxRTextureFormat_RGB24:
-		m_pixelIntFormatGL = GL_RGB;
-		m_pixelFormatGL = GL_RGB;
-		m_pixelTypeGL = GL_UNSIGNED_BYTE;
 		m_pixelSize = 3;
 		break;
 	case FxRTextureFormat_BGR24:
-		m_pixelIntFormatGL = GL_RGBA;
-		m_pixelFormatGL = GL_BGR;
-		m_pixelTypeGL = GL_UNSIGNED_BYTE;
 		m_pixelSize = 3;
 		break;
 	case FxRTextureFormat_RGBA4444:
-		m_pixelIntFormatGL = GL_RGBA;
-		m_pixelFormatGL = GL_RGBA;
-		m_pixelTypeGL = GL_UNSIGNED_SHORT_4_4_4_4;
 		m_pixelSize = 2;
 		break;
 	case FxRTextureFormat_RGBA5551:
-		m_pixelIntFormatGL = GL_RGBA;
-		m_pixelFormatGL = GL_RGBA;
-		m_pixelTypeGL = GL_UNSIGNED_SHORT_5_5_5_1;
 		m_pixelSize = 2;
 		break;
 	case FxRTextureFormat_RGB565:
-		m_pixelIntFormatGL = GL_RGB;
-		m_pixelFormatGL = GL_RGB;
-		m_pixelTypeGL = GL_UNSIGNED_SHORT_5_6_5;
 		m_pixelSize = 2;
 		break;
 	default:
@@ -108,35 +69,28 @@ FxRWindowGL::FxRWindowGL(Size size, void* texPtr, int format) :
 	setSize(size);
 }
 
-FxRWindowGL::~FxRWindowGL() {
-	if (m_generatedTex) {
-		glDeleteTextures(1, &m_texID);
-		m_texID = 0;
-		m_generatedTex = false;
-	}
+FxRWindowDX11::~FxRWindowDX11() {
 	if (m_buf) {
 		free(m_buf);
 		m_buf = NULL;
 	}
 }
 
-FxRWindow::Size FxRWindowGL::size() {
+FxRWindow::Size FxRWindowDX11::size() {
 	return m_size;
 }
 
-void FxRWindowGL::setSize(FxRWindow::Size size) {
+void FxRWindowDX11::setSize(FxRWindow::Size size) {
 	m_size = size;
 	if (m_buf) free(m_buf);
 	m_buf = (uint8_t *)calloc(1, m_size.w * m_size.h * m_pixelSize);
 }
 
-void* FxRWindowGL::getNativePtr() {
-#pragma warning(disable:4312) // Disable size-extension warning, it's the desired behaviour.
-	return (void *)m_texID;
-#pragma warning(default:4312)
+void* FxRWindowDX11::getNativePtr() {
+	return m_texPtr;
 }
 
-void FxRWindowGL::requestUpdate(float timeDelta) {
+void FxRWindowDX11::requestUpdate(float timeDelta) {
 
 	// Auto-generate a dummy texture. A 100 x 100 square, oscillating in x dimension.
 	static int k = 0;
@@ -178,19 +132,26 @@ void FxRWindowGL::requestUpdate(float timeDelta) {
 		}
 	}
 
-	// Setup a texture ourselves:
-	//glGenTextures(1, &m_texID);
-	//glBindTexture(GL_TEXTURE_2D, m_texID);
-	//glActiveTexture(GL_TEXTURE0);
-	//glTexImage2D(GL_TEXTURE_2D, 0, m_pixelIntFormatGL, m_size.w, m_size.h, 0, m_pixelFormatGL, m_pixelTypeGL, m_buf);
-	////glTexImage2D(GL_TEXTURE_RECTANGLE, 0, m_pixelIntFormatGL, m_size.w, m_size.h, 0, m_pixelFormatGL, m_pixelTypeGL, m_buf);
-	// Would also later require cleanup:
-	//glBindTexture(GL_TEXTURE_2D, 0);
-	//glDeleteTextures(1, &m_texID);
-	//m_texID = 0;
+    ID3D11DeviceContext* ctx = NULL;
+    s_D3D11Device->GetImmediateContext(&ctx);
 
-	glBindTexture(GL_TEXTURE_2D, m_texID);
-	glActiveTexture(GL_TEXTURE0);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
-	//glTexSubImage2D(GL_TEXTURE_RECTANGLE, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
+    // Could also do this here if we needed texture info:
+    //D3D11_TEXTURE2D_DESC desc;
+    //((ID3D11Texture2D*)m_texPtr)->GetDesc(&desc);
+
+#if 0
+    // Updating from a source smaller than the destination.
+    D3D11_BOX box;
+    box.front = 0;
+    box.back = 1;
+    box.left = 0;
+    box.right = m_size.w;
+    box.top = 0;
+    box.bottom = m_size.h;
+    ctx->UpdateSubresource((ID3D11Texture2D*)m_texPtr, 0, &box, m_buf, m_size.w * m_pixelSize, m_size.h * m_size.w * m_pixelSize);
+#else
+    ctx->UpdateSubresource((ID3D11Texture2D*)m_texPtr, 0, NULL, m_buf, m_size.w * m_pixelSize, m_size.h * m_size.w * m_pixelSize);
+#endif
+    ctx->Release();
+
 }

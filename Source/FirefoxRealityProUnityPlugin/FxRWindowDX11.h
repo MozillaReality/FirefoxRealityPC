@@ -1,5 +1,5 @@
 ﻿//
-// FxRWindowGL.h
+// FxRWindowDX11.h
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0.If a copy of the MPL was not distributed with this
@@ -13,26 +13,23 @@
 #pragma once
 #include "FxRWindow.h"
 #include <cstdint>
+#include "IUnityInterface.h"
 
-class FxRWindowGL : public FxRWindow
+class FxRWindowDX11 : public FxRWindow
 {
 private:
 	Size m_size;
-	uint32_t m_texID;
-	bool m_generatedTex;
+	void *m_texPtr;
 	uint8_t *m_buf;
 	int m_format;
-	uint32_t m_pixelIntFormatGL;
-	uint32_t m_pixelFormatGL;
-	uint32_t m_pixelTypeGL;
-	uint32_t m_pixelSize;
+    int m_pixelSize;
 public:
-	static void init();
+	static void init(IUnityInterfaces* unityInterfaces);
 	static void finalize();
-	FxRWindowGL(Size size, void* texPtr, int format);
-	~FxRWindowGL() ;
+	FxRWindowDX11(Size size, void* texPtr, int format);
+	~FxRWindowDX11() ;
 
-    RendererAPI rendererAPI() override {return RendererAPI::OpenGLCore;}
+    RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
 	Size size() override;
 	void setSize(Size size) override;
 	void* getNativePtr() override;
