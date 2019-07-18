@@ -5,6 +5,8 @@
 #include "stdafx.h"
 #include "fxrhost.h"
 
+
+
 void Pump()
 {
   // Run the message loop.
@@ -43,14 +45,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
       {
         pszFxProfile = szArglist[++cArg];
       }
-      else if (wcscmp(szArglist[cArg], ARG_FXRUI) == 0)
-      {
-        pszFxrUI = szArglist[++cArg];
-      }
       else
       {
         assert(!"Unsupported arg");
-      }    
+      }
     }
 
     if (pszFxPath != nullptr && pszFxProfile != nullptr)
@@ -60,7 +58,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
       FxRHostWindow win;
       if (win.Create(FXRHOST_NAME_WIDE, WS_OVERLAPPEDWINDOW, 0, 800, 50, 400, 100))
       {
-        win.OnCreate(pszFxPath, pszFxProfile, pszFxrUI);
+        win.OnCreate(pszFxPath, pszFxProfile);
 
         ShowWindow(win.Window(), nCmdShow);
 
@@ -76,6 +74,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, int nCmdSho
   else {
     assert(!"Invalid Args");
   }
+  
 
   return ret;
 }

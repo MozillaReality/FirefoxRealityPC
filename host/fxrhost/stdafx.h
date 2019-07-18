@@ -36,7 +36,6 @@ template <class T> void SafeRelease(T **ppT)
 #define FXRHOST_NAME_WIDE L"FxRHost"
 #define ARG_FXPATH        L"--fxpath"
 #define ARG_FXPROFILE     L"--fxprofile"
-#define ARG_FXRUI         L"--fxrui"
 
 // Messages passed from Fx
 #define WM_OVR_DRAWPID    (WM_USER+9)

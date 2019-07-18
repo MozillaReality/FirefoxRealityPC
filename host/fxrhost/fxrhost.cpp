@@ -38,37 +38,24 @@
 #include "stdafx.h"
 #include "fxrhost.h"
 
-void FxRHostWindow::OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile, LPWSTR pszChrome)
+void FxRHostWindow::OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile)
 {
   SetThreadDescription(::GetCurrentThread(), L"FxRHost Main");
+
+  hVR = ::LoadLibrary(L"vrhost.dll");
+  assert(hVR != nullptr);
+
   ovrHelper.Init(Window());
 
   int err = 0;
-  WCHAR chromeCmd[MAX_PATH] = { 0 };
-  if (pszChrome) {
-    fHasCustomUI = true;
-    err = swprintf_s(
-      chromeCmd,
-      ARRAYSIZE(chromeCmd),
-      L"-chrome %s",
-      pszChrome
-    );
-  }
-  else {
-    fHasCustomUI = false;
-  }
-  assert(err >= 0);
 
   WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
   err = swprintf_s(
     fxCmd,
     ARRAYSIZE(fxCmd),
-    L"%s -wait-for-browser %s -profile %s -fxr 0x%p -overlayid 0x%p",
+    L"%s -wait-for-browser -profile %s --fxr",
     pszFxPath,
-    chromeCmd,
-    pszFxProfile,
-    Window(),
-    ovrHelper.GetOverlayHandle()
+    pszFxProfile
   );
   assert(err > 0);
 
@@ -86,34 +73,25 @@ void FxRHostWindow::OnCreate(LPWSTR pszFxPath, LPWSTR pszFxProfile, LPWSTR pszCh
     &procInfoFx
   );
 
-  assert(fCreateContentProc);
+  assert(fCreateContentProc);  
 }
 
 // Synchronously terminate the new processes
 void FxRHostWindow::OnDestroy()
 {
   ovrHelper.EndInputThread();
-  ::SendMessage(ovrHelper.GetFxHwnd(), WM_CLOSE, 0, 0);
+  ovrHelper.EndDrawThread();
+  ovrHelper.CloseFxWindow();
   ::PostQuitMessage(0);
 }
 
 LRESULT FxRHostWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  switch (uMsg)
-  {
-  case WM_DESTROY:
+  if (uMsg == WM_DESTROY) {
     OnDestroy();
     return 0;
-
-  case WM_OVR_DRAWPID:
-    ovrHelper.SetDrawPID(wParam);
-    ovrHelper.TryStartInputThread();
-    return 0;
-
-  case WM_OVR_FXHWND:
-    ovrHelper.SetFxHwnd((HWND)wParam, fHasCustomUI);
-    ovrHelper.TryStartInputThread();
-    return 0;
   }
-  return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
+  else {
+    return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
+  }
 }

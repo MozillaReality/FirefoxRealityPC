@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "OpenVRHelper.h"
+#include <winerror.h>
 
 // Class-wide override to enable calls made to OpenVR
 bool OpenVRHelper::s_isEnabled = true;
@@ -18,21 +19,30 @@ void OpenVRHelper::Init(HWND hwndHost)
   {
     m_hwndHost = hwndHost;
 
-    // COpenVROverlayController::Init
-    vr::EVRInitError eError = vr::VRInitError_None;
-    m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Overlay);
-    if (eError == vr::VRInitError_None)
-    {
-      // TODO: May need to assert a particular index until this is supported
-      // between the two products.
-      m_pHMD->GetDXGIOutputInfo(&m_dxgiAdapterIndex);
-      assert(m_dxgiAdapterIndex != -1);
+    m_hVRHost = ::LoadLibrary(L"vrhost.dll");
+    if (m_hVRHost != nullptr) {
+      m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
 
-      CreateOverlay();
+      vr::EVRInitError eError = vr::VRInitError_None;
+      m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Overlay);
+      if (eError == vr::VRInitError_None)
+      {
+        // TODO: May need to assert a particular index until this is supported
+        // between the two products.
+        m_pHMD->GetDXGIOutputInfo(&m_dxgiAdapterIndex);
+        assert(m_dxgiAdapterIndex != -1);
+
+        CreateOverlay();
+        StartDrawThread();
+      }
+      else
+      {
+        assert(!"Failed to initialze OpenVR");
+      }
     }
     else
     {
-      assert(!"Failed to initialze OpenVR");
+      assert(!"Failed to load vrhost.dll");
     }
   }
   else
@@ -96,11 +106,11 @@ void OpenVRHelper::CreateOverlay()
   }
 }
 
-// Set the HWND passed from Firefox, which will be used to pass window messages (typicaly,
-// input messages) back to Firefox. 
-void OpenVRHelper::SetFxHwnd(HWND fx, bool fHasCustomUI)
-{
-  m_hwndFx = fx;
+
+void OpenVRHelper::CloseFxWindow() {
+  PFN_CLOSEVRWINDOW lpfnClose = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
+  lpfnClose(m_vrWin);
+
 }
 
 // Show the Virtual Keyboard in the HMD
@@ -124,15 +134,11 @@ void OpenVRHelper::ShowVirtualKeyboard()
 // Spins up a new thread so that polling of input events can happen without
 // blocking the UI thread.
 void OpenVRHelper::TryStartInputThread() {
-  // Only spin up the new thread if
-  // - Using OpenVR is enabled
-  // - Both the Fx HWND and GPU PID have been set
-  // - An Input Thread has not already been started
-  // - The Input thread is allowed to run (i.e., should not be exiting)
-  if (s_isEnabled && m_hwndFx != nullptr && m_dwPidGPU != 0 && m_hThreadInput == nullptr && !m_fExitInputThread) {
+  if (s_isEnabled)
+  {
     // Assert that the following variables are already set before spinning
     // up a new thread
-    assert(m_hwndFx != nullptr);
+    assert(m_vrWin != 0);
     assert(m_ulOverlayHandle != vr::k_ulOverlayHandleInvalid);
     // Assert that the following variables are not set because they should
     // only be modified and accessed on the new thread
@@ -161,16 +167,6 @@ void OpenVRHelper::TryStartInputThread() {
 // ThreadProc to handle Overlay event messages
 DWORD OpenVRHelper::InputThreadProc(_In_ LPVOID lpParameter) {
   OpenVRHelper* pInstance = static_cast<OpenVRHelper*>(lpParameter);
-
-  // HACK: For now, scrolling only works when the mouse cursor is located
-  // over the window (because scroll code in Fx does a hittest for HWND
-  // under the cursor). So...programmatically make this so.
-  ::SetFocus(pInstance->m_hwndFx);
-  RECT rcHwndFx;
-  if (::GetWindowRect(pInstance->m_hwndFx, &rcHwndFx)) {
-    ::SetCursorPos(rcHwndFx.left + 50, rcHwndFx.top + 50);
-  }
-
   while (!pInstance->m_fExitInputThread) {
     pInstance->OverlayPump();
   }
@@ -194,8 +190,8 @@ void OpenVRHelper::CheckOverlayMouseScale() {
       m_ulOverlayHandle, &vecWindowSize);
 
     if (error == vr::VROverlayError_None) {
-      m_rcFx.right = vecWindowSize.v[0];
-      m_rcFx.bottom = vecWindowSize.v[1];
+      m_rcFx.right = static_cast<LONG>(vecWindowSize.v[0]);
+      m_rcFx.bottom = static_cast<LONG>(vecWindowSize.v[1]);
     }
     else {
       DebugBreak();
@@ -208,7 +204,7 @@ void OpenVRHelper::CheckOverlayMouseScale() {
 void OpenVRHelper::OverlayPump()
 {
   assert(s_isEnabled);
-  assert(vr::VROverlay() != nullptr && m_hwndFx != nullptr);
+  assert(vr::VROverlay() != nullptr && m_vrWin != 0);
   
   CheckOverlayMouseScale();
 
@@ -230,7 +226,7 @@ void OpenVRHelper::OverlayPump()
       SHORT scrollDelta = WHEEL_DELTA * (SHORT)data.ydelta;
 
       // Route this back to the Firefox window for processing
-      ::PostMessage(m_hwndFx, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
+      m_pfnSendUIMessage(m_vrWin, WM_MOUSEWHEEL, MAKELONG(0, scrollDelta), POINTTOPOINTS(m_ptLastMouse));
       break;
     }
 
@@ -240,7 +236,7 @@ void OpenVRHelper::OverlayPump()
       _RPTF1(_CRT_WARN, "  VREvent_t.data.keyboard.cNewInput --%s--\n", data.cNewInput);
 
       // Route this back to the Firefox window for processing
-      ::PostMessage(m_hwndFx, WM_CHAR, data.cNewInput[0], 0);
+      m_pfnSendUIMessage(m_vrWin, WM_CHAR, data.cNewInput[0], 0);
       break;
     }
 
@@ -281,17 +277,67 @@ void OpenVRHelper::ProcessMouseEvent(vr::VREvent_t vrEvent) {
   }
 
   // Route this back to the Firefox window for processing
-  ::PostMessage(m_hwndFx, nMsg, 0, POINTTOPOINTS(m_ptLastMouse));
+  m_pfnSendUIMessage(m_vrWin, nMsg, 0, POINTTOPOINTS(m_ptLastMouse));
 }
 
-// In order to draw from a process that didn't create the overlay, SetOverlayRenderingPid must be called
-// for that process to allow it to render to the overlay texture.
-void OpenVRHelper::SetDrawPID(DWORD pid)
-{
-  m_dwPidGPU = pid;
-  if (s_isEnabled)
-  {
-    vr::VROverlayError error = vr::VROverlay()->SetOverlayRenderingPid(m_ulOverlayHandle, m_dwPidGPU);
-    assert(error == vr::VROverlayError_None);
+void OpenVRHelper::StartDrawThread() {
+  DWORD dwTid = 0;
+  m_hThreadInput =
+  CreateThread(
+    nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+    0,        // SIZE_T dwStackSize,
+    OpenVRHelper::DrawThreadProc,
+    this,  //__drv_aliasesMem LPVOID lpParameter,
+    0,     // DWORD dwCreationFlags,
+    &dwTid);
+
+  if (m_hThreadInput == nullptr) {
+    DebugBreak();
   }
+  else {
+    SetThreadDescription(m_hThreadInput, L"OpenVR Draw");
+  }
+}
+
+// ThreadProc to handle Overlay event messages
+DWORD OpenVRHelper::DrawThreadProc(_In_ LPVOID lpParameter) {
+  OpenVRHelper* pInstance = static_cast<OpenVRHelper*>(lpParameter);
+
+  HINSTANCE hVR = ::LoadLibrary(L"vrhost.dll");
+  if (hVR != nullptr) {
+    PFN_CREATEVRWINDOW lpfnCreate = (PFN_CREATEVRWINDOW)::GetProcAddress(hVR, "CreateVRWindow");
+    uint64_t width;
+    uint64_t height;
+    lpfnCreate(&pInstance->m_vrWin, &pInstance->m_hTex, &pInstance->m_hSignal, &width, &height);
+
+    vr::HmdVector2_t vecWindowSize = { (float)width, (float)height };
+    vr::EVROverlayError error = vr::VROverlay()->SetOverlayMouseScale(
+      pInstance->m_ulOverlayHandle, &vecWindowSize
+    );
+
+    if (error != vr::VROverlayError_None) {
+      DebugBreak();
+    }
+  }
+
+  pInstance->TryStartInputThread();
+  
+  while (!pInstance->m_fExitDrawThread) {
+    vr::VROverlayError e = pInstance->SetOverlayTexture(pInstance->m_hTex);
+    assert(e == vr::VROverlayError_None);
+    ::WaitForSingleObject(pInstance->m_hSignal, 5000);
+  }
+
+  ::ExitThread(0);
+}
+
+vr::VROverlayError OpenVRHelper::SetOverlayTexture(HANDLE hTex) {
+
+  vr::Texture_t overlayTextureDX11 = {
+    hTex,
+    vr::TextureType_DXGISharedHandle,
+    vr::ColorSpace_Gamma };
+
+  return vr::VROverlay()->SetOverlayTexture(this->m_ulOverlayHandle, &overlayTextureDX11);
+
 }
