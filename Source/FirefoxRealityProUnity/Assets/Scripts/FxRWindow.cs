@@ -63,7 +63,7 @@ public class FxRWindow : MonoBehaviour
         textureScaleV = (float)videoHeight / (float)textureHeight;
         //Debug.Log("Video texture coordinate scaling: " + textureScaleU + ", " + textureScaleV);
 
-        Texture2D vt = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
+        Texture2D vt = new Texture2D(textureWidth, textureHeight, TextureFormat.BGRA32, false);
         //vt = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false);
         vt.hideFlags = HideFlags.HideAndDontSave;
         vt.filterMode = FilterMode.Bilinear;

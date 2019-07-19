@@ -22,6 +22,7 @@
 static ID3D11Device* s_D3D11Device = nullptr;
 
 static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
+static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_debug\\dist\\bin\\vrhost.dll";
 static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_debug\\tmp\\profile-default";
 static HANDLE s_hThreadFxWin = nullptr;
 
@@ -110,7 +111,7 @@ FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format) :
 	m_format(format),
 	m_pixelSize(0)
 {
-  m_hVRHost = ::LoadLibrary(L"e:\\src4\\gecko_build_debug\\dist\\bin\\vrhost.dll");
+  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
   assert(m_hVRHost != nullptr);
 
   FxInit();
