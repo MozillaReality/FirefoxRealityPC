@@ -12,14 +12,16 @@ namespace Valve.VR.Extras
         public SteamVR_Action_Boolean interactWithUI = SteamVR_Input.GetBooleanAction("InteractUI");
 
         public bool active = true;
-        public Color color;
+        public Color color = new Color(0.0f, 0.8f, 1.0f, 0.8f);
         public float thickness = 0.002f;
-        public Color clickColor = Color.green;
-        public GameObject holder;
-        public GameObject pointer;
+        public Color clickColor = new Color(0.0f, 0.8f, 1.0f, 0.8f);
+        public Texture2D hitTargetTexture;
+        public float hitTargetRadius = 0.01f;
+        private GameObject hitTarget;
+        private GameObject holder;
+        private GameObject pointer;
         bool isActive = false;
         public bool addRigidBody = false;
-        public Transform reference;
         public event PointerEventHandler PointerIn;
         public event PointerEventHandler PointerOut;
         public event PointerEventHandler PointerClick;
@@ -36,14 +38,55 @@ namespace Valve.VR.Extras
             
             if (interactWithUI == null)
                 Debug.LogError("No ui interaction action has been set on this component.");
-            
 
-            holder = new GameObject();
+            // Create the hit target.
+            hitTarget = new GameObject("Hit target");
+            Shader shaderSource = Shader.Find("TextureOverlayNoLight");
+            Material mat = new Material(shaderSource);
+            mat.hideFlags = HideFlags.HideAndDontSave;
+            mat.mainTexture = hitTargetTexture;
+            Mesh m = new Mesh();
+            m.vertices = new Vector3[] {
+                new Vector3(-hitTargetRadius, -hitTargetRadius, 0.0f),
+                new Vector3( hitTargetRadius, -hitTargetRadius, 0.0f),
+                new Vector3( hitTargetRadius,  hitTargetRadius, 0.0f),
+                new Vector3(-hitTargetRadius,  hitTargetRadius, 0.0f),
+            };
+            m.normals = new Vector3[] {
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+            };
+            float u1 = 0.0f;
+            float u2 = 1.0f;
+            float v1 = 0.0f;
+            float v2 = 1.0f;
+            m.uv = new Vector2[] {
+                new Vector2(u1, v1),
+                new Vector2(u2, v1),
+                new Vector2(u2, v2),
+                new Vector2(u1, v2)
+            };
+            m.triangles = new int[] {
+                2, 1, 0,
+                3, 2, 0
+            };
+            MeshFilter filter = hitTarget.AddComponent<MeshFilter>();
+            filter.mesh = m;
+            MeshRenderer meshRenderer = hitTarget.AddComponent<MeshRenderer>();
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+            hitTarget.GetComponent<Renderer>().material = mat;
+            hitTarget.SetActive(false);
+
+            holder = new GameObject("Holder");
             holder.transform.parent = this.transform;
             holder.transform.localPosition = Vector3.zero;
             holder.transform.localRotation = Quaternion.identity;
 
             pointer = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            pointer.name = "Pointer";
             pointer.transform.parent = holder.transform;
             pointer.transform.localScale = new Vector3(thickness, thickness, 100f);
             pointer.transform.localPosition = new Vector3(0f, 0f, 50f);
@@ -126,10 +169,21 @@ namespace Valve.VR.Extras
             if (!bHit)
             {
                 previousContact = null;
+                hitTarget.SetActive(false);
             }
             if (bHit && hit.distance < 100f)
             {
                 dist = hit.distance;
+
+                hitTarget.transform.position = hit.point;
+                hitTarget.transform.rotation = Quaternion.LookRotation(-hit.normal);
+                hitTarget.SetActive(true);
+
+                //FxRWindow fxrWindow = hit.transform.gameObject.GetComponent(typeof(FxRWindow)) as FxrWindow;
+                //if (fxrWindow != null)
+                //{
+                //    fxrWindow.pointerHit(hit.textureCoord);
+                //}
             }
 
             if (bHit && interactWithUI.GetStateUp(pose.inputSource))
