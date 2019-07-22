@@ -16,7 +16,84 @@
 #include <d3d11.h>
 #include "IUnityGraphicsD3D11.h"
 
+#include <assert.h>
+#include <stdio.h>
+
 static ID3D11Device* s_D3D11Device = nullptr;
+
+static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
+static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_debug\\dist\\bin\\vrhost.dll";
+static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_debug\\tmp\\profile-default";
+static HANDLE s_hThreadFxWin = nullptr;
+
+// vrhost.dll Members
+static HINSTANCE m_hVRHost = nullptr;
+static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
+
+// Window/Process State for Host and Firefox
+static HANDLE m_hTex = nullptr;
+static ID3D11Texture2D* m_pTex = nullptr;
+static PROCESS_INFORMATION procInfoFx = { 0 };
+static HWND   m_hwndHost = nullptr;
+static UINT   m_vrWin = 0;
+static HANDLE m_hSignal = nullptr;
+
+DWORD FxRWindowDX11::FxWindowCreateInit(_In_ LPVOID lpParameter) {
+  FxRWindowDX11* pInstance = static_cast<FxRWindowDX11*>(lpParameter);
+
+  PFN_CREATEVRWINDOW lpfnCreate = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
+  uint64_t width;
+  uint64_t height;
+
+  lpfnCreate(&m_vrWin, &m_hTex, &m_hSignal, &width, &height);
+
+  ::ExitThread(0);
+}
+
+void  FxRWindowDX11::FxInit() {
+  assert(s_hThreadFxWin == nullptr);
+
+  DWORD dwTid = 0;
+  s_hThreadFxWin =
+    CreateThread(
+      nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+      0,        // SIZE_T dwStackSize,
+      FxRWindowDX11::FxWindowCreateInit,
+      this,  //__drv_aliasesMem LPVOID lpParameter,
+      0,     // DWORD dwCreationFlags,
+      &dwTid);
+  assert(s_hThreadFxWin != nullptr);
+
+  WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
+  int err = swprintf_s(
+    fxCmd,
+    ARRAYSIZE(fxCmd),
+    L"%s -wait-for-browser -profile %s --fxr",
+    s_pszFxPath,
+    s_pszFxProfile
+  );
+  assert(err > 0);
+
+  STARTUPINFO startupInfoFx = { 0 };
+  bool fCreateContentProc = ::CreateProcess(
+    nullptr,  // lpApplicationName,
+    fxCmd,
+    nullptr,  // lpProcessAttributes,
+    nullptr,  // lpThreadAttributes,
+    TRUE,     // bInheritHandles,
+    0,        // dwCreationFlags,
+    nullptr,  // lpEnvironment,
+    nullptr,  // lpCurrentDirectory,
+    &startupInfoFx,
+    &procInfoFx
+  );
+
+  assert(fCreateContentProc);
+
+  ::WaitForSingleObject(s_hThreadFxWin, INFINITE);
+  s_hThreadFxWin = nullptr;
+}
+
 
 void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
     IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
@@ -34,6 +111,14 @@ FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format) :
 	m_format(format),
 	m_pixelSize(0)
 {
+  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
+  assert(m_hVRHost != nullptr);
+
+  FxInit();
+
+  assert(m_hTex != nullptr);
+  assert(m_pTex == nullptr);
+
 	switch (format) {
 	case FxRTextureFormat_RGBA32:
 		m_pixelSize = 4;
@@ -90,68 +175,25 @@ void* FxRWindowDX11::getNativePtr() {
 	return m_texPtr;
 }
 
-void FxRWindowDX11::requestUpdate(float timeDelta) {
+void FxRWindowDX11::requestUpdate(float timeDelta) {  
+  HRESULT hr = S_OK;
+  if (m_pTex == nullptr) {
+    hr = s_D3D11Device->OpenSharedResource(
+      m_hTex,
+      IID_PPV_ARGS(&m_pTex)
+    );
+  }
 
-	// Auto-generate a dummy texture. A 100 x 100 square, oscillating in x dimension.
-	static int k = 0;
-	int i, j;
-	k++;
-	if (k > 100) k = -100;
-	memset(m_buf, 255, m_size.w * m_size.h * m_pixelSize); // Clear to white.
-	// Assumes RGBA32!
-	for (j = m_size.h / 2 - 50; j < m_size.h / 2 - 25; j++) {
-		for (i = m_size.w / 2 - 50 + k; i < m_size.w / 2 + 50 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = m_buf[(j*m_size.w + i) * 4 + 1] = m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-	}
-	for (j = m_size.h / 2 - 25; j < m_size.h / 2 + 25; j++) {
-		// Black bar (25 pixels wide).
-		for (i = m_size.w / 2 - 50 + k; i < m_size.w / 2 - 25 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = m_buf[(j*m_size.w + i) * 4 + 1] = m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-		// Red bar (17 pixels wide).
-		for (i = m_size.w / 2 - 25 + k; i < m_size.w / 2 - 8 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = 255; m_buf[(j*m_size.w + i) * 4 + 1] = m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-		// Green bar (16 pixels wide).
-		for (i = m_size.w / 2 - 8 + k; i < m_size.w / 2 + 8 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = 0; m_buf[(j*m_size.w + i) * 4 + 1] = 255; m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-		// Blue bar (17 pixels wide).
-		for (i = m_size.w / 2 + 8 + k; i < m_size.w / 2 + 25 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = m_buf[(j*m_size.w + i) * 4 + 1] = 0; m_buf[(j*m_size.w + i) * 4 + 2] = m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-		// Black bar (25 pixels wide).
-		for (i = m_size.w / 2 + 25 + k; i < m_size.w / 2 + 50 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = m_buf[(j*m_size.w + i) * 4 + 1] = m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-	}
-	for (j = m_size.h / 2 + 25; j < m_size.h / 2 + 50; j++) {
-		for (i = m_size.w / 2 - 50 + k; i < m_size.w / 2 + 50 + k; i++) {
-			m_buf[(j*m_size.w + i) * 4 + 0] = m_buf[(j*m_size.w + i) * 4 + 1] = m_buf[(j*m_size.w + i) * 4 + 2] = 0; m_buf[(j*m_size.w + i) * 4 + 3] = 255;
-		}
-	}
+  ID3D11DeviceContext* ctx = NULL;
+  s_D3D11Device->GetImmediateContext(&ctx);
 
-    ID3D11DeviceContext* ctx = NULL;
-    s_D3D11Device->GetImmediateContext(&ctx);
+  D3D11_TEXTURE2D_DESC descUnity = { 0 };
+  D3D11_TEXTURE2D_DESC descFxr = { 0 };
+  
+  m_pTex->GetDesc(&descFxr);
+  ((ID3D11Texture2D*)m_texPtr)->GetDesc(&descUnity);
 
-    // Could also do this here if we needed texture info:
-    //D3D11_TEXTURE2D_DESC desc;
-    //((ID3D11Texture2D*)m_texPtr)->GetDesc(&desc);
+  ctx->CopyResource((ID3D11Texture2D*)m_texPtr, m_pTex);
 
-#if 0
-    // Updating from a source smaller than the destination.
-    D3D11_BOX box;
-    box.front = 0;
-    box.back = 1;
-    box.left = 0;
-    box.right = m_size.w;
-    box.top = 0;
-    box.bottom = m_size.h;
-    ctx->UpdateSubresource((ID3D11Texture2D*)m_texPtr, 0, &box, m_buf, m_size.w * m_pixelSize, m_size.h * m_size.w * m_pixelSize);
-#else
-    ctx->UpdateSubresource((ID3D11Texture2D*)m_texPtr, 0, NULL, m_buf, m_size.w * m_pixelSize, m_size.h * m_size.w * m_pixelSize);
-#endif
-    ctx->Release();
-
+  ctx->Release();
 }
