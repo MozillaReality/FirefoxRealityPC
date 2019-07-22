@@ -1,4 +1,4 @@
-﻿Shader "VideoPlaneNoLight" {
+﻿Shader "TextureNoLight" {
 	Properties {
 		_Color ("Main Color", Color) = (1,1,1,1)
 		_MainTex ("Base (RGB)", 2D) = "white" { }
@@ -10,7 +10,7 @@
 			}
 			Lighting Off
 			ZWrite On
-			Blend SrcAlpha OneMinusSrcAlpha
+			Blend Off
 			SeparateSpecular Off
 			SetTexture [_MainTex] {
 				constantColor [_Color]

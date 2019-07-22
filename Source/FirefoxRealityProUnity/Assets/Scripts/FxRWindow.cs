@@ -121,7 +121,7 @@ public class FxRWindow : MonoBehaviour
         vmgo.layer = layer;
 
         // Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
-        Shader shaderSource = Shader.Find("VideoPlaneNoLight");
+        Shader shaderSource = Shader.Find("TextureNoLight");
         Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
         vm.hideFlags = HideFlags.HideAndDontSave;
         vm.mainTexture = vt;
@@ -167,6 +167,9 @@ public class FxRWindow : MonoBehaviour
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
         vmgo.GetComponent<Renderer>().material = vm;
+
+        MeshCollider vmc = vmgo.AddComponent<MeshCollider>();
+        vmc.sharedMesh = filter.sharedMesh;
 
         return vmgo;
     }
