@@ -38,5 +38,12 @@ public:
 	void requestUpdate(float timeDelta) override;
 
 	int format() override { return m_format; }
+
+	void pointerEnter() override;
+	void pointerExit() override;
+	void pointerOver(int x, int y) override;
+	void pointerPress(int x, int y) override;
+	void pointerRelease(int x, int y) override;
+
 };
 

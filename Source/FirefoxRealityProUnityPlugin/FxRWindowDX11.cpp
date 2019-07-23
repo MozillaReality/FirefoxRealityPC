@@ -15,6 +15,7 @@
 #include "fxr_unity_c.h"
 #include <d3d11.h>
 #include "IUnityGraphicsD3D11.h"
+#include "fxr_log.h"
 
 static ID3D11Device* s_D3D11Device = nullptr;
 
@@ -155,3 +156,24 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
     ctx->Release();
 
 }
+
+void FxRWindowDX11::pointerEnter() {
+	FXRLOGi("FxRWindowDX11::pointerEnter()\n");
+}
+
+void FxRWindowDX11::pointerExit() {
+	FXRLOGi("FxRWindowDX11::pointerExit()\n");
+}
+
+void FxRWindowDX11::pointerOver(int x, int y) {
+	FXRLOGi("FxRWindowDX11::pointerOver(%d, %d)\n", x, y);
+}
+
+void FxRWindowDX11::pointerPress(int x, int y) {
+	FXRLOGi("FxRWindowDX11::pointerPress(%d, %d)\n", x, y);
+}
+
+void FxRWindowDX11::pointerRelease(int x, int y) {
+	FXRLOGi("FxRWindowDX11::pointerRelease(%d, %d)\n", x, y);
+}
+

@@ -150,4 +150,16 @@ public class FxRPlugin
         GL.IssuePluginEvent(FxRPlugin_pinvoke.GetRenderEventFunc(), 1);
     }
 
+    public enum FxRPointerEventID {
+        Enter = 0,
+        Exit = 1,
+        Over = 2,
+        Press = 3,
+        Release = 4
+    };
+
+    public void fxrWindowPointerEvent(int windowIndex, FxRPointerEventID eventID, int windowX, int windowY)
+    {
+        FxRPlugin_pinvoke.fxrWindowPointerEvent(windowIndex, (int)eventID, windowX, windowY);
+    }
 }
