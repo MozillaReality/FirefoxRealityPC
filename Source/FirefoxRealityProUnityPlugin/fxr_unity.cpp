@@ -218,10 +218,36 @@ bool fxrSetWindowSize(int windowIndex, int width, int height)
 	return true;
 }
 
-FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
+void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
 {
 	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return;
 
 	if (!gWindow) return;
 	gWindow->requestUpdate(timeDelta);
+}
+
+void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY)
+{
+	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return;
+
+	if (!gWindow) return;
+	switch (eventID) {
+	case FxRPointerEventID_Enter:
+		gWindow->pointerEnter();
+		break;
+	case FxRPointerEventID_Exit:
+		gWindow->pointerExit();
+		break;
+	case FxRPointerEventID_Over:
+		gWindow->pointerOver(windowX, windowY);
+		break;
+	case FxRPointerEventID_Press:
+		gWindow->pointerPress(windowX, windowY);
+		break;
+	case FxRPointerEventID_Release:
+		gWindow->pointerRelease(windowX, windowY);
+		break;
+	default:
+		break;
+	}
 }

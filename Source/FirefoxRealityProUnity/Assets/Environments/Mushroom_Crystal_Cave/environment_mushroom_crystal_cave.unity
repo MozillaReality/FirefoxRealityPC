@@ -19378,13 +19378,12 @@ MonoBehaviour:
     actionPath: /actions/default/in/InteractUI
     needsReinit: 0
   active: 1
-  color: {r: 1, g: 1, b: 1, a: 0.7490196}
+  color: {r: 0, g: 0.8, b: 1, a: 0.8}
   thickness: 0.002
-  clickColor: {r: 0, g: 1, b: 0, a: 0.7490196}
-  holder: {fileID: 0}
-  pointer: {fileID: 0}
+  clickColor: {r: 0, g: 0.8, b: 1, a: 0.8}
+  hitTargetTexture: {fileID: 2800000, guid: 1872e2a696580814fa48e1ab7e83214e, type: 3}
+  hitTargetRadius: 0.015
   addRigidBody: 0
-  reference: {fileID: 0}
 --- !u!1 &1286886497
 GameObject:
   m_ObjectHideFlags: 0
@@ -24314,13 +24313,12 @@ MonoBehaviour:
     actionPath: /actions/default/in/InteractUI
     needsReinit: 0
   active: 1
-  color: {r: 1, g: 1, b: 1, a: 0.7490196}
+  color: {r: 0, g: 0.8, b: 1, a: 0.8}
   thickness: 0.002
-  clickColor: {r: 0, g: 1, b: 0, a: 0.7490196}
-  holder: {fileID: 0}
-  pointer: {fileID: 0}
+  clickColor: {r: 0, g: 0.8, b: 1, a: 0.8}
+  hitTargetTexture: {fileID: 2800000, guid: 1872e2a696580814fa48e1ab7e83214e, type: 3}
+  hitTargetRadius: 0.015
   addRigidBody: 0
-  reference: {fileID: 0}
 --- !u!1001 &1918932352
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -156,6 +156,16 @@ FXR_EXTERN bool fxrSetWindowSize(int windowIndex, int width, int height);
 
 FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
 
+enum {
+	FxRPointerEventID_Enter = 0,
+	FxRPointerEventID_Exit = 1,
+	FxRPointerEventID_Over = 2,
+	FxRPointerEventID_Press = 3,
+	FxRPointerEventID_Release = 4
+};
+
+FXR_EXTERN void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY);
+
 #ifdef __cplusplus
 }
 #endif

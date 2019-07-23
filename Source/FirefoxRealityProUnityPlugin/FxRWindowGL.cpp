@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "FxRWindowGL.h"
 #include "fxr_unity_c.h"
+#include "fxr_log.h"
 
 void FxRWindowGL::init() {
 #ifdef _WIN32
@@ -194,3 +195,24 @@ void FxRWindowGL::requestUpdate(float timeDelta) {
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
 	//glTexSubImage2D(GL_TEXTURE_RECTANGLE, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
 }
+
+void FxRWindowGL::pointerEnter() {
+	FXRLOGi("FxRWindowGL::pointerEnter()\n");
+}
+
+void FxRWindowGL::pointerExit() {
+	FXRLOGi("FxRWindowGL::pointerExit()\n");
+}
+
+void FxRWindowGL::pointerOver(int x, int y) {
+	FXRLOGi("FxRWindowGL::pointerOver(%d, %d)\n", x, y);
+}
+
+void FxRWindowGL::pointerPress(int x, int y) {
+	FXRLOGi("FxRWindowGL::pointerPress(%d, %d)\n", x, y);
+}
+
+void FxRWindowGL::pointerRelease(int x, int y) {
+	FXRLOGi("FxRWindowGL::pointerRelease(%d, %d)\n", x, y);
+}
+
