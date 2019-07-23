@@ -38,6 +38,9 @@ public static class FxRPlugin_pinvoke
     public static extern void fxrKeyEvent(int keyCode);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrSetOpenVRSessionPtr(IntPtr keyCode);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]

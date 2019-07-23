@@ -33,5 +33,11 @@ public:
 	virtual int format() = 0;
 	virtual void* getNativePtr() = 0;
 	virtual void requestUpdate(float timeDelta) = 0;
+
+	virtual void pointerEnter() = 0;
+	virtual void pointerExit() = 0;
+	virtual void pointerOver(int x, int y) = 0;
+	virtual void pointerPress(int x, int y) = 0;
+	virtual void pointerRelease(int x, int y) = 0;
 };
 
