@@ -32,7 +32,7 @@ private:
 	int m_format;
     int m_pixelSize;
 
-  static DWORD FxWindowCreateInit(_In_ LPVOID lpParameter);
+  static DWORD WINAPI FxWindowCreateInit(_In_ LPVOID lpParameter);
   void FxInit();
 
 public:
