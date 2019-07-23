@@ -6,8 +6,14 @@ public class FxRWindow : MonoBehaviour
 {
     public Vector2 InitialSize = new Vector2(4.0f, 2.25f);
     public Vector2Int  InitialVideoSize = new Vector2Int(1920, 1080);
+    public bool flipX = false;
+    public bool flipY = false;
+
     private Vector2 size;
     private Vector2Int videoSize;
+    private float textureScaleU;
+    private float textureScaleV;
+
     private GameObject _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
     private Texture2D _videoTexture = null;  // Texture object with the video image.
     public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
@@ -19,8 +25,6 @@ public class FxRWindow : MonoBehaviour
         size = InitialSize;
         videoSize = InitialVideoSize;
 
-        float textureScaleU;
-        float textureScaleV;
         _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, out textureScaleU, out textureScaleV);
 
         _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, size.x, size.y, 0);
@@ -33,6 +37,43 @@ public class FxRWindow : MonoBehaviour
     void Update()
     {
         fxr_plugin.fxrRequestWindowUpdate(_nativeWindowIndex, Time.deltaTime);
+    }
+
+    // Pointer events from FxRLaserPointer.
+    public void PointerEnter()
+    {
+        //Debug.Log("PointerEnter()");
+        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Enter, -1, -1);
+    }
+
+    public void PointerExit()
+    {
+        //Debug.Log("PointerExit()");
+        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Exit, -1, -1);
+    }
+
+    public void PointerOver(Vector2 texCoord)
+    {
+        int x = (int)(texCoord.x * videoSize.x);
+        int y = (int)(texCoord.y * videoSize.y);
+        //Debug.Log("PointerOver(" + x + ", " + y + ")");
+        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Over, x, y);
+    }
+
+    public void PointerPress(Vector2 texCoord)
+    {
+        int x = (int)(texCoord.x * videoSize.x);
+        int y = (int)(texCoord.y * videoSize.y);
+        //Debug.Log("PointerPress(" + x + ", " + y + ")");
+        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Press, x, y);
+    }
+
+    public void PointerRelease(Vector2 texCoord)
+    {
+        int x = (int)(texCoord.x * videoSize.x);
+        int y = (int)(texCoord.y * videoSize.y);
+        //Debug.Log("PointerRelease(" + x + ", " + y + ")");
+        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Release, x, y);
     }
 
     //
@@ -129,8 +170,6 @@ public class FxRWindow : MonoBehaviour
 
         // Now create a mesh appropriate for displaying the video, a mesh filter to instantiate that mesh,
         // and a mesh renderer to render the material on the instantiated mesh.
-        bool flipX = false;
-        bool flipY = false;
         Mesh m = new Mesh();
         m.Clear();
         m.vertices = new Vector3[] {
