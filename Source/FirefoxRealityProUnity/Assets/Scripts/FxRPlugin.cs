@@ -155,7 +155,8 @@ public class FxRPlugin
         Exit = 1,
         Over = 2,
         Press = 3,
-        Release = 4
+        Release = 4,
+        ScrollDiscrete = 5
     };
 
     public void fxrWindowPointerEvent(int windowIndex, FxRPointerEventID eventID, int windowX, int windowY)

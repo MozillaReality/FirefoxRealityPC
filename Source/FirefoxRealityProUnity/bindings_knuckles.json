@@ -1,5 +1,7 @@
 {
-   "app_key" : "application.generated.unity.steamvr.exe",
+   "action_manifest_version" : 0,
+   "alias_info" : {},
+   "app_key" : "application.generated.unity.firefoxrealityprounity.exe",
    "bindings" : {
       "/actions/buggy" : {
          "sources" : [
@@ -215,6 +217,24 @@
                   "force_release_threshold" : "0.01"
                },
                "path" : "/user/hand/right/input/pinch"
+            },
+            {
+               "inputs" : {
+                  "scroll" : {
+                     "output" : "/actions/default/in/scroll2d"
+                  }
+               },
+               "mode" : "scroll",
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "scroll" : {
+                     "output" : "/actions/default/in/scroll2d"
+                  }
+               },
+               "mode" : "scroll",
+               "path" : "/user/hand/right/input/trackpad"
             }
          ]
       },
@@ -259,7 +279,10 @@
          ]
       }
    },
+   "category" : "steamvr_input",
    "controller_type" : "knuckles",
    "description" : "",
-   "name" : "knuckles_default"
+   "name" : "My FirefoxRealityProUnity [Testing] configuration for Index Controller",
+   "options" : {},
+   "simulated_actions" : []
 }

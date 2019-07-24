@@ -89,6 +89,14 @@ namespace Valve.VR
             }
         }
         
+        public virtual SteamVR_Action_Vector2 Scroll2D
+        {
+            get
+            {
+                return SteamVR_Actions.default_Scroll2D;
+            }
+        }
+        
         public virtual SteamVR_Action_Vibration Haptic
         {
             get

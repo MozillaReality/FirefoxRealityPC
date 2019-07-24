@@ -76,6 +76,14 @@ public class FxRWindow : MonoBehaviour
         fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Release, x, y);
     }
 
+    public void PointerScrollDiscrete(Vector2 delta)
+    {
+        int x = (int)(delta.x);
+        int y = (int)(delta.y);
+        //Debug.Log("PointerScroll(" + x + ", " + y + ")");
+        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.ScrollDiscrete, x, y);
+    }
+
     //
     private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, out float textureScaleU, out float textureScaleV)
     {

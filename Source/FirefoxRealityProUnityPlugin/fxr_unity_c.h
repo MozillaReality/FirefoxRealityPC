@@ -161,7 +161,8 @@ enum {
 	FxRPointerEventID_Exit = 1,
 	FxRPointerEventID_Over = 2,
 	FxRPointerEventID_Press = 3,
-	FxRPointerEventID_Release = 4
+	FxRPointerEventID_Release = 4,
+	FxRPointerEventID_ScrollDiscrete = 5
 };
 
 FXR_EXTERN void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY);
