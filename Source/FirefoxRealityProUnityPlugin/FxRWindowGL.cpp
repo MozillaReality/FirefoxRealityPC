@@ -216,3 +216,6 @@ void FxRWindowGL::pointerRelease(int x, int y) {
 	FXRLOGi("FxRWindowGL::pointerRelease(%d, %d)\n", x, y);
 }
 
+void FxRWindowGL::pointerScrollDiscrete(int x, int y) {
+	FXRLOGi("FxRWindowGL::pointerScrollDiscrete(%d, %d)\n", x, y);
+}

@@ -51,6 +51,8 @@ public class FxRLaserPointer : MonoBehaviour
 
     //public SteamVR_Action_Boolean interactWithUI = SteamVR_Input.__actions_default_in_InteractUI;
     public SteamVR_Action_Boolean interactWithUI = SteamVR_Input.GetBooleanAction("InteractUI");
+    public SteamVR_Action_Vector2 scroll2D = SteamVR_Input.GetVector2Action("Scroll2D");
+
 
     public bool active = true;
     public Color color = new Color(0.0f, 0.8f, 1.0f, 0.8f);
@@ -79,7 +81,9 @@ public class FxRLaserPointer : MonoBehaviour
             Debug.LogError("No SteamVR_Behaviour_Pose component found on this object");
             
         if (interactWithUI == null)
-            Debug.LogError("No ui interaction action has been set on this component.");
+            Debug.LogError("No UI Interaction action has been set on this component.");
+        if (scroll2D == null)
+            Debug.LogError("No 2D scrolling action has been set on this component.");
 
         // Create the hit target.
         hitTarget = new GameObject("Hit target");
@@ -251,6 +255,8 @@ public class FxRLaserPointer : MonoBehaviour
             if (fxrWindow != null)
             {
                 fxrWindow.PointerOver(hit.textureCoord);
+                Vector2 scrollDelta = scroll2D.GetAxis(pose.inputSource);
+                if (scrollDelta != Vector2.zero) fxrWindow.PointerScrollDiscrete(scrollDelta);
             }
 
             if (interactWithUI.GetStateDown(pose.inputSource))

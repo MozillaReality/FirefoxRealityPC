@@ -208,7 +208,7 @@ void FxRWindowDX11::pointerExit() {
 }
 
 void FxRWindowDX11::pointerOver(int x, int y) {
-	FXRLOGi("FxRWindowDX11::pointerOver(%d, %d)\n", x, y);
+	//FXRLOGi("FxRWindowDX11::pointerOver(%d, %d)\n", x, y);
 }
 
 void FxRWindowDX11::pointerPress(int x, int y) {
@@ -219,3 +219,6 @@ void FxRWindowDX11::pointerRelease(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerRelease(%d, %d)\n", x, y);
 }
 
+void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
+	FXRLOGi("FxRWindowDX11::pointerScrollDiscrete(%d, %d)\n", x, y);
+}
