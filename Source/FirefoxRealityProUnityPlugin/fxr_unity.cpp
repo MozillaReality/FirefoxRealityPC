@@ -247,6 +247,9 @@ void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int window
 	case FxRPointerEventID_Release:
 		gWindow->pointerRelease(windowX, windowY);
 		break;
+	case FxRPointerEventID_ScrollDiscrete:
+		gWindow->pointerScrollDiscrete(windowX, windowY);
+		break;
 	default:
 		break;
 	}

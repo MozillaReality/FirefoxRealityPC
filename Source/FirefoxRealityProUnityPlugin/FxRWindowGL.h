@@ -47,5 +47,6 @@ public:
 	void pointerOver(int x, int y) override;
 	void pointerPress(int x, int y) override;
 	void pointerRelease(int x, int y) override;
+	void pointerScrollDiscrete(int x, int y) override;
 };
 
