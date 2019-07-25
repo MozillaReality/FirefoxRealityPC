@@ -18,6 +18,7 @@
 #include "FxRWindowDX11.h"
 #include "FxRWindowGL.h"
 #include <memory>
+#include <string>
 
 //
 // Unity low-level plugin interface.
@@ -32,6 +33,7 @@
 static IUnityInterfaces* s_UnityInterfaces = NULL;
 static IUnityGraphics* s_Graphics = NULL;
 static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
+static char *s_ResourcesPath = NULL;
 
 extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 {
@@ -146,6 +148,16 @@ bool fxrGetFxVersion(char *buffer, int length)
 	return false;
 }
 
+void fxrSetResourcesPath(const char *path)
+{
+	free(s_ResourcesPath);
+	s_ResourcesPath = NULL;
+	if (path && path[0]) {
+		s_ResourcesPath = strdup(path);
+		FXRLOGi("Resources path is '%s'.\n", s_ResourcesPath);
+	}
+}
+
 void fxrKeyEvent(int keyCode)
 {
 	FXRLOGi("Got keyCode %d.\n", keyCode);
@@ -172,9 +184,9 @@ int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightP
     FXRLOGi("fxrNewWindowFromTexture got texturePtr %p size %dx%d, format %d.\n", nativeTexturePtr, widthPixels, heightPixels, format);
     FxRWindow::Size size = {widthPixels, heightPixels};
     if (s_RendererType == kUnityGfxRendererD3D11) {
-        gWindow = std::make_unique<FxRWindowDX11>(size, nativeTexturePtr, format);
+        gWindow = std::make_unique<FxRWindowDX11>(size, nativeTexturePtr, format, std::string(s_ResourcesPath));
     } else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
-        gWindow = std::make_unique<FxRWindowGL>(size, nativeTexturePtr, format);
+        gWindow = std::make_unique<FxRWindowGL>(size, nativeTexturePtr, format, std::string(s_ResourcesPath));
     }
 	return (0);
 }
