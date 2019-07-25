@@ -97,6 +97,13 @@ void  FxRWindowDX11::FxInit() {
   s_hThreadFxWin = nullptr;
 }
 
+void FxRWindowDX11::FxClose() {
+  PFN_CLOSEVRWINDOW lpfnClose = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
+  lpfnClose(m_vrWin);
+
+  ::FreeLibrary(m_hVRHost);
+  m_hVRHost = nullptr;
+}
 
 void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
     IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
@@ -105,6 +112,8 @@ void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
 
 void FxRWindowDX11::finalize() {
     s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
+
+    FxClose();
 }
 
 FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::string& resourcesPath) :
