@@ -53,6 +53,11 @@ public class FxRPlugin
         else return "";
     }
 
+    public void fxrSetResourcesPath(string path)
+    {
+        FxRPlugin_pinvoke.fxrSetResourcesPath(path);
+    }
+
     public void fxrKeyEvent(int keyCode)
     {
         FxRPlugin_pinvoke.fxrKeyEvent(keyCode);

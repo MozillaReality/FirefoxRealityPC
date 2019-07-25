@@ -13,6 +13,7 @@
 #pragma once
 #include "FxRWindow.h"
 #include <cstdint>
+#include <string>
 
 class FxRWindowGL : public FxRWindow
 {
@@ -29,7 +30,7 @@ private:
 public:
 	static void init();
 	static void finalize();
-	FxRWindowGL(Size size, void* texPtr, int format);
+	FxRWindowGL(Size size, void* texPtr, int format, const std::string& resourcesPath);
 	~FxRWindowGL() ;
 
     RendererAPI rendererAPI() override {return RendererAPI::OpenGLCore;}

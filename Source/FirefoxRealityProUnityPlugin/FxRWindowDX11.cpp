@@ -28,7 +28,7 @@ void FxRWindowDX11::finalize() {
     s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format) :
+FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::string& resourcesPath) :
 	m_size(size),
 	m_texPtr(texPtr),
 	m_buf(NULL),

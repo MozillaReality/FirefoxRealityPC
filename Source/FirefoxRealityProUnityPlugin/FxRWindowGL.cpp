@@ -32,7 +32,7 @@ void FxRWindowGL::init() {
 void FxRWindowGL::finalize() {
 }
 
-FxRWindowGL::FxRWindowGL(Size size, void* texPtr, int format) :
+FxRWindowGL::FxRWindowGL(Size size, void* texPtr, int format, const std::string& resourcesPath) :
 	m_size(size),
 #pragma warning(disable:4302) // Disable truncation warnings, it's the desired behaviour.
 #pragma warning(disable:4311)

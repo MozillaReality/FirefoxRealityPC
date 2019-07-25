@@ -13,6 +13,7 @@
 #pragma once
 #include "FxRWindow.h"
 #include <cstdint>
+#include <string>
 #include "IUnityInterface.h"
 
 class FxRWindowDX11 : public FxRWindow
@@ -26,7 +27,7 @@ private:
 public:
 	static void init(IUnityInterfaces* unityInterfaces);
 	static void finalize();
-	FxRWindowDX11(Size size, void* texPtr, int format);
+	FxRWindowDX11(Size size, void* texPtr, int format, const std::string& resourcesPath);
 	~FxRWindowDX11() ;
 
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
