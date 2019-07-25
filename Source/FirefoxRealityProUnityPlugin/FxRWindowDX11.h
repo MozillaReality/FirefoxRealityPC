@@ -35,7 +35,7 @@ private:
   POINT m_ptLastPointer;
 
   static DWORD WINAPI FxWindowCreateInit(_In_ LPVOID lpParameter);
-  void FxInit();
+  void FxInit(const std::string& resourcesPath);
   static void FxClose();
 
   void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);

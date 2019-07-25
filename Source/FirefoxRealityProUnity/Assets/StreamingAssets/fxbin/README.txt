@@ -1,0 +1,1 @@
+This folder contains the build of Firefox that will be run with FirefoxReality

@@ -22,9 +22,19 @@
 
 static ID3D11Device* s_D3D11Device = nullptr;
 
+// For debugging scenarios, recommended to hard code paths to these files rather than
+// copying to StreamingAssets folder, which greatly slows down Unity IDE load and
+// generates many .meta files.
+//#define USE_HARDCODED_FX_PATHS 1
+#ifdef USE_HARDCODED_FX_PATHS
 static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
 static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\vrhost.dll";
 static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_release\\tmp\\profile-default";
+#else
+static WCHAR s_pszFxPath[MAX_PATH] = { 0 };
+static WCHAR s_pszVrHostPath[MAX_PATH] = { 0 };
+static WCHAR s_pszFxProfile[MAX_PATH] = { 0 };
+#endif
 static HANDLE s_hThreadFxWin = nullptr;
 
 // vrhost.dll Members
@@ -51,8 +61,43 @@ DWORD FxRWindowDX11::FxWindowCreateInit(_In_ LPVOID lpParameter) {
   ::ExitThread(0);
 }
 
-void  FxRWindowDX11::FxInit() {
+void  FxRWindowDX11::FxInit(const std::string& resourcesPath) {
   assert(s_hThreadFxWin == nullptr);
+  assert(m_hVRHost == nullptr);
+  
+  int err;
+#ifndef USE_HARDCODED_FX_PATHS
+  err = swprintf_s(
+    s_pszFxPath,
+    ARRAYSIZE(s_pszFxPath),
+    L"%S/%S",
+    resourcesPath.c_str(),
+    "fxbin/firefox.exe"
+  );
+  assert(err > 0);
+
+  err = swprintf_s(
+    s_pszVrHostPath,
+    ARRAYSIZE(s_pszVrHostPath),
+    L"%S/%S",
+    resourcesPath.c_str(),
+    "fxbin/vrhost.dll"
+  );
+  assert(err > 0);
+
+  err = swprintf_s(
+    s_pszFxProfile,
+    ARRAYSIZE(s_pszFxProfile),
+    L"%S/%S",
+    resourcesPath.c_str(),
+    "fxbin/fxr-profile"
+  );
+  assert(err > 0);
+#endif
+
+
+  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
+  assert(m_hVRHost != nullptr);
 
   m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
 
@@ -68,7 +113,7 @@ void  FxRWindowDX11::FxInit() {
   assert(s_hThreadFxWin != nullptr);
 
   WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
-  int err = swprintf_s(
+  err = swprintf_s(
     fxCmd,
     ARRAYSIZE(fxCmd),
     L"%s -wait-for-browser -profile %s --fxr",
@@ -123,10 +168,7 @@ FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::str
 	m_format(format),
 	m_pixelSize(0)
 {
-  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
-  assert(m_hVRHost != nullptr);
-
-  FxInit();
+  FxInit(resourcesPath);
 
   assert(m_hTex != nullptr);
   assert(m_pTex == nullptr);
