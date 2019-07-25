@@ -22,9 +22,19 @@
 
 static ID3D11Device* s_D3D11Device = nullptr;
 
+// For debugging scenarios, recommended to hard code paths to these files rather than
+// copying to StreamingAssets folder, which greatly slows down Unity IDE load and
+// generates many .meta files.
+//#define USE_HARDCODED_FX_PATHS 1
+#ifdef USE_HARDCODED_FX_PATHS
 static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
-static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_debug\\dist\\bin\\vrhost.dll";
-static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_debug\\tmp\\profile-default";
+static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\vrhost.dll";
+static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_release\\tmp\\profile-default";
+#else
+static WCHAR s_pszFxPath[MAX_PATH] = { 0 };
+static WCHAR s_pszVrHostPath[MAX_PATH] = { 0 };
+static WCHAR s_pszFxProfile[MAX_PATH] = { 0 };
+#endif
 static HANDLE s_hThreadFxWin = nullptr;
 
 // vrhost.dll Members
@@ -51,8 +61,45 @@ DWORD FxRWindowDX11::FxWindowCreateInit(_In_ LPVOID lpParameter) {
   ::ExitThread(0);
 }
 
-void  FxRWindowDX11::FxInit() {
+void  FxRWindowDX11::FxInit(const std::string& resourcesPath) {
   assert(s_hThreadFxWin == nullptr);
+  assert(m_hVRHost == nullptr);
+  
+  int err;
+#ifndef USE_HARDCODED_FX_PATHS
+  err = swprintf_s(
+    s_pszFxPath,
+    ARRAYSIZE(s_pszFxPath),
+    L"%S/%S",
+    resourcesPath.c_str(),
+    "fxbin/firefox.exe"
+  );
+  assert(err > 0);
+
+  err = swprintf_s(
+    s_pszVrHostPath,
+    ARRAYSIZE(s_pszVrHostPath),
+    L"%S/%S",
+    resourcesPath.c_str(),
+    "fxbin/vrhost.dll"
+  );
+  assert(err > 0);
+
+  err = swprintf_s(
+    s_pszFxProfile,
+    ARRAYSIZE(s_pszFxProfile),
+    L"%S/%S",
+    resourcesPath.c_str(),
+    "fxbin/fxr-profile"
+  );
+  assert(err > 0);
+#endif
+
+
+  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
+  assert(m_hVRHost != nullptr);
+
+  m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
 
   DWORD dwTid = 0;
   s_hThreadFxWin =
@@ -66,7 +113,7 @@ void  FxRWindowDX11::FxInit() {
   assert(s_hThreadFxWin != nullptr);
 
   WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
-  int err = swprintf_s(
+  err = swprintf_s(
     fxCmd,
     ARRAYSIZE(fxCmd),
     L"%s -wait-for-browser -profile %s --fxr",
@@ -95,6 +142,13 @@ void  FxRWindowDX11::FxInit() {
   s_hThreadFxWin = nullptr;
 }
 
+void FxRWindowDX11::FxClose() {
+  PFN_CLOSEVRWINDOW lpfnClose = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
+  lpfnClose(m_vrWin);
+
+  ::FreeLibrary(m_hVRHost);
+  m_hVRHost = nullptr;
+}
 
 void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
     IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
@@ -103,6 +157,8 @@ void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
 
 void FxRWindowDX11::finalize() {
     s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
+
+    FxClose();
 }
 
 FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::string& resourcesPath) :
@@ -112,10 +168,7 @@ FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::str
 	m_format(format),
 	m_pixelSize(0)
 {
-  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
-  assert(m_hVRHost != nullptr);
-
-  FxInit();
+  FxInit(resourcesPath);
 
   assert(m_hTex != nullptr);
   assert(m_pTex == nullptr);
@@ -199,6 +252,14 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
   ctx->Release();
 }
 
+void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
+  m_ptLastPointer.x = x;
+  m_ptLastPointer.y = y;
+ 
+  // Route this back to the Firefox window for processing
+  m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
+}
+
 void FxRWindowDX11::pointerEnter() {
 	FXRLOGi("FxRWindowDX11::pointerEnter()\n");
 }
@@ -209,16 +270,22 @@ void FxRWindowDX11::pointerExit() {
 
 void FxRWindowDX11::pointerOver(int x, int y) {
 	//FXRLOGi("FxRWindowDX11::pointerOver(%d, %d)\n", x, y);
+  ProcessPointerEvent(WM_MOUSEMOVE, x, y, 0);
 }
 
 void FxRWindowDX11::pointerPress(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerPress(%d, %d)\n", x, y);
+  ProcessPointerEvent(WM_LBUTTONDOWN, x, y, 0);
 }
 
 void FxRWindowDX11::pointerRelease(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerRelease(%d, %d)\n", x, y);
+  ProcessPointerEvent(WM_LBUTTONUP, x, y, 0);
 }
 
 void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerScrollDiscrete(%d, %d)\n", x, y);
+  
+  SHORT scrollDelta = WHEEL_DELTA * (SHORT)y;  
+  ProcessPointerEvent(WM_MOUSEWHEEL, m_ptLastPointer.x, m_ptLastPointer.y, scrollDelta);
 }

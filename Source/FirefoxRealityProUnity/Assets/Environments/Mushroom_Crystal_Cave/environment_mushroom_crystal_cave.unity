@@ -14587,6 +14587,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InitialSize: {x: 4, y: 2}
   InitialVideoSize: {x: 2048, y: 1024}
+  flipX: 0
+  flipY: 1
 --- !u!4 &1011347982
 Transform:
   m_ObjectHideFlags: 0
@@ -19377,10 +19379,14 @@ MonoBehaviour:
   interactWithUI:
     actionPath: /actions/default/in/InteractUI
     needsReinit: 0
+  scroll2D:
+    actionPath: /actions/default/in/Scroll2D
+    needsReinit: 0
   active: 1
   color: {r: 0, g: 0.8, b: 1, a: 0.8}
   thickness: 0.002
   clickColor: {r: 0, g: 0.8, b: 1, a: 0.8}
+  clickThicknesss: 0.0024
   hitTargetTexture: {fileID: 2800000, guid: 1872e2a696580814fa48e1ab7e83214e, type: 3}
   hitTargetRadius: 0.015
   addRigidBody: 0
@@ -24312,10 +24318,14 @@ MonoBehaviour:
   interactWithUI:
     actionPath: /actions/default/in/InteractUI
     needsReinit: 0
+  scroll2D:
+    actionPath: /actions/default/in/Scroll2D
+    needsReinit: 0
   active: 1
   color: {r: 0, g: 0.8, b: 1, a: 0.8}
   thickness: 0.002
   clickColor: {r: 0, g: 0.8, b: 1, a: 0.8}
+  clickThicknesss: 0.0024
   hitTargetTexture: {fileID: 2800000, guid: 1872e2a696580814fa48e1ab7e83214e, type: 3}
   hitTargetRadius: 0.015
   addRigidBody: 0

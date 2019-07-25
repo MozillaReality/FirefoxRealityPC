@@ -31,10 +31,14 @@ private:
 	void *m_texPtr;
 	uint8_t *m_buf;
 	int m_format;
-    int m_pixelSize;
+  int m_pixelSize;
+  POINT m_ptLastPointer;
 
-  static DWORD FxWindowCreateInit(_In_ LPVOID lpParameter);
-  void FxInit();
+  static DWORD WINAPI FxWindowCreateInit(_In_ LPVOID lpParameter);
+  void FxInit(const std::string& resourcesPath);
+  static void FxClose();
+
+  void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
 
 public:
 	static void init(IUnityInterfaces* unityInterfaces);
