@@ -61,6 +61,9 @@ public class FxRController : MonoBehaviour
                 break;
         }
 
+        // Give the plugin a place to look for resources.
+        fxr_plugin.fxrSetResourcesPath(Application.streamingAssetsPath);
+
         // Set the reference to the plugin in any other objects in the scene that need it.
         FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
         foreach (FxRWindow w in fxrwindows) {
