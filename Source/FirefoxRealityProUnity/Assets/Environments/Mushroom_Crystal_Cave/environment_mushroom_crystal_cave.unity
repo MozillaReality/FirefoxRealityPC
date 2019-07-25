@@ -14586,7 +14586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   InitialSize: {x: 4, y: 2}
-  InitialVideoSize: {x: 2048, y: 1024}
+  InitialVideoSize: {x: 1600, y: 800}
   flipX: 0
   flipY: 1
 --- !u!4 &1011347982
