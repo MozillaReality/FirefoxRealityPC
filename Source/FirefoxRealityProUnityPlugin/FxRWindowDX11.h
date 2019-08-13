@@ -19,8 +19,6 @@
 
 struct ID3D11Texture2D;
 
-typedef void(*PFN_CREATEVRWINDOW)(UINT* windowId, HANDLE* hTex, HANDLE* hEvt, uint64_t* width, uint64_t* height);
-typedef void(*PFN_CLOSEVRWINDOW)(UINT nVRWindow);
 typedef void(*PFN_SENDUIMESSAGE)(UINT nVRWindow, UINT msg, uint64_t wparam, uint64_t lparam);
 
 class FxRWindowDX11 : public FxRWindow
@@ -28,22 +26,21 @@ class FxRWindowDX11 : public FxRWindow
 private:
 
 	Size m_size;
-	void *m_texPtr;
+	void *m_unityTexPtr;
 	uint8_t *m_buf;
 	int m_format;
-  int m_pixelSize;
-  POINT m_ptLastPointer;
+	ID3D11Texture2D* m_fxTexPtr;
+    int m_pixelSize;
+	PFN_SENDUIMESSAGE m_pfnSendUIMessage;
+	UINT m_vrWin;
+    POINT m_ptLastPointer;
 
-  static DWORD WINAPI FxWindowCreateInit(_In_ LPVOID lpParameter);
-  void FxInit(const std::string& resourcesPath);
-  static void FxClose();
-
-  void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
+    void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
 
 public:
 	static void init(IUnityInterfaces* unityInterfaces);
 	static void finalize();
-	FxRWindowDX11(Size size, void* texPtr, int format, const std::string& resourcesPath);
+	FxRWindowDX11(Size size, void* texPtr, int format, HANDLE fxTexHandle, PFN_SENDUIMESSAGE pfnSendUIMessage, UINT vrWin);
 	~FxRWindowDX11() ;
 
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}

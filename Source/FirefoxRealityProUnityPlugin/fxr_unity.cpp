@@ -19,6 +19,7 @@
 #include "FxRWindowGL.h"
 #include <memory>
 #include <string>
+#include <assert.h>
 
 //
 // Unity low-level plugin interface.
@@ -34,6 +35,40 @@ static IUnityInterfaces* s_UnityInterfaces = NULL;
 static IUnityGraphics* s_Graphics = NULL;
 static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
 static char *s_ResourcesPath = NULL;
+
+// --------------------------------------------------------------------------
+// vrhost.dll
+
+typedef void(*PFN_CREATEVRWINDOW)(UINT* windowId, HANDLE* hTex, HANDLE* hEvt, uint64_t* width, uint64_t* height);
+typedef void(*PFN_CLOSEVRWINDOW)(UINT nVRWindow);
+
+// For debugging scenarios, recommended to hard code paths to these files rather than
+// copying to StreamingAssets folder, which greatly slows down Unity IDE load and
+// generates many .meta files.
+//#define USE_HARDCODED_FX_PATHS 1
+#ifdef USE_HARDCODED_FX_PATHS
+static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
+static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\vrhost.dll";
+static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_release\\tmp\\profile-default";
+#else
+static WCHAR s_pszFxPath[MAX_PATH] = { 0 };
+static WCHAR s_pszVrHostPath[MAX_PATH] = { 0 };
+static WCHAR s_pszFxProfile[MAX_PATH] = { 0 };
+#endif
+static HANDLE s_hThreadFxWin = nullptr;
+
+// vrhost.dll Members
+static HINSTANCE m_hVRHost = nullptr;
+static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
+
+// Window/Process State for Host and Firefox
+static HANDLE m_fxTexHandle = nullptr;
+static PROCESS_INFORMATION procInfoFx = { 0 };
+static HWND   m_hwndHost = nullptr;
+static UINT   m_vrWin = 0;
+static HANDLE m_hSignal = nullptr;
+
+// --------------------------------------------------------------------------
 
 extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 {
@@ -158,6 +193,95 @@ void fxrSetResourcesPath(const char *path)
 	}
 }
 
+static DWORD fxrStartFxCreateVRWindow(_In_ LPVOID lpParameter) {
+	//foo* pFoo = static_cast<foo*>(lpParameter);
+
+	PFN_CREATEVRWINDOW lpfnCreate = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
+	uint64_t width;
+	uint64_t height;
+
+	lpfnCreate(&m_vrWin, &m_fxTexHandle, &m_hSignal, &width, &height);
+
+	// TODO: Move FxRWindow instantiation to here.
+
+	::ExitThread(0);
+}
+
+void fxrStartFx(void)
+{
+	assert(s_hThreadFxWin == nullptr);
+	assert(m_hVRHost == nullptr);
+
+	int err;
+#ifndef USE_HARDCODED_FX_PATHS
+	err = swprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), L"%S/%S", s_ResourcesPath, "fxbin/firefox.exe");
+	assert(err > 0);
+	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "fxbin/vrhost.dll");
+	assert(err > 0);
+	err = swprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), L"%S/%S", s_ResourcesPath, "fxbin/fxr-profile");
+	assert(err > 0);
+#endif
+
+	m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
+	assert(m_hVRHost != nullptr);
+
+	m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
+
+	DWORD dwTid = 0;
+	s_hThreadFxWin =
+		CreateThread(
+			nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+			0,        // SIZE_T dwStackSize,
+			fxrStartFxCreateVRWindow,
+			nullptr,  //__drv_aliasesMem LPVOID lpParameter,
+			0,     // DWORD dwCreationFlags,
+			&dwTid);
+	assert(s_hThreadFxWin != nullptr);
+
+	WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
+	err = swprintf_s(
+		fxCmd,
+		ARRAYSIZE(fxCmd),
+		L"%s -wait-for-browser -profile %s --fxr",
+		s_pszFxPath,
+		s_pszFxProfile
+	);
+	assert(err > 0);
+
+	STARTUPINFO startupInfoFx = { 0 };
+	bool fCreateContentProc = ::CreateProcess(
+		nullptr,  // lpApplicationName,
+		fxCmd,
+		nullptr,  // lpProcessAttributes,
+		nullptr,  // lpThreadAttributes,
+		TRUE,     // bInheritHandles,
+		0,        // dwCreationFlags,
+		nullptr,  // lpEnvironment,
+		nullptr,  // lpCurrentDirectory,
+		&startupInfoFx,
+		&procInfoFx
+	);
+
+	assert(fCreateContentProc);
+
+	DWORD waitResult = ::WaitForSingleObject(s_hThreadFxWin, 10000); // 10 seconds
+	if (waitResult == WAIT_TIMEOUT) {
+		FXRLOGe("Gave up waiting for Firefox VR window.\n");
+	} else if (waitResult != WAIT_OBJECT_0) {
+		FXRLOGe("Error waiting for Firefox VR window.\n");
+	}
+	s_hThreadFxWin = nullptr;
+}
+
+void fxrStopFx()
+{
+	PFN_CLOSEVRWINDOW lpfnClose = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
+	lpfnClose(m_vrWin);
+
+	::FreeLibrary(m_hVRHost);
+	m_hVRHost = nullptr;
+}
+
 void fxrKeyEvent(int keyCode)
 {
 	FXRLOGi("Got keyCode %d.\n", keyCode);
@@ -184,9 +308,9 @@ int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightP
     FXRLOGi("fxrNewWindowFromTexture got texturePtr %p size %dx%d, format %d.\n", nativeTexturePtr, widthPixels, heightPixels, format);
     FxRWindow::Size size = {widthPixels, heightPixels};
     if (s_RendererType == kUnityGfxRendererD3D11) {
-        gWindow = std::make_unique<FxRWindowDX11>(size, nativeTexturePtr, format, std::string(s_ResourcesPath));
+        gWindow = std::make_unique<FxRWindowDX11>(size, nativeTexturePtr, format, m_fxTexHandle, m_pfnSendUIMessage, m_vrWin);
     } else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
-        gWindow = std::make_unique<FxRWindowGL>(size, nativeTexturePtr, format, std::string(s_ResourcesPath));
+        gWindow = std::make_unique<FxRWindowGL>(size, nativeTexturePtr, format);
     }
 	return (0);
 }

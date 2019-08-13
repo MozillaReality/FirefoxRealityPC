@@ -30,7 +30,7 @@ private:
 public:
 	static void init();
 	static void finalize();
-	FxRWindowGL(Size size, void* texPtr, int format, const std::string& resourcesPath);
+	FxRWindowGL(Size size, void* texPtr, int format);
 	~FxRWindowGL() ;
 
     RendererAPI rendererAPI() override {return RendererAPI::OpenGLCore;}

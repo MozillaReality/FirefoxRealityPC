@@ -22,156 +22,37 @@
 
 static ID3D11Device* s_D3D11Device = nullptr;
 
-// For debugging scenarios, recommended to hard code paths to these files rather than
-// copying to StreamingAssets folder, which greatly slows down Unity IDE load and
-// generates many .meta files.
-//#define USE_HARDCODED_FX_PATHS 1
-#ifdef USE_HARDCODED_FX_PATHS
-static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
-static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\vrhost.dll";
-static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_release\\tmp\\profile-default";
-#else
-static WCHAR s_pszFxPath[MAX_PATH] = { 0 };
-static WCHAR s_pszVrHostPath[MAX_PATH] = { 0 };
-static WCHAR s_pszFxProfile[MAX_PATH] = { 0 };
-#endif
-static HANDLE s_hThreadFxWin = nullptr;
-
-// vrhost.dll Members
-static HINSTANCE m_hVRHost = nullptr;
-static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
-
-// Window/Process State for Host and Firefox
-static HANDLE m_hTex = nullptr;
-static ID3D11Texture2D* m_pTex = nullptr;
-static PROCESS_INFORMATION procInfoFx = { 0 };
-static HWND   m_hwndHost = nullptr;
-static UINT   m_vrWin = 0;
-static HANDLE m_hSignal = nullptr;
-
-DWORD FxRWindowDX11::FxWindowCreateInit(_In_ LPVOID lpParameter) {
-  FxRWindowDX11* pInstance = static_cast<FxRWindowDX11*>(lpParameter);
-
-  PFN_CREATEVRWINDOW lpfnCreate = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
-  uint64_t width;
-  uint64_t height;
-
-  lpfnCreate(&m_vrWin, &m_hTex, &m_hSignal, &width, &height);
-
-  ::ExitThread(0);
-}
-
-void  FxRWindowDX11::FxInit(const std::string& resourcesPath) {
-  assert(s_hThreadFxWin == nullptr);
-  assert(m_hVRHost == nullptr);
-  
-  int err;
-#ifndef USE_HARDCODED_FX_PATHS
-  err = swprintf_s(
-    s_pszFxPath,
-    ARRAYSIZE(s_pszFxPath),
-    L"%S/%S",
-    resourcesPath.c_str(),
-    "fxbin/firefox.exe"
-  );
-  assert(err > 0);
-
-  err = swprintf_s(
-    s_pszVrHostPath,
-    ARRAYSIZE(s_pszVrHostPath),
-    L"%S/%S",
-    resourcesPath.c_str(),
-    "fxbin/vrhost.dll"
-  );
-  assert(err > 0);
-
-  err = swprintf_s(
-    s_pszFxProfile,
-    ARRAYSIZE(s_pszFxProfile),
-    L"%S/%S",
-    resourcesPath.c_str(),
-    "fxbin/fxr-profile"
-  );
-  assert(err > 0);
-#endif
-
-
-  m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
-  assert(m_hVRHost != nullptr);
-
-  m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
-
-  DWORD dwTid = 0;
-  s_hThreadFxWin =
-    CreateThread(
-      nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
-      0,        // SIZE_T dwStackSize,
-      FxRWindowDX11::FxWindowCreateInit,
-      this,  //__drv_aliasesMem LPVOID lpParameter,
-      0,     // DWORD dwCreationFlags,
-      &dwTid);
-  assert(s_hThreadFxWin != nullptr);
-
-  WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
-  err = swprintf_s(
-    fxCmd,
-    ARRAYSIZE(fxCmd),
-    L"%s -wait-for-browser -profile %s --fxr",
-    s_pszFxPath,
-    s_pszFxProfile
-  );
-  assert(err > 0);
-
-  STARTUPINFO startupInfoFx = { 0 };
-  bool fCreateContentProc = ::CreateProcess(
-    nullptr,  // lpApplicationName,
-    fxCmd,
-    nullptr,  // lpProcessAttributes,
-    nullptr,  // lpThreadAttributes,
-    TRUE,     // bInheritHandles,
-    0,        // dwCreationFlags,
-    nullptr,  // lpEnvironment,
-    nullptr,  // lpCurrentDirectory,
-    &startupInfoFx,
-    &procInfoFx
-  );
-
-  assert(fCreateContentProc);
-
-  ::WaitForSingleObject(s_hThreadFxWin, INFINITE);
-  s_hThreadFxWin = nullptr;
-}
-
-void FxRWindowDX11::FxClose() {
-  PFN_CLOSEVRWINDOW lpfnClose = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
-  lpfnClose(m_vrWin);
-
-  ::FreeLibrary(m_hVRHost);
-  m_hVRHost = nullptr;
-}
-
 void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
-    IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
-    s_D3D11Device = ud3d->GetDevice();
+	IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
+	s_D3D11Device = ud3d->GetDevice();
 }
 
 void FxRWindowDX11::finalize() {
-    s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
-
-    FxClose();
+	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::string& resourcesPath) :
+FxRWindowDX11::FxRWindowDX11(Size size, void *unityTexPtr, int format, HANDLE fxTexHandle, PFN_SENDUIMESSAGE pfnSendUIMessage, UINT vrWin) :
 	m_size(size),
-	m_texPtr(texPtr),
+	m_unityTexPtr(unityTexPtr),
 	m_buf(NULL),
 	m_format(format),
-	m_pixelSize(0)
+	m_pixelSize(0),
+	m_fxTexPtr(nullptr),
+	m_pfnSendUIMessage(pfnSendUIMessage),
+	m_vrWin(vrWin)
 {
-  FxInit(resourcesPath);
-
-  assert(m_hTex != nullptr);
-  assert(m_pTex == nullptr);
+	if (!fxTexHandle) {
+		FXRLOGw("Warning: Firefox texture handle is null.\n");
+	} else {
+		// Extract a pointer to the D3D texture from the shared handle.
+		HRESULT hr = s_D3D11Device->OpenSharedResource(
+			fxTexHandle,
+			IID_PPV_ARGS(&m_fxTexPtr)
+		);
+		if (hr != S_OK) {
+			FXRLOGe("Can't get pointer to Firefox texture from handle.\n");
+		}
+	}
 
 	switch (format) {
 	case FxRTextureFormat_RGBA32:
@@ -206,6 +87,8 @@ FxRWindowDX11::FxRWindowDX11(Size size, void *texPtr, int format, const std::str
 	}
 
 	setSize(size);
+	
+	// TODO: callback to Unity here.
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
@@ -226,38 +109,38 @@ void FxRWindowDX11::setSize(FxRWindow::Size size) {
 }
 
 void* FxRWindowDX11::getNativePtr() {
-	return m_texPtr;
+	return m_unityTexPtr;
 }
 
-void FxRWindowDX11::requestUpdate(float timeDelta) {  
-  HRESULT hr = S_OK;
-  if (m_pTex == nullptr) {
-    hr = s_D3D11Device->OpenSharedResource(
-      m_hTex,
-      IID_PPV_ARGS(&m_pTex)
-    );
-  }
+void FxRWindowDX11::requestUpdate(float timeDelta) {
 
-  ID3D11DeviceContext* ctx = NULL;
-  s_D3D11Device->GetImmediateContext(&ctx);
+	if (!m_fxTexPtr || !m_unityTexPtr) {
+		return;
+	}
 
-  D3D11_TEXTURE2D_DESC descUnity = { 0 };
-  D3D11_TEXTURE2D_DESC descFxr = { 0 };
-  
-  m_pTex->GetDesc(&descFxr);
-  ((ID3D11Texture2D*)m_texPtr)->GetDesc(&descUnity);
+	ID3D11DeviceContext* ctx = NULL;
+	s_D3D11Device->GetImmediateContext(&ctx);
 
-  ctx->CopyResource((ID3D11Texture2D*)m_texPtr, m_pTex);
+	D3D11_TEXTURE2D_DESC descUnity = { 0 };
+	D3D11_TEXTURE2D_DESC descFxr = { 0 };
 
-  ctx->Release();
+	m_fxTexPtr->GetDesc(&descFxr);
+	((ID3D11Texture2D*)m_unityTexPtr)->GetDesc(&descUnity);
+	if (descFxr.Width != descUnity.Width || descFxr.Height != descUnity.Height) {
+		FXRLOGe("Error: Unity and Firefox texture sizes do not match.\n");
+	} else {
+		ctx->CopyResource((ID3D11Texture2D*)m_unityTexPtr, m_fxTexPtr);
+	}
+
+	ctx->Release();
 }
 
 void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
-  m_ptLastPointer.x = x;
-  m_ptLastPointer.y = y;
- 
-  // Route this back to the Firefox window for processing
-  m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
+	m_ptLastPointer.x = x;
+	m_ptLastPointer.y = y;
+
+	// Route this back to the Firefox window for processing
+	m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
 }
 
 void FxRWindowDX11::pointerEnter() {
@@ -270,22 +153,22 @@ void FxRWindowDX11::pointerExit() {
 
 void FxRWindowDX11::pointerOver(int x, int y) {
 	//FXRLOGi("FxRWindowDX11::pointerOver(%d, %d)\n", x, y);
-  ProcessPointerEvent(WM_MOUSEMOVE, x, y, 0);
+	ProcessPointerEvent(WM_MOUSEMOVE, x, y, 0);
 }
 
 void FxRWindowDX11::pointerPress(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerPress(%d, %d)\n", x, y);
-  ProcessPointerEvent(WM_LBUTTONDOWN, x, y, 0);
+	ProcessPointerEvent(WM_LBUTTONDOWN, x, y, 0);
 }
 
 void FxRWindowDX11::pointerRelease(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerRelease(%d, %d)\n", x, y);
-  ProcessPointerEvent(WM_LBUTTONUP, x, y, 0);
+	ProcessPointerEvent(WM_LBUTTONUP, x, y, 0);
 }
 
 void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
 	FXRLOGi("FxRWindowDX11::pointerScrollDiscrete(%d, %d)\n", x, y);
-  
-  SHORT scrollDelta = WHEEL_DELTA * (SHORT)y;  
-  ProcessPointerEvent(WM_MOUSEWHEEL, m_ptLastPointer.x, m_ptLastPointer.y, scrollDelta);
+
+	SHORT scrollDelta = WHEEL_DELTA * (SHORT)y;
+	ProcessPointerEvent(WM_MOUSEWHEEL, m_ptLastPointer.x, m_ptLastPointer.y, scrollDelta);
 }

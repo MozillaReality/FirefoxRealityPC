@@ -82,6 +82,8 @@ public class FxRController : MonoBehaviour
             w.fxr_plugin = null;
         }
 
+        fxr_plugin.fxrSetResourcesPath(null);
+
         // Since we might be going away, tell users of our Log function
         // to stop calling it.
         switch (Application.platform)
@@ -117,6 +119,15 @@ public class FxRController : MonoBehaviour
         Debug.Log("FxRController.Start()");
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
+
+        fxr_plugin.fxrStartFx();
+    }
+
+    private void OnApplicationQuit()
+    {
+        Debug.Log("FxRController.OnApplicationQuit()");
+
+        fxr_plugin.fxrStopFx();
     }
 
     // Update is called once per frame

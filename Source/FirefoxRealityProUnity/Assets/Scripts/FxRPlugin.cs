@@ -20,6 +20,9 @@ using UnityEngine;
 // Delegate type declaration for log callback.
 public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] string msg);
 
+// Delegate type declaration for window size callback.
+public delegate void FxRPluginWindowSizeCallback(int windowIndex, int pixelWidth, int pixelHeight);
+
 public class FxRPlugin
 {
     // Delegate instance.
@@ -51,6 +54,16 @@ public class FxRPlugin
         bool ok = FxRPlugin_pinvoke.fxrGetFxVersion(sb, sb.Capacity);
         if (ok) return sb.ToString();
         else return "";
+    }
+
+    public void fxrStartFx()
+    {
+        FxRPlugin_pinvoke.fxrStartFx();
+    }
+
+    public void fxrStopFx()
+    {
+        FxRPlugin_pinvoke.fxrStopFx();
     }
 
     public void fxrSetResourcesPath(string path)
