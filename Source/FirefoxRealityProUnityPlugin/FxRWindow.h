@@ -13,6 +13,9 @@
 #pragma once
 class FxRWindow
 {
+protected:
+	FxRWindow(int index) : m_index(index) { }
+	int m_index;
 public:
 	virtual ~FxRWindow() {};
 
@@ -27,11 +30,13 @@ public:
 		int h;
 	};
 
+	int index() { return m_index; }
 	virtual RendererAPI rendererAPI() = 0;
 	virtual Size size() = 0;
 	virtual void setSize(Size size) = 0;
 	virtual int format() = 0;
-	virtual void* getNativePtr() = 0;
+	virtual void setNativePtr(void* texPtr) = 0;
+	virtual void* nativePtr() = 0;
 	virtual void requestUpdate(float timeDelta) = 0;
 
 	virtual void pointerEnter() = 0;
@@ -39,6 +44,6 @@ public:
 	virtual void pointerOver(int x, int y) = 0;
 	virtual void pointerPress(int x, int y) = 0;
 	virtual void pointerRelease(int x, int y) = 0;
-	virtual void pointerScrollDiscrete(int x, int y) = 0; // x and y are a discrete scroll count, e.g. count of mousewheel "clicks". 
+	virtual void pointerScrollDiscrete(int x, int y) = 0; // x and y are a discrete scroll count, e.g. count of mousewheel "clicks".
 };
 

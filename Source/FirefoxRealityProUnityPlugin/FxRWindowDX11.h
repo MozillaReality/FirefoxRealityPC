@@ -16,23 +16,23 @@
 #include <string>
 #include <Windows.h>
 #include "IUnityInterface.h"
+#include "vrhost.h"
+#include "fxr_unity_c.h"
 
 struct ID3D11Texture2D;
-
-typedef void(*PFN_SENDUIMESSAGE)(UINT nVRWindow, UINT msg, uint64_t wparam, uint64_t lparam);
 
 class FxRWindowDX11 : public FxRWindow
 {
 private:
 
-	Size m_size;
-	void *m_unityTexPtr;
-	uint8_t *m_buf;
-	int m_format;
-	ID3D11Texture2D* m_fxTexPtr;
-    int m_pixelSize;
+	PFN_CREATEVRWINDOW m_pfnCreateVRWindow;
 	PFN_SENDUIMESSAGE m_pfnSendUIMessage;
+	PFN_CLOSEVRWINDOW m_pfnCloseVRWindow;
 	UINT m_vrWin;
+	ID3D11Texture2D* m_fxTexPtr;
+	Size m_size;
+	int m_format;
+	void *m_unityTexPtr;
     POINT m_ptLastPointer;
 
     void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
@@ -40,13 +40,16 @@ private:
 public:
 	static void init(IUnityInterfaces* unityInterfaces);
 	static void finalize();
-	FxRWindowDX11(Size size, void* texPtr, int format, HANDLE fxTexHandle, PFN_SENDUIMESSAGE pfnSendUIMessage, UINT vrWin);
+	static DWORD CreateVRWindow(_In_ LPVOID lpParameter);
+
+	FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_WINDOWCREATEDCALLBACK windowCreatedCallback);
 	~FxRWindowDX11() ;
 
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
 	Size size() override;
 	void setSize(Size size) override;
-	void* getNativePtr() override;
+	void setNativePtr(void* texPtr) override;
+	void* nativePtr() override;
 
 	// Must be called from render thread.
 	void requestUpdate(float timeDelta) override;

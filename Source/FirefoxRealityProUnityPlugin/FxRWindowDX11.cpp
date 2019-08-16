@@ -22,6 +22,24 @@
 
 static ID3D11Device* s_D3D11Device = nullptr;
 
+struct CreateVRWindowParams {
+	PFN_CREATEVRWINDOW lpfnCreate;
+	UINT vrWin;
+	HANDLE fxTexHandle;
+	HANDLE hSignal;
+};
+
+DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
+	CreateVRWindowParams* pParams = static_cast<CreateVRWindowParams*>(lpParameter);
+
+	uint64_t width;
+	uint64_t height;
+
+	pParams->lpfnCreate(&pParams->vrWin, &pParams->fxTexHandle, &pParams->hSignal, &width, &height);
+	::ExitThread(0);
+}
+
+
 void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
 	IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
 	s_D3D11Device = ud3d->GetDevice();
@@ -31,16 +49,42 @@ void FxRWindowDX11::finalize() {
 	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(Size size, void *unityTexPtr, int format, HANDLE fxTexHandle, PFN_SENDUIMESSAGE pfnSendUIMessage, UINT vrWin) :
-	m_size(size),
-	m_unityTexPtr(unityTexPtr),
-	m_buf(NULL),
-	m_format(format),
-	m_pixelSize(0),
-	m_fxTexPtr(nullptr),
+FxRWindowDX11::FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) :
+	FxRWindow(index),
+	m_pfnCreateVRWindow(pfnCreateVRWindow),
 	m_pfnSendUIMessage(pfnSendUIMessage),
-	m_vrWin(vrWin)
+	m_pfnCloseVRWindow(pfnCloseVRWindow),
+	m_vrWin(0),
+	m_fxTexPtr(nullptr),
+	m_size({0, 0}),
+	m_format(FxRTextureFormat_Invalid),
+	m_unityTexPtr(nullptr)
 {
+	CreateVRWindowParams* pParams = new CreateVRWindowParams;
+	pParams->lpfnCreate = pfnCreateVRWindow;
+
+	DWORD dwTid = 0;
+	HANDLE hThreadFxWin =
+		CreateThread(
+			nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+			0,        // SIZE_T dwStackSize,
+			CreateVRWindow,
+			pParams,  //__drv_aliasesMem LPVOID lpParameter,
+			0,     // DWORD dwCreationFlags,
+			&dwTid);
+	assert(hThreadFxWin != nullptr);
+
+	HANDLE fxTexHandle = nullptr;
+	DWORD waitResult = ::WaitForSingleObject(hThreadFxWin, 10000); // 10 seconds
+	if (waitResult == WAIT_TIMEOUT) {
+		FXRLOGe("Gave up waiting for Firefox VR window.\n");
+	} else if (waitResult != WAIT_OBJECT_0) {
+		FXRLOGe("Error waiting for Firefox VR window.\n");
+	} else {
+		m_vrWin = pParams->vrWin;
+		fxTexHandle = pParams->fxTexHandle;
+	}
+
 	if (!fxTexHandle) {
 		FXRLOGw("Warning: Firefox texture handle is null.\n");
 	} else {
@@ -51,51 +95,40 @@ FxRWindowDX11::FxRWindowDX11(Size size, void *unityTexPtr, int format, HANDLE fx
 		);
 		if (hr != S_OK) {
 			FXRLOGe("Can't get pointer to Firefox texture from handle.\n");
+		} else {
+			D3D11_TEXTURE2D_DESC descFxr = { 0 };
+			m_fxTexPtr->GetDesc(&descFxr);
+            m_size = Size({(int)descFxr.Width, (int)descFxr.Height});
+            switch (descFxr.Format) {
+				case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+				case DXGI_FORMAT_R8G8B8A8_UNORM:
+				case DXGI_FORMAT_R8G8B8A8_UINT:
+					m_format = FxRTextureFormat_RGBA32;
+					break;
+				case DXGI_FORMAT_B8G8R8A8_UNORM:
+				case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+					m_format = FxRTextureFormat_BGRA32;
+					break;
+				case DXGI_FORMAT_B4G4R4A4_UNORM:
+					m_format = FxRTextureFormat_RGBA4444;
+					break;
+				case DXGI_FORMAT_B5G6R5_UNORM:
+					m_format = FxRTextureFormat_RGB565;
+					break;
+				case DXGI_FORMAT_B5G5R5A1_UNORM:
+					m_format = FxRTextureFormat_RGBA5551;
+					break;
+				default:
+					m_format = FxRTextureFormat_Invalid;
+			}
+
+			if (windowCreatedCallback) (*windowCreatedCallback)(m_index, m_size.w, m_size.h, m_format);
 		}
 	}
-
-	switch (format) {
-	case FxRTextureFormat_RGBA32:
-		m_pixelSize = 4;
-		break;
-	case FxRTextureFormat_BGRA32:
-		m_pixelSize = 4;
-		break;
-	case FxRTextureFormat_ARGB32:
-		m_pixelSize = 4;
-		break;
-	case FxRTextureFormat_ABGR32:
-		m_pixelSize = 4;
-		break;
-	case FxRTextureFormat_RGB24:
-		m_pixelSize = 3;
-		break;
-	case FxRTextureFormat_BGR24:
-		m_pixelSize = 3;
-		break;
-	case FxRTextureFormat_RGBA4444:
-		m_pixelSize = 2;
-		break;
-	case FxRTextureFormat_RGBA5551:
-		m_pixelSize = 2;
-		break;
-	case FxRTextureFormat_RGB565:
-		m_pixelSize = 2;
-		break;
-	default:
-		break;
-	}
-
-	setSize(size);
-	
-	// TODO: callback to Unity here.
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
-	if (m_buf) {
-		free(m_buf);
-		m_buf = NULL;
-	}
+	m_pfnCloseVRWindow(m_vrWin);
 }
 
 FxRWindow::Size FxRWindowDX11::size() {
@@ -103,12 +136,14 @@ FxRWindow::Size FxRWindowDX11::size() {
 }
 
 void FxRWindowDX11::setSize(FxRWindow::Size size) {
-	m_size = size;
-	if (m_buf) free(m_buf);
-	m_buf = (uint8_t *)calloc(1, m_size.w * m_size.h * m_pixelSize);
+	// TODO: request change in the Firefox VR window size.
 }
 
-void* FxRWindowDX11::getNativePtr() {
+void FxRWindowDX11::setNativePtr(void* texPtr) {
+	m_unityTexPtr = texPtr;
+}
+
+void* FxRWindowDX11::nativePtr() {
 	return m_unityTexPtr;
 }
 
@@ -127,7 +162,7 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
 	m_fxTexPtr->GetDesc(&descFxr);
 	((ID3D11Texture2D*)m_unityTexPtr)->GetDesc(&descUnity);
 	if (descFxr.Width != descUnity.Width || descFxr.Height != descUnity.Height) {
-		FXRLOGe("Error: Unity and Firefox texture sizes do not match.\n");
+		FXRLOGe("Error: Unity texture size %dx%d does not match Firefox texture size %dx%d.\n", descUnity.Width, descUnity.Height, descFxr.Width, descFxr.Height);
 	} else {
 		ctx->CopyResource((ID3D11Texture2D*)m_unityTexPtr, m_fxTexPtr);
 	}

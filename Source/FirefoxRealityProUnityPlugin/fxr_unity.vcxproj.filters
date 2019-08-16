@@ -50,6 +50,9 @@
     <ClInclude Include="FxRWindowDX11.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vrhost.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin_pinvoke.cs" />

@@ -32,22 +32,18 @@ void FxRWindowGL::init() {
 void FxRWindowGL::finalize() {
 }
 
-FxRWindowGL::FxRWindowGL(Size size, void* texPtr, int format) :
+FxRWindowGL::FxRWindowGL(int index, Size size) :
+	FxRWindow(index),
 	m_size(size),
-#pragma warning(disable:4302) // Disable truncation warnings, it's the desired behaviour.
-#pragma warning(disable:4311)
-	m_texID((uint32_t)texPtr),
-#pragma warning(default:4302)
-#pragma warning(default:4311)
-    m_generatedTex(false),
+	m_texID(0),
 	m_buf(NULL),
-	m_format(format),
+	m_format(FxRTextureFormat_BGRA32),
 	m_pixelIntFormatGL(0),
 	m_pixelFormatGL(0),
 	m_pixelTypeGL(0),
 	m_pixelSize(0)
 {
-	switch (format) {
+	switch (m_format) {
 	case FxRTextureFormat_RGBA32:
 		m_pixelIntFormatGL = GL_RGBA;
 		m_pixelFormatGL = GL_RGBA;
@@ -110,11 +106,6 @@ FxRWindowGL::FxRWindowGL(Size size, void* texPtr, int format) :
 }
 
 FxRWindowGL::~FxRWindowGL() {
-	if (m_generatedTex) {
-		glDeleteTextures(1, &m_texID);
-		m_texID = 0;
-		m_generatedTex = false;
-	}
 	if (m_buf) {
 		free(m_buf);
 		m_buf = NULL;
@@ -131,7 +122,15 @@ void FxRWindowGL::setSize(FxRWindow::Size size) {
 	m_buf = (uint8_t *)calloc(1, m_size.w * m_size.h * m_pixelSize);
 }
 
-void* FxRWindowGL::getNativePtr() {
+void FxRWindowGL::setNativePtr(void* texPtr) {
+#pragma warning(disable:4302) // Disable truncation warnings, it's the desired behaviour.
+#pragma warning(disable:4311)
+	m_texID = (uint32_t)texPtr;
+#pragma warning(default:4302)
+#pragma warning(default:4311)
+}
+
+void* FxRWindowGL::nativePtr() {
 #pragma warning(disable:4312) // Disable size-extension warning, it's the desired behaviour.
 	return (void *)m_texID;
 #pragma warning(default:4312)
