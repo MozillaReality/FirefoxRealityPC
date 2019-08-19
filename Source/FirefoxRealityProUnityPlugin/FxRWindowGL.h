@@ -20,7 +20,6 @@ class FxRWindowGL : public FxRWindow
 private:
 	Size m_size;
 	uint32_t m_texID;
-	bool m_generatedTex;
 	uint8_t *m_buf;
 	int m_format;
 	uint32_t m_pixelIntFormatGL;
@@ -28,15 +27,17 @@ private:
 	uint32_t m_pixelTypeGL;
 	uint32_t m_pixelSize;
 public:
-	static void init();
-	static void finalize();
-	FxRWindowGL(Size size, void* texPtr, int format, const std::string& resourcesPath);
+	static void initDevice();
+	static void finalizeDevice();
+	FxRWindowGL(int uid, int uidExt, Size size);
 	~FxRWindowGL() ;
 
+	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::OpenGLCore;}
 	Size size() override;
 	void setSize(Size size) override;
-	void* getNativePtr() override;
+	void setNativePtr(void* texPtr) override;
+	void* nativePtr() override;
 
 	// Must be called from render thread.
 	void requestUpdate(float timeDelta) override;

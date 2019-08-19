@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2019- Mozilla, Inc.
 //
-// Author(s): Philip Lamb
+// Author(s): Philip Lamb, Thomas Moore
 //
 // Implementations of plugin interfaces which are invoked from Unity via P/Invoke.
 //
@@ -19,6 +19,10 @@
 #include "FxRWindowGL.h"
 #include <memory>
 #include <string>
+#include <assert.h>
+#include <map>
+
+#include "vrhost.h"
 
 //
 // Unity low-level plugin interface.
@@ -34,6 +38,34 @@ static IUnityInterfaces* s_UnityInterfaces = NULL;
 static IUnityGraphics* s_Graphics = NULL;
 static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
 static char *s_ResourcesPath = NULL;
+
+// --------------------------------------------------------------------------
+// vrhost.dll
+
+// For debugging scenarios, recommended to hard code paths to these files rather than
+// copying to StreamingAssets folder, which greatly slows down Unity IDE load and
+// generates many .meta files.
+//#define USE_HARDCODED_FX_PATHS 1
+#ifdef USE_HARDCODED_FX_PATHS
+static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox.exe";
+static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\vrhost.dll";
+static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_release\\tmp\\profile-default";
+#else
+static WCHAR s_pszFxPath[MAX_PATH] = { 0 };
+static WCHAR s_pszVrHostPath[MAX_PATH] = { 0 };
+static WCHAR s_pszFxProfile[MAX_PATH] = { 0 };
+#endif
+static HINSTANCE m_hVRHost = nullptr;
+static PFN_CREATEVRWINDOW m_pfnCreateVRWindow = nullptr;
+static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
+static PFN_CLOSEVRWINDOW m_pfnCloseVRWindow = nullptr;
+static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
+static PROCESS_INFORMATION procInfoFx = { 0 };
+
+static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
+static int s_windowIndexNext = 1;
+
+// --------------------------------------------------------------------------
 
 extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 {
@@ -61,11 +93,11 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
 				FXRLOGi("Using DirectX 11 renderer.\n");
-                FxRWindowDX11::init(s_UnityInterfaces);
+                FxRWindowDX11::initDevice(s_UnityInterfaces);
 				break;
 			case kUnityGfxRendererOpenGLCore:
 				FXRLOGi("Using OpenGL renderer.\n");
-				FxRWindowGL::init();
+				FxRWindowGL::initDevice();
 				break;
 			default:
 				FXRLOGe("Unsupported renderer.\n");
@@ -77,16 +109,25 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 		{
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
-                FxRWindowDX11::finalize();
+                FxRWindowDX11::finalizeDevice();
 				break;
 			case kUnityGfxRendererOpenGLCore:
-				FxRWindowGL::finalize();
+				FxRWindowGL::finalizeDevice();
 				break;
 			}
 			s_RendererType = kUnityGfxRendererNull;
 			break;
 		}
 	};
+}
+
+static int s_RenderEventFunc1Param_windowIndex = 0;
+static float s_RenderEventFunc1Param_timeDelta = 0.0f;
+
+void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta)
+{
+	s_RenderEventFunc1Param_windowIndex = windowIndex;
+	s_RenderEventFunc1Param_timeDelta = timeDelta;
 }
 
 static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
@@ -104,7 +145,7 @@ static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
 
 	switch (eventID) {
 	case 1:
-		fxrRequestWindowUpdate(0, 0.0f);
+		fxrRequestWindowUpdate(s_RenderEventFunc1Param_windowIndex, s_RenderEventFunc1Param_timeDelta);
 		break;
 	default:
 		break;
@@ -122,12 +163,9 @@ extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRen
 // FxR plugin implementation.
 //
 
-
-static std::unique_ptr<FxRWindow> gWindow = nullptr;
-
-void fxrRegisterLogCallback(PFN_LOGCALLBACK callback)
+void fxrRegisterLogCallback(PFN_LOGCALLBACK logCallback)
 {
-	fxrLogSetLogger(callback, 1); // 1 -> only callback on same thread, as required e.g. by C# interop.
+	fxrLogSetLogger(logCallback, 1); // 1 -> only callback on same thread, as required e.g. by C# interop.
 }
 
 void fxrSetLogLevel(const int logLevel)
@@ -158,6 +196,65 @@ void fxrSetResourcesPath(const char *path)
 	}
 }
 
+void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
+{
+	assert(s_hThreadFxWin == nullptr);
+	assert(m_hVRHost == nullptr);
+
+	int err;
+#ifndef USE_HARDCODED_FX_PATHS
+	err = swprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), L"%S/%S", s_ResourcesPath, "fxbin/firefox.exe");
+	assert(err > 0);
+	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "fxbin/vrhost.dll");
+	assert(err > 0);
+	err = swprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), L"%S/%S", s_ResourcesPath, "fxbin/fxr-profile");
+	assert(err > 0);
+#endif
+
+	m_hVRHost = ::LoadLibrary(s_pszVrHostPath);
+	assert(m_hVRHost != nullptr);
+
+	m_pfnCreateVRWindow = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
+	m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
+	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
+
+	WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
+	err = swprintf_s(
+		fxCmd,
+		ARRAYSIZE(fxCmd),
+		L"%s -wait-for-browser -profile %s --fxr",
+		s_pszFxPath,
+		s_pszFxProfile
+	);
+	assert(err > 0);
+
+	STARTUPINFO startupInfoFx = { 0 };
+	bool fCreateContentProc = ::CreateProcess(
+		nullptr,  // lpApplicationName,
+		fxCmd,
+		nullptr,  // lpProcessAttributes,
+		nullptr,  // lpThreadAttributes,
+		TRUE,     // bInheritHandles,
+		0,        // dwCreationFlags,
+		nullptr,  // lpEnvironment,
+		nullptr,  // lpCurrentDirectory,
+		&startupInfoFx,
+		&procInfoFx
+	);
+
+	assert(fCreateContentProc);
+
+	m_windowCreatedCallback = windowCreatedCallback;
+}
+
+void fxrStopFx()
+{
+	m_windowCreatedCallback = nullptr;
+
+	::FreeLibrary(m_hVRHost);
+	m_hVRHost = nullptr;
+}
+
 void fxrKeyEvent(int keyCode)
 {
 	FXRLOGi("Got keyCode %d.\n", keyCode);
@@ -170,97 +267,115 @@ void fxrSetOpenVRSessionPtr(void *p)
 
 int fxrGetWindowCount(void)
 {
-	if (gWindow) return 1;
-	return 0;
+	return (int)s_windows.size();
 }
 
-int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightPixels, int format)
+bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsRequested)
+{
+	std::unique_ptr<FxRWindow> window;
+	if (s_RendererType == kUnityGfxRendererD3D11) {
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnCloseVRWindow);
+	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
+		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
+	}
+	auto inserted = s_windows.emplace(window->uid(), move(window));
+	if (!inserted.second || !inserted.first->second->init(m_windowCreatedCallback)) {
+		FXRLOGe("Error initing window.\n");
+		return false;
+	}
+	return true;
+}
+
+bool fxrSetWindowUnityTextureID(int windowIndex, void *nativeTexturePtr)
 {
     if (s_RendererType != kUnityGfxRendererD3D11 && s_RendererType != kUnityGfxRendererOpenGLCore) {
         FXRLOGe("Unsupported renderer.\n");
-        return -1;
+        return false;
     }
    
-    FXRLOGi("fxrNewWindowFromTexture got texturePtr %p size %dx%d, format %d.\n", nativeTexturePtr, widthPixels, heightPixels, format);
-    FxRWindow::Size size = {widthPixels, heightPixels};
-    if (s_RendererType == kUnityGfxRendererD3D11) {
-        gWindow = std::make_unique<FxRWindowDX11>(size, nativeTexturePtr, format, std::string(s_ResourcesPath));
-    } else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
-        gWindow = std::make_unique<FxRWindowGL>(size, nativeTexturePtr, format, std::string(s_ResourcesPath));
-    }
-	return (0);
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) {
+		FXRLOGe("Requested to set unity texture ID for non-existent window with index %d.\n", windowIndex);
+		return false;
+	}
+
+	window_iter->second->setNativePtr(nativeTexturePtr);
+	FXRLOGi("fxrSetWindowUnityTextureID set texturePtr %p.\n", nativeTexturePtr);
+	return true;
 }
 
 bool fxrCloseWindow(int windowIndex)
 {
-	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return false;
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) return false;
 	
-	if (!gWindow) return false;
-	gWindow = nullptr;
+	s_windows.erase(window_iter);
 	return true;
 }
 
 bool fxrCloseAllWindows(void)
 {
-	gWindow = nullptr;
+	s_windows.clear();
 	return true;
 }
 
 bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p)
 {
-	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return false;
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) return false;
 
-	if (!gWindow) return false;
-	FxRWindow::Size size = gWindow->size();
+	FxRWindow::Size size = window_iter->second->size();
 	if (width) *width = size.w;
 	if (height) *height = size.h;
-	if (format) *format = gWindow->format();
+	if (format) *format = window_iter->second->format();
 	if (mipChain) *mipChain = false;
 	if (linear) *linear = true;
-	if (nativeTextureID_p) *nativeTextureID_p = gWindow->getNativePtr();
+	if (nativeTextureID_p) *nativeTextureID_p = window_iter->second->nativePtr();
 	return true;
 }
 
 bool fxrSetWindowSize(int windowIndex, int width, int height)
 {
-	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return false;
-
-	if (!gWindow) return false;
-	gWindow->setSize({width, height});
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) return false;
+	
+	window_iter->second->setSize({ width, height });
 	return true;
 }
 
 void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
 {
-	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return;
-
-	if (!gWindow) return;
-	gWindow->requestUpdate(timeDelta);
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) {
+		FXRLOGe("Requested update for non-existent window with index %d.\n", windowIndex);
+		return;
+	}
+	window_iter->second->requestUpdate(timeDelta);
 }
 
 void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY)
 {
-	if (windowIndex < 0 || windowIndex >= fxrGetWindowCount()) return;
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) return;
 
-	if (!gWindow) return;
 	switch (eventID) {
 	case FxRPointerEventID_Enter:
-		gWindow->pointerEnter();
+		window_iter->second->pointerEnter();
 		break;
 	case FxRPointerEventID_Exit:
-		gWindow->pointerExit();
+		window_iter->second->pointerExit();
 		break;
 	case FxRPointerEventID_Over:
-		gWindow->pointerOver(windowX, windowY);
+		window_iter->second->pointerOver(windowX, windowY);
 		break;
 	case FxRPointerEventID_Press:
-		gWindow->pointerPress(windowX, windowY);
+		window_iter->second->pointerPress(windowX, windowY);
 		break;
 	case FxRPointerEventID_Release:
-		gWindow->pointerRelease(windowX, windowY);
+		window_iter->second->pointerRelease(windowX, windowY);
 		break;
 	case FxRPointerEventID_ScrollDiscrete:
-		gWindow->pointerScrollDiscrete(windowX, windowY);
+		window_iter->second->pointerScrollDiscrete(windowX, windowY);
 		break;
 	default:
 		break;

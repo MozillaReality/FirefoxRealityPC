@@ -114,12 +114,14 @@ enum  {
 
 typedef void (FXR_CALLBACK *PFN_LOGCALLBACK)(const char* msg);
 
+typedef void (FXR_CALLBACK *PFN_WINDOWCREATEDCALLBACK)(int uidExt, int windowIndex, int pixelWidth, int pixelHeight, int format);
+
 /**
  * Registers a callback function to use when a message is logged.
  * If the callback is to become invalid, be sure to call this function with NULL
  * first so that the callback is unregistered.
  */
-FXR_EXTERN void fxrRegisterLogCallback(PFN_LOGCALLBACK callback);
+FXR_EXTERN void fxrRegisterLogCallback(PFN_LOGCALLBACK logCcallback);
 
 FXR_EXTERN void fxrSetLogLevel(const int logLevel);
 
@@ -130,6 +132,10 @@ FXR_EXTERN void fxrSetLogLevel(const int logLevel);
  * @return			true if successful, false if an error occurred
  */
 FXR_EXTERN bool fxrGetFxVersion(char *buffer, int length);
+
+FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback);
+
+FXR_EXTERN void fxrStopFx(void);
 
 // Set the path in which the plugin should look for resources. Should be full filesystem path without trailing slash.
 // This should be called early on in the plugin lifecycle, typically from a Unity MonoBehaviour.OnEnable() event.
@@ -142,24 +148,27 @@ FXR_EXTERN void fxrSetOpenVRSessionPtr(void *p);
 
 FXR_EXTERN int fxrGetWindowCount(void);
 
-// Pass NULL nativeTexturePtr to allocate the texture on the native side, otherwise uses the passed-in texture.
+FXR_EXTERN bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsRequested);
+
+FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
+
 // On Direct3D-like devices pass a pointer to the base texture type (IDirect3DBaseTexture9 on D3D9, ID3D11Resource on D3D11),
 // or on OpenGL-like devices pass the texture "name", casting the integer to a pointer.
-// Returns windowIndex.
-// Must be called from rendering thread with active rendering context.
-FXR_EXTERN int fxrNewWindowFromTexture(void *nativeTexturePtr, int widthPixels, int heightPixels, int format);
+FXR_EXTERN bool fxrSetWindowUnityTextureID(int windowIndex, void *nativeTexturePtr);
+
+FXR_EXTERN bool fxrRequestWindowSizeChange(int windowIndex, int width, int height);
 
 FXR_EXTERN bool fxrCloseWindow(int windowIndex);
 
 FXR_EXTERN bool fxrCloseAllWindows(void);
 
-FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
-
 // Must be called from rendering thread with active rendering context.
-// Must be followed by a call to fxrGetWindowTextureFormat to check for updated format (including nativeTexureID).
-FXR_EXTERN bool fxrSetWindowSize(int windowIndex, int width, int height);
-
+// As an alternative to invoking directly, an equivalent invocation can be invoked via call this sequence:
+//     fxrSetRenderEventFunc1Params(windowIndex, timeDelta);
+//     (*GetRenderEventFunc())(1);
 FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
+
+FXR_EXTERN void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta);
 
 enum {
 	FxRPointerEventID_Enter = 0,

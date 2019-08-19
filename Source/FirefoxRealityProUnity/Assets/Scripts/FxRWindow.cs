@@ -4,12 +4,12 @@ using System;
 
 public class FxRWindow : MonoBehaviour
 {
-    public Vector2 InitialSize = new Vector2(4.0f, 2.25f);
-    public Vector2Int  InitialVideoSize = new Vector2Int(1920, 1080);
+    public static float DefaultWidth = 4.0f;
+    public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
     public bool flipX = false;
     public bool flipY = false;
-
-    private Vector2 size;
+    public float Width = DefaultWidth;
+    private float Height;
     private Vector2Int videoSize;
     private float textureScaleU;
     private float textureScaleV;
@@ -17,17 +17,56 @@ public class FxRWindow : MonoBehaviour
     private GameObject _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
     private Texture2D _videoTexture = null;  // Texture object with the video image.
     public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
-    private int _nativeWindowIndex = 0;
 
-    // Use this for initialization
+    private int _windowIndex = 0;
+
+    public static FxRWindow FindWindowWithUID(int uid)
+    {
+        Debug.Log("FxRWindow.FindWindowWithUID(uid:" + uid + ")");
+        if (uid != 0) {
+            FxRWindow[] windows = GameObject.FindObjectsOfType<FxRWindow>();
+            foreach (FxRWindow window in windows) {
+                if (window.GetInstanceID() == uid) return window;
+            }
+        }
+        return null;
+    }
+
+    public static FxRWindow CreateNewInParent(GameObject parent)
+    {
+        Debug.Log("FxRWindow.CreateNewInParent(parent:" + parent + ")");
+        FxRWindow window = parent.AddComponent<FxRWindow>();
+        return window;
+    }
+
     void Start()
     {
-        size = InitialSize;
-        videoSize = InitialVideoSize;
+        Debug.Log("FxRWindow.Start()");
 
-        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, out textureScaleU, out textureScaleV);
+        if (_windowIndex == 0) fxr_plugin.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
+    }
 
-        _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, size.x, size.y, 0);
+    void OnApplicationQuit()
+    {
+        Debug.Log("FxRWindow.OnApplicationQuit()");
+
+        if (_windowIndex != 0) {
+            fxr_plugin.fxrCloseWindow(_windowIndex);
+            _windowIndex = 0;
+        }
+    }
+
+    public void WasCreated(int windowIndex, int widthPixels, int heightPixels, TextureFormat format)
+    {
+        Debug.Log("FxRWindow.WasCreated(windowIndex:" + windowIndex + ", widthPixels:" + widthPixels + ", heightPixels:" + heightPixels + ", format:" + format + ")");
+        _windowIndex = windowIndex;
+
+        Height = (Width / widthPixels) * heightPixels;
+        videoSize = new Vector2Int(widthPixels, heightPixels);
+
+        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, format, out textureScaleU, out textureScaleV);
+
+        _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
         _videoMeshGO.transform.localRotation = Quaternion.identity;
@@ -36,20 +75,25 @@ public class FxRWindow : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        fxr_plugin.fxrRequestWindowUpdate(_nativeWindowIndex, Time.deltaTime);
+        if (_windowIndex != 0) {
+            //Debug.Log("FxRWindow.Update() with _windowIndex == " + _windowIndex);
+            fxr_plugin.fxrRequestWindowUpdate(_windowIndex, Time.deltaTime);
+        } else {
+            //Debug.Log("FxRWindow.Update() with _windowIndex == 0");
+        }
     }
 
     // Pointer events from FxRLaserPointer.
     public void PointerEnter()
     {
         //Debug.Log("PointerEnter()");
-        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Enter, -1, -1);
+        fxr_plugin.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Enter, -1, -1);
     }
 
     public void PointerExit()
     {
         //Debug.Log("PointerExit()");
-        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Exit, -1, -1);
+        fxr_plugin.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Exit, -1, -1);
     }
 
     public void PointerOver(Vector2 texCoord)
@@ -57,7 +101,7 @@ public class FxRWindow : MonoBehaviour
         int x = (int)(texCoord.x * videoSize.x);
         int y = (int)(texCoord.y * videoSize.y);
         //Debug.Log("PointerOver(" + x + ", " + y + ")");
-        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Over, x, y);
+        fxr_plugin.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Over, x, y);
     }
 
     public void PointerPress(Vector2 texCoord)
@@ -65,7 +109,7 @@ public class FxRWindow : MonoBehaviour
         int x = (int)(texCoord.x * videoSize.x);
         int y = (int)(texCoord.y * videoSize.y);
         //Debug.Log("PointerPress(" + x + ", " + y + ")");
-        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Press, x, y);
+        fxr_plugin.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Press, x, y);
     }
 
     public void PointerRelease(Vector2 texCoord)
@@ -73,7 +117,7 @@ public class FxRWindow : MonoBehaviour
         int x = (int)(texCoord.x * videoSize.x);
         int y = (int)(texCoord.y * videoSize.y);
         //Debug.Log("PointerRelease(" + x + ", " + y + ")");
-        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.Release, x, y);
+        fxr_plugin.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Release, x, y);
     }
 
     public void PointerScrollDiscrete(Vector2 delta)
@@ -81,11 +125,11 @@ public class FxRWindow : MonoBehaviour
         int x = (int)(delta.x);
         int y = (int)(delta.y);
         //Debug.Log("PointerScroll(" + x + ", " + y + ")");
-        fxr_plugin.fxrWindowPointerEvent(_nativeWindowIndex, FxRPlugin.FxRPointerEventID.ScrollDiscrete, x, y);
+        fxr_plugin.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.ScrollDiscrete, x, y);
     }
 
     //
-    private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, out float textureScaleU, out float textureScaleV)
+    private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, TextureFormat format, out float textureScaleU, out float textureScaleV)
     {
         // Check parameters.
         if (videoWidth <= 0 || videoHeight <= 0) {
@@ -112,8 +156,7 @@ public class FxRWindow : MonoBehaviour
         textureScaleV = (float)videoHeight / (float)textureHeight;
         //Debug.Log("Video texture coordinate scaling: " + textureScaleU + ", " + textureScaleV);
 
-        Texture2D vt = new Texture2D(textureWidth, textureHeight, TextureFormat.BGRA32, false);
-        //vt = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false);
+        Texture2D vt = new Texture2D(textureWidth, textureHeight, format, false);
         vt.hideFlags = HideFlags.HideAndDontSave;
         vt.filterMode = FilterMode.Bilinear;
         vt.wrapMode = TextureWrapMode.Clamp;
@@ -129,8 +172,8 @@ public class FxRWindow : MonoBehaviour
 
         // Now pass the ID to the native side.
         IntPtr nativeTexPtr = vt.GetNativeTexturePtr();
-        Debug.Log("nativeTexPtr=" + nativeTexPtr.ToString("x"));
-        _nativeWindowIndex = fxr_plugin.fxrNewWindowFromTexture(nativeTexPtr, textureWidth, textureHeight, vt.format);
+        Debug.Log("Calling fxrSetWindowUnityTextureID(windowIndex:" + _windowIndex + ", nativeTexPtr:" + nativeTexPtr.ToString("X") + ")");
+        fxr_plugin.fxrSetWindowUnityTextureID(_windowIndex, nativeTexPtr);
 
         /*
         // Debug.
@@ -145,11 +188,6 @@ public class FxRWindow : MonoBehaviour
         }
         */
         return vt;
-    }
-
-    private Texture2D CreateWindowTextureFromNativeTexture()
-    {
-        return null;
     }
 
     // Creates a GameObject in layer 'layer' which renders a mesh displaying the video stream.

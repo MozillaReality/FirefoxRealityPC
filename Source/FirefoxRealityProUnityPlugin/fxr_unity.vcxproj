@@ -182,6 +182,7 @@
     <ClInclude Include="fxr_log.h" />
     <ClInclude Include="fxr_unity_c.h" />
     <ClInclude Include="FxRWindowDX11.h" />
+    <ClInclude Include="vrhost.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin.cs">
