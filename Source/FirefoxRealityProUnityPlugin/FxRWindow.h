@@ -11,11 +11,15 @@
 //
 
 #pragma once
+
+#include "fxr_unity_c.h"
+
 class FxRWindow
 {
 protected:
-	FxRWindow(int index) : m_index(index) { }
-	int m_index;
+	FxRWindow(int uid, int uidExt) : m_uid(uid), m_uidExt(uidExt)  { }
+	int m_uid;
+	int m_uidExt;
 public:
 	virtual ~FxRWindow() {};
 
@@ -30,7 +34,10 @@ public:
 		int h;
 	};
 
-	int index() { return m_index; }
+	int uid() { return m_uid; }
+	int uidExt() { return m_uidExt; }
+	int setUidExt(int uidExt) { m_uidExt = uidExt; }
+	virtual bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) = 0;
 	virtual RendererAPI rendererAPI() = 0;
 	virtual Size size() = 0;
 	virtual void setSize(Size size) = 0;

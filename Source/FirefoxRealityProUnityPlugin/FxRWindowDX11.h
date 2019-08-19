@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2019- Mozilla, Inc.
 //
-// Author(s): Philip Lamb
+// Author(s): Philip Lamb, Thomas Moore
 //
 
 #pragma once
@@ -17,7 +17,6 @@
 #include <Windows.h>
 #include "IUnityInterface.h"
 #include "vrhost.h"
-#include "fxr_unity_c.h"
 
 struct ID3D11Texture2D;
 
@@ -38,13 +37,14 @@ private:
     void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
 
 public:
-	static void init(IUnityInterfaces* unityInterfaces);
-	static void finalize();
+	static void initDevice(IUnityInterfaces* unityInterfaces);
+	static void finalizeDevice();
 	static DWORD CreateVRWindow(_In_ LPVOID lpParameter);
 
-	FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_WINDOWCREATEDCALLBACK windowCreatedCallback);
+	FxRWindowDX11(int uid, int uidExt, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow);
 	~FxRWindowDX11() ;
 
+	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
 	Size size() override;
 	void setSize(Size size) override;

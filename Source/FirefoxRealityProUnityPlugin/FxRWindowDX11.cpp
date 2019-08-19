@@ -40,17 +40,17 @@ DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 }
 
 
-void FxRWindowDX11::init(IUnityInterfaces* unityInterfaces) {
+void FxRWindowDX11::initDevice(IUnityInterfaces* unityInterfaces) {
 	IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
 	s_D3D11Device = ud3d->GetDevice();
 }
 
-void FxRWindowDX11::finalize() {
+void FxRWindowDX11::finalizeDevice() {
 	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) :
-	FxRWindow(index),
+FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
+	FxRWindow(uid, uidExt),
 	m_pfnCreateVRWindow(pfnCreateVRWindow),
 	m_pfnSendUIMessage(pfnSendUIMessage),
 	m_pfnCloseVRWindow(pfnCloseVRWindow),
@@ -60,8 +60,12 @@ FxRWindowDX11::FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PF
 	m_format(FxRTextureFormat_Invalid),
 	m_unityTexPtr(nullptr)
 {
+}
+
+bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
+{
 	CreateVRWindowParams* pParams = new CreateVRWindowParams;
-	pParams->lpfnCreate = pfnCreateVRWindow;
+	pParams->lpfnCreate = m_pfnCreateVRWindow;
 
 	DWORD dwTid = 0;
 	HANDLE hThreadFxWin =
@@ -78,23 +82,24 @@ FxRWindowDX11::FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PF
 	DWORD waitResult = ::WaitForSingleObject(hThreadFxWin, 10000); // 10 seconds
 	if (waitResult == WAIT_TIMEOUT) {
 		FXRLOGe("Gave up waiting for Firefox VR window.\n");
+		return false;
 	} else if (waitResult != WAIT_OBJECT_0) {
 		FXRLOGe("Error waiting for Firefox VR window.\n");
+		return false;
 	} else {
 		m_vrWin = pParams->vrWin;
 		fxTexHandle = pParams->fxTexHandle;
 	}
 
 	if (!fxTexHandle) {
-		FXRLOGw("Warning: Firefox texture handle is null.\n");
+		FXRLOGe("Error: Firefox texture handle is null.\n");
+		return false;
 	} else {
 		// Extract a pointer to the D3D texture from the shared handle.
-		HRESULT hr = s_D3D11Device->OpenSharedResource(
-			fxTexHandle,
-			IID_PPV_ARGS(&m_fxTexPtr)
-		);
+		HRESULT hr = s_D3D11Device->OpenSharedResource(fxTexHandle, IID_PPV_ARGS(&m_fxTexPtr) );
 		if (hr != S_OK) {
 			FXRLOGe("Can't get pointer to Firefox texture from handle.\n");
+			return false;
 		} else {
 			D3D11_TEXTURE2D_DESC descFxr = { 0 };
 			m_fxTexPtr->GetDesc(&descFxr);
@@ -122,9 +127,10 @@ FxRWindowDX11::FxRWindowDX11(int index, PFN_CREATEVRWINDOW pfnCreateVRWindow, PF
 					m_format = FxRTextureFormat_Invalid;
 			}
 
-			if (windowCreatedCallback) (*windowCreatedCallback)(m_index, m_size.w, m_size.h, m_format);
+			if (windowCreatedCallback) (*windowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
 		}
 	}
+	return true;
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
@@ -150,6 +156,7 @@ void* FxRWindowDX11::nativePtr() {
 void FxRWindowDX11::requestUpdate(float timeDelta) {
 
 	if (!m_fxTexPtr || !m_unityTexPtr) {
+		FXRLOGi("FxRWindowDX11::requestUpdate() m_fxTexPtr=%p, m_unityTexPtr=%p.\n", m_fxTexPtr, m_unityTexPtr);
 		return;
 	}
 

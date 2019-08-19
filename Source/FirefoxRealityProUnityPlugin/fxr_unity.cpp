@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2019- Mozilla, Inc.
 //
-// Author(s): Philip Lamb
+// Author(s): Philip Lamb, Thomas Moore
 //
 // Implementations of plugin interfaces which are invoked from Unity via P/Invoke.
 //
@@ -93,11 +93,11 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
 				FXRLOGi("Using DirectX 11 renderer.\n");
-                FxRWindowDX11::init(s_UnityInterfaces);
+                FxRWindowDX11::initDevice(s_UnityInterfaces);
 				break;
 			case kUnityGfxRendererOpenGLCore:
 				FXRLOGi("Using OpenGL renderer.\n");
-				FxRWindowGL::init();
+				FxRWindowGL::initDevice();
 				break;
 			default:
 				FXRLOGe("Unsupported renderer.\n");
@@ -109,16 +109,25 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 		{
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
-                FxRWindowDX11::finalize();
+                FxRWindowDX11::finalizeDevice();
 				break;
 			case kUnityGfxRendererOpenGLCore:
-				FxRWindowGL::finalize();
+				FxRWindowGL::finalizeDevice();
 				break;
 			}
 			s_RendererType = kUnityGfxRendererNull;
 			break;
 		}
 	};
+}
+
+static int s_RenderEventFunc1Param_windowIndex = 0;
+static float s_RenderEventFunc1Param_timeDelta = 0.0f;
+
+void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta)
+{
+	s_RenderEventFunc1Param_windowIndex = windowIndex;
+	s_RenderEventFunc1Param_timeDelta = timeDelta;
 }
 
 static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
@@ -136,7 +145,7 @@ static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
 
 	switch (eventID) {
 	case 1:
-		fxrRequestWindowUpdate(0, 0.0f);
+		fxrRequestWindowUpdate(s_RenderEventFunc1Param_windowIndex, s_RenderEventFunc1Param_timeDelta);
 		break;
 	default:
 		break;
@@ -261,16 +270,19 @@ int fxrGetWindowCount(void)
 	return (int)s_windows.size();
 }
 
-bool fxrRequestNewWindow(int widthPixelsRequested, int heightPixelsRequested)
+bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsRequested)
 {
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
-		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnCloseVRWindow, m_windowCreatedCallback);
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnCloseVRWindow);
 	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
-		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
+		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
 	}
-	if (!window) return false;
-	s_windows.emplace(window->index(), move(window));
+	auto inserted = s_windows.emplace(window->uid(), move(window));
+	if (!inserted.second || !inserted.first->second->init(m_windowCreatedCallback)) {
+		FXRLOGe("Error initing window.\n");
+		return false;
+	}
 	return true;
 }
 
@@ -282,8 +294,11 @@ bool fxrSetWindowUnityTextureID(int windowIndex, void *nativeTexturePtr)
     }
    
 	auto window_iter = s_windows.find(windowIndex);
-	if (window_iter == s_windows.end()) return false;
-	
+	if (window_iter == s_windows.end()) {
+		FXRLOGe("Requested to set unity texture ID for non-existent window with index %d.\n", windowIndex);
+		return false;
+	}
+
 	window_iter->second->setNativePtr(nativeTexturePtr);
 	FXRLOGi("fxrSetWindowUnityTextureID set texturePtr %p.\n", nativeTexturePtr);
 	return true;
@@ -331,8 +346,10 @@ bool fxrSetWindowSize(int windowIndex, int width, int height)
 void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
 {
 	auto window_iter = s_windows.find(windowIndex);
-	if (window_iter == s_windows.end()) return;
-
+	if (window_iter == s_windows.end()) {
+		FXRLOGe("Requested update for non-existent window with index %d.\n", windowIndex);
+		return;
+	}
 	window_iter->second->requestUpdate(timeDelta);
 }
 

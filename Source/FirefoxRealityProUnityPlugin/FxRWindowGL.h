@@ -27,11 +27,12 @@ private:
 	uint32_t m_pixelTypeGL;
 	uint32_t m_pixelSize;
 public:
-	static void init();
-	static void finalize();
-	FxRWindowGL(int index, Size size);
+	static void initDevice();
+	static void finalizeDevice();
+	FxRWindowGL(int uid, int uidExt, Size size);
 	~FxRWindowGL() ;
 
+	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::OpenGLCore;}
 	Size size() override;
 	void setSize(Size size) override;

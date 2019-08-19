@@ -120,7 +120,43 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        fxr_plugin.fxrStartFx();
+        fxr_plugin.fxrStartFx(OnFxWindowCreated);
+    }
+
+    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
+    {
+        Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" + widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
+
+        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
+        if (window == null) {
+            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
+        }
+        TextureFormat format;
+        switch (formatNative)
+        {
+            case 1:
+                format = TextureFormat.RGBA32;
+                break;
+            case 2:
+                format = TextureFormat.BGRA32;
+                break;
+            case 3:
+                format = TextureFormat.ARGB32;
+                break;
+            case 5:
+                format = TextureFormat.RGB24;
+                break;
+            case 7:
+                format = TextureFormat.RGBA4444;
+                break;
+            case 9:
+                format = TextureFormat.RGB565;
+                break;
+            default:
+                format = (TextureFormat)0;
+                break;
+        }
+        window.WasCreated(windowIndex, widthPixels, heightPixels, format);
     }
 
     private void OnApplicationQuit()

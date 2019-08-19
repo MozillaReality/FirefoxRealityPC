@@ -114,7 +114,7 @@ enum  {
 
 typedef void (FXR_CALLBACK *PFN_LOGCALLBACK)(const char* msg);
 
-typedef void (FXR_CALLBACK *PFN_WINDOWCREATEDCALLBACK)(int windowIndex, int pixelWidth, int pixelHeight, int format);
+typedef void (FXR_CALLBACK *PFN_WINDOWCREATEDCALLBACK)(int uidExt, int windowIndex, int pixelWidth, int pixelHeight, int format);
 
 /**
  * Registers a callback function to use when a message is logged.
@@ -148,7 +148,7 @@ FXR_EXTERN void fxrSetOpenVRSessionPtr(void *p);
 
 FXR_EXTERN int fxrGetWindowCount(void);
 
-FXR_EXTERN bool fxrRequestNewWindow(int widthPixelsRequested, int heightPixelsRequested);
+FXR_EXTERN bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsRequested);
 
 FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
 
@@ -163,7 +163,12 @@ FXR_EXTERN bool fxrCloseWindow(int windowIndex);
 FXR_EXTERN bool fxrCloseAllWindows(void);
 
 // Must be called from rendering thread with active rendering context.
+// As an alternative to invoking directly, an equivalent invocation can be invoked via call this sequence:
+//     fxrSetRenderEventFunc1Params(windowIndex, timeDelta);
+//     (*GetRenderEventFunc())(1);
 FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
+
+FXR_EXTERN void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta);
 
 enum {
 	FxRPointerEventID_Enter = 0,

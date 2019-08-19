@@ -21,7 +21,7 @@ using UnityEngine;
 public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] string msg);
 
 // Delegate type declaration for window size callback.
-public delegate void FxRPluginWindowCreatedCallback(int windowIndex, int pixelWidth, int pixelHeight, int format);
+public delegate void FxRPluginWindowCreatedCallback(int uid, int windowIndex, int pixelWidth, int pixelHeight, int format);
 
 public class FxRPlugin
 {
@@ -94,9 +94,9 @@ public class FxRPlugin
         return FxRPlugin_pinvoke.fxrGetWindowCount();
     }
 
-    public bool fxrRequestNewWindow(int widthPixelsRequested, int heightPixelsRequested)
+    public bool fxrRequestNewWindow(int uid, int widthPixelsRequested, int heightPixelsRequested)
     {
-        return FxRPlugin_pinvoke.fxrRequestNewWindow(widthPixelsRequested, heightPixelsRequested);
+        return FxRPlugin_pinvoke.fxrRequestNewWindow(uid, widthPixelsRequested, heightPixelsRequested);
     }
 
     public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
@@ -150,7 +150,7 @@ public class FxRPlugin
     public void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
     {
         //FxRPlugin_pinvoke.fxrRequestWindowUpdate(windowIndex, timeDelta);
-        //FxRPlugin_pinvoke.fxrUnitySetParams_RequestWindowUpdate(windowIndex, timeDelta);
+        FxRPlugin_pinvoke.fxrSetRenderEventFunc1Params(windowIndex, timeDelta);
         GL.IssuePluginEvent(FxRPlugin_pinvoke.GetRenderEventFunc(), 1);
     }
 
@@ -166,5 +166,15 @@ public class FxRPlugin
     public void fxrWindowPointerEvent(int windowIndex, FxRPointerEventID eventID, int windowX, int windowY)
     {
         FxRPlugin_pinvoke.fxrWindowPointerEvent(windowIndex, (int)eventID, windowX, windowY);
+    }
+
+    public bool fxrCloseWindow(int windowIndex)
+    {
+        return FxRPlugin_pinvoke.fxrCloseWindow(windowIndex);
+    }
+
+    public bool fxrCloseAllWindows()
+    {
+        return FxRPlugin_pinvoke.fxrCloseAllWindows();
     }
 }

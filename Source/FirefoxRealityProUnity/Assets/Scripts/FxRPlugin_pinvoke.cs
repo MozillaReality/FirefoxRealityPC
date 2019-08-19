@@ -57,7 +57,7 @@ public static class FxRPlugin_pinvoke
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
-    public static extern bool fxrRequestNewWindow(int widthPixelsRequested, int heightPixelsRequested);
+    public static extern bool fxrRequestNewWindow(int uid, int widthPixelsRequested, int heightPixelsRequested);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrGetWindowTextureFormat(int windowIndex, out int width, out int height, out int format, [MarshalAsAttribute(UnmanagedType.I1)] out bool mipChain, [MarshalAsAttribute(UnmanagedType.I1)] out bool linear, IntPtr[] nativeTextureIDHandle);
@@ -82,4 +82,6 @@ public static class FxRPlugin_pinvoke
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
 
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta);
 }
