@@ -177,6 +177,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="depends\windows\include\gl3w\gl3w.h" />
+    <ClInclude Include="depends\windows\include\openvr.h" />
+    <ClInclude Include="depends\windows\include\openvr_capi.h" />
     <ClInclude Include="FxRWindow.h" />
     <ClInclude Include="FxRWindowGL.h" />
     <ClInclude Include="fxr_log.h" />

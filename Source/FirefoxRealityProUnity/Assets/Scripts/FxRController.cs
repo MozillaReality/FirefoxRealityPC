@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class FxRController : MonoBehaviour
 {
@@ -30,7 +31,9 @@ public class FxRController : MonoBehaviour
     [AOT.MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
     public static void Log(System.String msg)
     {
-        Debug.Log(msg);
+        if (msg.StartsWith("[error]")) Debug.LogError(msg);
+        else if (msg.StartsWith("[warning]")) Debug.LogWarning(msg);
+        else Debug.Log (msg); // incldues [info] and [debug].
     }
 
     void OnEnable()
@@ -121,8 +124,15 @@ public class FxRController : MonoBehaviour
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
         fxr_plugin.fxrStartFx(OnFxWindowCreated);
+
+        IntPtr openVRSession = UnityEngine.XR.XRDevice.GetNativePtr();
+        if (openVRSession != IntPtr.Zero) {
+            fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
+        }
+
     }
 
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
     void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
     {
         Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" + widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
