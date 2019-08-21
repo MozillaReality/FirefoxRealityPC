@@ -24,6 +24,8 @@
 
 #include "vrhost.h"
 
+#include "openvr.h"
+
 //
 // Unity low-level plugin interface.
 //
@@ -64,6 +66,8 @@ static PROCESS_INFORMATION procInfoFx = { 0 };
 
 static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
 static int s_windowIndexNext = 1;
+
+#define OPENVR_API_LIBRARY_NAME "openvr_api"
 
 // --------------------------------------------------------------------------
 
@@ -263,6 +267,18 @@ void fxrKeyEvent(int keyCode)
 void fxrSetOpenVRSessionPtr(void *p)
 {
 	FXRLOGi("Got OpenVR session ptr %p.\n", p);
+	HMODULE hOpenVR = GetModuleHandleA(OPENVR_API_LIBRARY_NAME);
+	if (hOpenVR == NULL) {
+		FXRLOGw("Couldn't access " OPENVR_API_LIBRARY_NAME ".dll.\n");
+	} else {
+		char path[MAX_PATH];
+		GetModuleFileNameA(hOpenVR, path, sizeof(path));
+		FXRLOGi("Got OpenVR library at path '%s'.\n", path);
+		::vr::IVRSystem *pOpenVR = (vr::IVRSystem *)p;
+		uint32_t w, h;
+		pOpenVR->GetRecommendedRenderTargetSize(&w, &h);
+		FXRLOGi("OpenVR recommends render target size %dx%d.\n", w, h);
+	}
 }
 
 int fxrGetWindowCount(void)

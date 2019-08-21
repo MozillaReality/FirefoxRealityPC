@@ -43,6 +43,10 @@ public:
 
 	FxRWindowDX11(int uid, int uidExt, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow);
 	~FxRWindowDX11() ;
+	FxRWindowDX11(const FxRWindowDX11&) = delete;
+	void operator=(const FxRWindowDX11&) = delete;
+	FxRWindowDX11(FxRWindowDX11 &&) noexcept = default;
+	FxRWindowDX11& operator=(FxRWindowDX11 &&) noexcept = default;
 
 	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}

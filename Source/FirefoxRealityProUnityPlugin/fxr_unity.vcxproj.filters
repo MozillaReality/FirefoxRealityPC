@@ -53,6 +53,12 @@
     <ClInclude Include="vrhost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="depends\windows\include\openvr_capi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="depends\windows\include\openvr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin_pinvoke.cs" />
