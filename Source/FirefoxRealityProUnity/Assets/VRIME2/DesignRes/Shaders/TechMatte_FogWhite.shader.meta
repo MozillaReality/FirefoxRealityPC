@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e3dee252a626c704eb7ebdb352bf6828
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _SheenTexture: {fileID: 2800000, guid: 167a184aacde8f64d9b6711c9b6e75fe, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

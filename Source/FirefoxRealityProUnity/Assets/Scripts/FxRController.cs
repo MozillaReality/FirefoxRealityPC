@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using Valve.VR;
+using VRIME2;
 
 public class FxRController : MonoBehaviour
 {
@@ -130,6 +132,33 @@ public class FxRController : MonoBehaviour
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
 
+        // Keyboard setup.
+        VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
+        VRIME_Manager.Ins.ShowIME("");
+    }
+
+    private void imeShowHandle(bool iShow)
+    {
+        if (iShow) {
+            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
+            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
+
+        } else {
+            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
+            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPos.RemoveOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPos.RemoveOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
+        }
     }
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]

@@ -1,0 +1,384 @@
+﻿{
+    "rowType": 0,
+    "rowDatas": [
+        {
+            "atRow": 0,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                },
+                {
+                    "index": 1,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 2,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 3,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 4,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 5,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 6,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 7,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 8,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 9,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 10,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 11,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 3
+                },
+                {
+                    "index": 12,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                }
+            ]
+        },
+        {
+            "atRow": 1,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                },
+                {
+                    "index": 1,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 2,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 3,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 4,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 5,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 6,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 7,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 8,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 9,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 10,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 11,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 2
+                },
+                {
+                    "index": 12,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                }
+            ]
+        },
+        {
+            "atRow": 2,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0225,
+                    "objectType": 0
+                },
+                {
+                    "index": 1,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 2,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 3,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 4,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 5,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 6,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 7,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 8,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 9,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 10,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 1
+                },
+                {
+                    "index": 11,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                }
+            ]
+        },
+        {
+            "atRow": 3,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0225,
+                    "objectType": 0
+                },
+                {
+                    "index": 1,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 3
+                },
+                {
+                    "index": 2,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 3,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 4,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 5,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 6,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 7,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 8,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 9,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 10,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 11,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 12,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0225,
+                    "objectType": 0
+                }
+            ]
+        },
+        {
+            "atRow": 4,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                },
+                {
+                    "index": 1,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 5
+                },
+                {
+                    "index": 2,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 3,
+                    "spacing": false,
+                    "layoutSpaceX": 0.3525,
+                    "objectType": 6
+                },
+                {
+                    "index": 4,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 5,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 6,
+                    "spacing": false,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 4
+                },
+                {
+                    "index": 7,
+                    "spacing": true,
+                    "layoutSpaceX": 0.0,
+                    "objectType": 0
+                }
+            ]
+        }
+    ]
+}

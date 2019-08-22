@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fc43bca35ce14943b2299cc621133a7, type: 3}
+  m_Name: Key_Medium
+  m_EditorClassIdentifier: 
+  width: 0.0775
+  height: 0.05
+  thickness: 0.0025
+  cornerRadius: 0.0025
+  frontBevel: 0.0005
+  backBevel: 0
+  widthDivision: 1
+  heightDivision: 1
+  thicknessDivision: 1
+  cornerDivision: 3
+  frontBevelDivision: 1
+  backBevelDividion: 0
+  frontFaceUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  sideUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  backFaceUV:
+    serializedVersion: 2
+    x: 1
+    y: 0
+    width: 0
+    height: 0
+  mapFrontBevelUVToSide: 1
+  mapBackBevelUVToSide: 1
+  extrudeDirection: {x: 0, y: 0, z: 1}
+  xCurvature: 0
+  yCurvature: 0
+  hasNormals: 0
+  hasUV: 1
