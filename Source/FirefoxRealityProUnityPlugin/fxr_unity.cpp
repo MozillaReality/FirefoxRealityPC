@@ -202,7 +202,6 @@ void fxrSetResourcesPath(const char *path)
 
 void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 {
-	assert(s_hThreadFxWin == nullptr);
 	assert(m_hVRHost == nullptr);
 
 	int err;
