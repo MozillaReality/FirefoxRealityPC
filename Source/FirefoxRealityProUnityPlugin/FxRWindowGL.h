@@ -50,5 +50,7 @@ public:
 	void pointerPress(int x, int y) override;
 	void pointerRelease(int x, int y) override;
 	void pointerScrollDiscrete(int x, int y) override;
+
+	void keyPress(int charCode) override;
 };
 

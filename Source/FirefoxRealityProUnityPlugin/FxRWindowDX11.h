@@ -39,7 +39,7 @@ private:
 public:
 	static void initDevice(IUnityInterfaces* unityInterfaces);
 	static void finalizeDevice();
-	static DWORD CreateVRWindow(_In_ LPVOID lpParameter);
+	static DWORD WINAPI CreateVRWindow(_In_ LPVOID lpParameter);
 
 	FxRWindowDX11(int uid, int uidExt, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow);
 	~FxRWindowDX11() ;
@@ -66,6 +66,6 @@ public:
 	void pointerPress(int x, int y) override;
 	void pointerRelease(int x, int y) override;
 	void pointerScrollDiscrete(int x, int y) override;
-
+	void keyPress(int charCode) override;
 };
 

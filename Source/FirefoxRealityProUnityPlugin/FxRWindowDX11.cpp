@@ -69,7 +69,7 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 
 	DWORD dwTid = 0;
 	HANDLE hThreadFxWin =
-		CreateThread(
+		::CreateThread(
 			nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
 			0,        // SIZE_T dwStackSize,
 			CreateVRWindow,
@@ -213,4 +213,8 @@ void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
 
 	SHORT scrollDelta = WHEEL_DELTA * (SHORT)y;
 	ProcessPointerEvent(WM_MOUSEWHEEL, m_ptLastPointer.x, m_ptLastPointer.y, scrollDelta);
+}
+
+void FxRWindowDX11::keyPress(int charCode) {
+	m_pfnSendUIMessage(m_vrWin, WM_CHAR, charCode, 0);
 }
