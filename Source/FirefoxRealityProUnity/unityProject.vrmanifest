@@ -1,0 +1,16 @@
+{
+  "source": "Unity",
+  "applications": [
+    {
+      "app_key": "application.generated.unity.firefoxrealityprounity.exe",
+      "launch_type": "url",
+      "url": "steam://launch/",
+      "action_manifest_path": "C:\\Users\\patri\\dev\\Mozilla\\FirefoxRealityPro\\Source\\FirefoxRealityProUnity\\actions.json",
+      "strings": {
+        "en_us": {
+          "name": "FirefoxReality [Testing]"
+        }
+      }
+    }
+  ]
+}

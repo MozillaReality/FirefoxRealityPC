@@ -131,7 +131,13 @@ public class FxRController : MonoBehaviour
         if (openVRSession != IntPtr.Zero) {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
+        
+        StartCoroutine(ShowKeyboard());
+    }
 
+    private IEnumerator ShowKeyboard()
+    {
+        yield return new WaitForSeconds(3f);
         // Keyboard setup.
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
         VRIME_Manager.Ins.ShowIME("");

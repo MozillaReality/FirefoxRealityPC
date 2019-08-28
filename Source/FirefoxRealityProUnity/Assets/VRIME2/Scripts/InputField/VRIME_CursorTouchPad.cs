@@ -55,13 +55,14 @@ namespace VRIME2
 #endif
 
 		private void CheckTouchPadPress() {
-#if steamvr_v2
-			int leftIndex = VRIME_Manager.Ins.userControllerLeft.GetDeviceIndex();
-			int rightIndex = VRIME_Manager.Ins.userControllerRight.GetDeviceIndex();
-#else			
+#if steamvr_v2			
+			int leftIndex = (int)VRIME_Manager.Ins.userControllerLeft.GetDeviceIndex();
+			int rightIndex = (int)VRIME_Manager.Ins.userControllerRight.GetDeviceIndex();
+#else
 			int leftIndex = (int)VRIME_Manager.Ins.userControllerLeft.index;
 			int rightIndex = (int)VRIME_Manager.Ins.userControllerRight.index;
 #endif			
+
 
 			bool isLeftPressTouched = false;
 			bool isRightPressTouched = false;

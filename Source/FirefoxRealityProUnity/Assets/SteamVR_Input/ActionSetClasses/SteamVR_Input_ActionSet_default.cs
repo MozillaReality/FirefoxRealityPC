@@ -97,6 +97,22 @@ namespace Valve.VR
             }
         }
         
+        public virtual SteamVR_Action_Boolean TouchPress
+        {
+            get
+            {
+                return SteamVR_Actions.default_TouchPress;
+            }
+        }
+        
+        public virtual SteamVR_Action_Vector2 TouchPos
+        {
+            get
+            {
+                return SteamVR_Actions.default_TouchPos;
+            }
+        }
+        
         public virtual SteamVR_Action_Vibration Haptic
         {
             get
