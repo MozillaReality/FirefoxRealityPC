@@ -142,7 +142,7 @@ FXR_EXTERN void fxrStopFx(void);
 // Normally this would be the path to Unity's StreamingAssets folder, which holds unprocessed resources for use at runtime.
 FXR_EXTERN void fxrSetResourcesPath(const char *path);
 
-FXR_EXTERN void fxrKeyEvent(int keyCode);
+FXR_EXTERN void fxrKeyEvent(int windowIndex, int keyCode);
 
 FXR_EXTERN void fxrSetOpenVRSessionPtr(void *p);
 
