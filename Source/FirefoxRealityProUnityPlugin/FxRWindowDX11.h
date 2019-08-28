@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2019- Mozilla, Inc.
 //
-// Author(s): Philip Lamb
+// Author(s): Philip Lamb, Thomas Moore
 //
 
 #pragma once
@@ -16,40 +16,44 @@
 #include <string>
 #include <Windows.h>
 #include "IUnityInterface.h"
+#include "vrhost.h"
 
 struct ID3D11Texture2D;
-
-typedef void(*PFN_CREATEVRWINDOW)(UINT* windowId, HANDLE* hTex, HANDLE* hEvt, uint64_t* width, uint64_t* height);
-typedef void(*PFN_CLOSEVRWINDOW)(UINT nVRWindow);
-typedef void(*PFN_SENDUIMESSAGE)(UINT nVRWindow, UINT msg, uint64_t wparam, uint64_t lparam);
 
 class FxRWindowDX11 : public FxRWindow
 {
 private:
 
+	PFN_CREATEVRWINDOW m_pfnCreateVRWindow;
+	PFN_SENDUIMESSAGE m_pfnSendUIMessage;
+	PFN_CLOSEVRWINDOW m_pfnCloseVRWindow;
+	UINT m_vrWin;
+	ID3D11Texture2D* m_fxTexPtr;
 	Size m_size;
-	void *m_texPtr;
-	uint8_t *m_buf;
 	int m_format;
-  int m_pixelSize;
-  POINT m_ptLastPointer;
+	void *m_unityTexPtr;
+    POINT m_ptLastPointer;
 
-  static DWORD WINAPI FxWindowCreateInit(_In_ LPVOID lpParameter);
-  void FxInit(const std::string& resourcesPath);
-  static void FxClose();
-
-  void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
+    void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
 
 public:
-	static void init(IUnityInterfaces* unityInterfaces);
-	static void finalize();
-	FxRWindowDX11(Size size, void* texPtr, int format, const std::string& resourcesPath);
-	~FxRWindowDX11() ;
+	static void initDevice(IUnityInterfaces* unityInterfaces);
+	static void finalizeDevice();
+	static DWORD CreateVRWindow(_In_ LPVOID lpParameter);
 
+	FxRWindowDX11(int uid, int uidExt, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow);
+	~FxRWindowDX11() ;
+	FxRWindowDX11(const FxRWindowDX11&) = delete;
+	void operator=(const FxRWindowDX11&) = delete;
+	FxRWindowDX11(FxRWindowDX11 &&) noexcept = default;
+	FxRWindowDX11& operator=(FxRWindowDX11 &&) noexcept = default;
+
+	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
 	Size size() override;
 	void setSize(Size size) override;
-	void* getNativePtr() override;
+	void setNativePtr(void* texPtr) override;
+	void* nativePtr() override;
 
 	// Must be called from render thread.
 	void requestUpdate(float timeDelta) override;

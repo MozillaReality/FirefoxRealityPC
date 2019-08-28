@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class FxRController : MonoBehaviour
 {
@@ -30,7 +31,9 @@ public class FxRController : MonoBehaviour
     [AOT.MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
     public static void Log(System.String msg)
     {
-        Debug.Log(msg);
+        if (msg.StartsWith("[error]")) Debug.LogError(msg);
+        else if (msg.StartsWith("[warning]")) Debug.LogWarning(msg);
+        else Debug.Log (msg); // incldues [info] and [debug].
     }
 
     void OnEnable()
@@ -82,6 +85,8 @@ public class FxRController : MonoBehaviour
             w.fxr_plugin = null;
         }
 
+        fxr_plugin.fxrSetResourcesPath(null);
+
         // Since we might be going away, tell users of our Log function
         // to stop calling it.
         switch (Application.platform)
@@ -117,6 +122,58 @@ public class FxRController : MonoBehaviour
         Debug.Log("FxRController.Start()");
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
+
+        fxr_plugin.fxrStartFx(OnFxWindowCreated);
+
+        IntPtr openVRSession = UnityEngine.XR.XRDevice.GetNativePtr();
+        if (openVRSession != IntPtr.Zero) {
+            fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
+        }
+
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
+    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
+    {
+        Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" + widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
+
+        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
+        if (window == null) {
+            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
+        }
+        TextureFormat format;
+        switch (formatNative)
+        {
+            case 1:
+                format = TextureFormat.RGBA32;
+                break;
+            case 2:
+                format = TextureFormat.BGRA32;
+                break;
+            case 3:
+                format = TextureFormat.ARGB32;
+                break;
+            case 5:
+                format = TextureFormat.RGB24;
+                break;
+            case 7:
+                format = TextureFormat.RGBA4444;
+                break;
+            case 9:
+                format = TextureFormat.RGB565;
+                break;
+            default:
+                format = (TextureFormat)0;
+                break;
+        }
+        window.WasCreated(windowIndex, widthPixels, heightPixels, format);
+    }
+
+    private void OnApplicationQuit()
+    {
+        Debug.Log("FxRController.OnApplicationQuit()");
+
+        fxr_plugin.fxrStopFx();
     }
 
     // Update is called once per frame

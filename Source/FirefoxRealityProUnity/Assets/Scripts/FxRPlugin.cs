@@ -20,11 +20,16 @@ using UnityEngine;
 // Delegate type declaration for log callback.
 public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] string msg);
 
+// Delegate type declaration for window size callback.
+public delegate void FxRPluginWindowCreatedCallback(int uid, int windowIndex, int pixelWidth, int pixelHeight, int format);
+
 public class FxRPlugin
 {
     // Delegate instance.
     private FxRPluginLogCallback logCallback = null;
     private GCHandle logCallbackGCH;
+    private FxRPluginWindowCreatedCallback windowCreatedCallback = null;
+    private GCHandle windowCreatedCallbackGCH;
 
     public void fxrRegisterLogCallback(FxRPluginLogCallback lcb)
     {
@@ -53,6 +58,22 @@ public class FxRPlugin
         else return "";
     }
 
+    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb)
+    {
+        windowCreatedCallback = wccb;
+        // Create the callback stub prior to registering the callback on the native side.
+        windowCreatedCallbackGCH = GCHandle.Alloc(windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
+        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback);
+    }
+
+    public void fxrStopFx()
+    {
+        FxRPlugin_pinvoke.fxrStopFx();
+        windowCreatedCallback = null;
+        // Free the callback stub after deregistering the callback on the native side.
+        windowCreatedCallbackGCH.Free();
+    }
+
     public void fxrSetResourcesPath(string path)
     {
         FxRPlugin_pinvoke.fxrSetResourcesPath(path);
@@ -73,36 +94,9 @@ public class FxRPlugin
         return FxRPlugin_pinvoke.fxrGetWindowCount();
     }
 
-    public int fxrNewWindowFromTexture(IntPtr nativeTexturePtr, int width, int height, TextureFormat textureFormat)
+    public bool fxrRequestNewWindow(int uid, int widthPixelsRequested, int heightPixelsRequested)
     {
-        int formatNative = 0;
-        switch (textureFormat) {
-            case TextureFormat.RGBA32:
-                formatNative = 1;
-                break;
-            case TextureFormat.BGRA32:
-                formatNative = 2;
-                break;
-            case TextureFormat.ARGB32:
-                formatNative = 3;
-                break;
-            case TextureFormat.RGB24:
-                formatNative = 5;
-                break;
-            case TextureFormat.RGBA4444:
-                formatNative = 7;
-                break;
-            case TextureFormat.RGB565:
-                formatNative = 9;
-                break;
-            default:
-                break;
-        }
-        if (textureFormat == 0) {
-            Debug.LogError("Unsupported texture format " + textureFormat);
-            return -1;
-        }
-        return FxRPlugin_pinvoke.fxrNewWindowFromTexture(nativeTexturePtr, width, height, formatNative);
+        return FxRPlugin_pinvoke.fxrRequestNewWindow(uid, widthPixelsRequested, heightPixelsRequested);
     }
 
     public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
@@ -148,10 +142,15 @@ public class FxRPlugin
         return true;
     }
 
+    public bool fxrSetWindowUnityTextureID(int windowIndex, IntPtr nativeTexturePtr)
+    {
+        return FxRPlugin_pinvoke.fxrSetWindowUnityTextureID(windowIndex, nativeTexturePtr);
+    }
+
     public void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
     {
         //FxRPlugin_pinvoke.fxrRequestWindowUpdate(windowIndex, timeDelta);
-        //FxRPlugin_pinvoke.fxrUnitySetParams_RequestWindowUpdate(windowIndex, timeDelta);
+        FxRPlugin_pinvoke.fxrSetRenderEventFunc1Params(windowIndex, timeDelta);
         GL.IssuePluginEvent(FxRPlugin_pinvoke.GetRenderEventFunc(), 1);
     }
 
@@ -167,5 +166,15 @@ public class FxRPlugin
     public void fxrWindowPointerEvent(int windowIndex, FxRPointerEventID eventID, int windowX, int windowY)
     {
         FxRPlugin_pinvoke.fxrWindowPointerEvent(windowIndex, (int)eventID, windowX, windowY);
+    }
+
+    public bool fxrCloseWindow(int windowIndex)
+    {
+        return FxRPlugin_pinvoke.fxrCloseWindow(windowIndex);
+    }
+
+    public bool fxrCloseAllWindows()
+    {
+        return FxRPlugin_pinvoke.fxrCloseAllWindows();
     }
 }

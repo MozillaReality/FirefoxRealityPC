@@ -27,6 +27,9 @@
     <ClCompile Include="depends\windows\include\gl3w\gl3w.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FxRWindowDX11.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FxRWindow.h">
@@ -44,15 +47,22 @@
     <ClInclude Include="depends\windows\include\gl3w\gl3w.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FxRWindowDX11.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vrhost.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="depends\windows\include\openvr_capi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="depends\windows\include\openvr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin_pinvoke.cs" />
-    <None Include="FxRWindowDX11.cpp">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="FxRWindowDX11.h">
-      <Filter>Header Files</Filter>
-    </None>
+    <None Include="..\FirefoxRealityProUnity\Assets\Scripts\FxRPlugin.cs" />
   </ItemGroup>
   <ItemGroup>
     <Text Include=".editorconfig">

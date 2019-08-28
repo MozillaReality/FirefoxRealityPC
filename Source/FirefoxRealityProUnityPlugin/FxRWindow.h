@@ -11,8 +11,15 @@
 //
 
 #pragma once
+
+#include "fxr_unity_c.h"
+
 class FxRWindow
 {
+protected:
+	FxRWindow(int uid, int uidExt) : m_uid(uid), m_uidExt(uidExt)  { }
+	int m_uid;
+	int m_uidExt;
 public:
 	virtual ~FxRWindow() {};
 
@@ -27,11 +34,16 @@ public:
 		int h;
 	};
 
+	int uid() { return m_uid; }
+	int uidExt() { return m_uidExt; }
+	int setUidExt(int uidExt) { m_uidExt = uidExt; }
+	virtual bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) = 0;
 	virtual RendererAPI rendererAPI() = 0;
 	virtual Size size() = 0;
 	virtual void setSize(Size size) = 0;
 	virtual int format() = 0;
-	virtual void* getNativePtr() = 0;
+	virtual void setNativePtr(void* texPtr) = 0;
+	virtual void* nativePtr() = 0;
 	virtual void requestUpdate(float timeDelta) = 0;
 
 	virtual void pointerEnter() = 0;
@@ -39,6 +51,6 @@ public:
 	virtual void pointerOver(int x, int y) = 0;
 	virtual void pointerPress(int x, int y) = 0;
 	virtual void pointerRelease(int x, int y) = 0;
-	virtual void pointerScrollDiscrete(int x, int y) = 0; // x and y are a discrete scroll count, e.g. count of mousewheel "clicks". 
+	virtual void pointerScrollDiscrete(int x, int y) = 0; // x and y are a discrete scroll count, e.g. count of mousewheel "clicks".
 };
 
