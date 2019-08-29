@@ -391,6 +391,11 @@ namespace VRIME2
         }
         private void SendBaseWords(string iWords, bool iNeedDelay)
         {
+            // TODO: Move this out of this class, but just seeing if it works for now as a quick hack...
+            for (int i = 0; i < iWords.Length; i++)
+            {
+                FxRPlugin_pinvoke.fxrKeyEvent(1, (int)iWords[i]);
+            }
             // 2. insert word
             VRIME_InputFieldOversee.Ins.Insert(iWords, iNeedDelay);
             // 3. if caps State == UpperUnLock, set caps = Lower
