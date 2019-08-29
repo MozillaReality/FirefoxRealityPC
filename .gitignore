@@ -16,6 +16,9 @@ Source/FirefoxRealityProUnity/UnityGenerated/
 Source/FirefoxRealityProUnity/Assets/AssetStoreTools*
 Source/FirefoxRealityProUnity/.vs
 
+# Unity VR client-specific
+Source/FirefoxRealityProUnity/unityProject.vrmanifest
+
 # Unity3D Generated file on crash reports
 sysinfo.txt
 
