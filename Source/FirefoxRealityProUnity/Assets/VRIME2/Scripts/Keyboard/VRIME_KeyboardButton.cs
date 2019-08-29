@@ -12,6 +12,10 @@ namespace VRIME2
     [AddComponentMenu("VRIME/IMEKeyboard/Keyboard Button")]
     public class VRIME_KeyboardButton : MonoBehaviour
     {
+        public delegate void KeyPressed(int keyCode);
+
+        public static KeyPressed OnKeyPressed;
+        
         #region public Field
         // Button Base Info
         public string Word {
@@ -394,7 +398,7 @@ namespace VRIME2
             // TODO: Move this out of this class, but just seeing if it works for now as a quick hack...
             for (int i = 0; i < iWords.Length; i++)
             {
-                FxRPlugin_pinvoke.fxrKeyEvent(1, (int)iWords[i]);
+                OnKeyPressed?.Invoke((int)iWords[i]);
             }
             // 2. insert word
             VRIME_InputFieldOversee.Ins.Insert(iWords, iNeedDelay);
@@ -442,6 +446,7 @@ namespace VRIME2
             }
             else {
                 VRIME_InputFieldOversee.Ins.DeleteButton();
+                OnKeyPressed?.Invoke(8);
             }
         }
         private void DeleteLoopAction()

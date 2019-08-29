@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using VRIME2;
 
 public class FxRWindow : MonoBehaviour
 {
@@ -37,6 +38,22 @@ public class FxRWindow : MonoBehaviour
         Debug.Log("FxRWindow.CreateNewInParent(parent:" + parent + ")");
         FxRWindow window = parent.AddComponent<FxRWindow>();
         return window;
+    }
+
+    private void OnEnable()
+    {
+        VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
+    }
+
+    private void OnDisable()
+    {
+        VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
+    }
+
+    private void HandleKeyPressed(int keycode)
+    {
+        // TODO: All windows with respond to all keyboard presses. Since we only ever have one at the moment...
+        FxRPlugin_pinvoke.fxrKeyEvent(_windowIndex, keycode);
     }
 
     void Start()
