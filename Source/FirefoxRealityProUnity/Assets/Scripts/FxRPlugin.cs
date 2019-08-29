@@ -177,4 +177,40 @@ public class FxRPlugin
     {
         return FxRPlugin_pinvoke.fxrCloseAllWindows();
     }
+
+    public enum FxRParam {
+        b_CloseNativeWindowOnClose = 0,
+        Max
+    };
+
+    public void fxrSetParamBool(FxRParam param, bool flag)
+    {
+        FxRPlugin_pinvoke.fxrSetParamBool((int)param, flag);
+    }
+
+    public void fxrSetParamInt(FxRParam param, int val)
+    {
+        FxRPlugin_pinvoke.fxrSetParamInt((int)param, val);
+    }
+
+    public void fxrSetParamFloat(FxRParam param, bool val)
+    {
+        FxRPlugin_pinvoke.fxrSetParamFloat((int)param, val);
+    }
+
+    public bool fxrGetParamBool(FxRParam param)
+    {
+        return FxRPlugin_pinvoke.fxrGetParamBool((int)param);
+    }
+
+    public int fxrGetParamInt(FxRParam param)
+    {
+        return FxRPlugin_pinvoke.fxrGetParamInt((int)param);
+    }
+
+    public float fxrGetParamFloat(FxRParam param)
+    {
+        return FxRPlugin_pinvoke.fxrGetParamFloat((int)param);
+    }
+
 }
