@@ -15088,7 +15088,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flipX: 0
   flipY: 1
-  Width: 4
+  Width: 3
 --- !u!4 &1011347982
 Transform:
   m_ObjectHideFlags: 0
@@ -15097,7 +15097,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1011347980}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.9, z: 1.8}
+  m_LocalPosition: {x: 0, y: 0.5, z: 2.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

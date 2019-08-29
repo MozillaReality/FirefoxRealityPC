@@ -245,3 +245,7 @@ void FxRWindowGL::pointerRelease(int x, int y) {
 void FxRWindowGL::pointerScrollDiscrete(int x, int y) {
 	FXRLOGi("FxRWindowGL::pointerScrollDiscrete(%d, %d)\n", x, y);
 }
+
+void FxRWindowGL::keyPress(int charCode) {
+	FXRLOGi("FxRWindowGL::keyPress(%d)\n", charCode);
+}

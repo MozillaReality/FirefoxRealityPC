@@ -258,9 +258,14 @@ void fxrStopFx()
 	m_hVRHost = nullptr;
 }
 
-void fxrKeyEvent(int keyCode)
+void fxrKeyEvent(int windowIndex, int keyCode)
 {
 	FXRLOGi("Got keyCode %d.\n", keyCode);
+
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter != s_windows.end()) {
+		window_iter->second->keyPress(keyCode);
+	}
 }
 
 void fxrSetOpenVRSessionPtr(void *p)

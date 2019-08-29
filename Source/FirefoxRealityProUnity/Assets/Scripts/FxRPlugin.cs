@@ -79,9 +79,9 @@ public class FxRPlugin
         FxRPlugin_pinvoke.fxrSetResourcesPath(path);
     }
 
-    public void fxrKeyEvent(int keyCode)
+    public void fxrKeyEvent(int windowIndex, int keyCode)
     {
-        FxRPlugin_pinvoke.fxrKeyEvent(keyCode);
+        FxRPlugin_pinvoke.fxrKeyEvent(windowIndex, keyCode);
     }
 
     public void fxrSetOpenVRSessionPtr(System.IntPtr p)
