@@ -240,6 +240,7 @@ namespace VRIME2
                     VRIME_Manager.Ins.ResetTrackingPos();
                     break;
                 case eButtonType.Submit:
+                    OnKeyPressed?.Invoke(0x0D); // Return
                     VRIME_Manager.Ins.SubmitText();
                     break;
                 case eButtonType.Delete:
@@ -395,7 +396,7 @@ namespace VRIME2
         }
         private void SendBaseWords(string iWords, bool iNeedDelay)
         {
-            // TODO: Move this out of this class, but just seeing if it works for now as a quick hack...
+            // Emit each character as a key press event
             for (int i = 0; i < iWords.Length; i++)
             {
                 OnKeyPressed?.Invoke((int)iWords[i]);
@@ -445,8 +446,8 @@ namespace VRIME2
                 Invoke("DeleteLoopAction", aIntervalTime);
             }
             else {
+                OnKeyPressed?.Invoke(8); // Backspace
                 VRIME_InputFieldOversee.Ins.DeleteButton();
-                OnKeyPressed?.Invoke(8);
             }
         }
         private void DeleteLoopAction()
