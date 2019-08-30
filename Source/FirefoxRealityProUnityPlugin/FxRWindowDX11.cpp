@@ -216,5 +216,14 @@ void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
 }
 
 void FxRWindowDX11::keyPress(int charCode) {
-	m_pfnSendUIMessage(m_vrWin, WM_CHAR, charCode, 0);
+	switch (charCode) {
+		case 0x08: // bs
+		case 0x09: // htab
+		case 0x0d: // cr
+		case 0x1b: // esc
+			m_pfnSendUIMessage(m_vrWin, WM_KEYDOWN, charCode, 0);
+			break;
+		default:
+			m_pfnSendUIMessage(m_vrWin, WM_CHAR, charCode, 0);
+	}
 }
