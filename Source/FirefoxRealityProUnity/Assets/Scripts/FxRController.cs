@@ -21,6 +21,8 @@ public class FxRController : MonoBehaviour
     // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
 
+    public bool DontCloseNativeWindowOnClose = false;
+
     //
     // MonoBehavior methods.
     //
@@ -68,6 +70,9 @@ public class FxRController : MonoBehaviour
 
         // Give the plugin a place to look for resources.
         fxr_plugin.fxrSetResourcesPath(Application.streamingAssetsPath);
+
+        // Set any launch-time parameters.
+        if (DontCloseNativeWindowOnClose) fxr_plugin.fxrSetParamBool(FxRPlugin.FxRParam.b_CloseNativeWindowOnClose, false);
 
         // Set the reference to the plugin in any other objects in the scene that need it.
         FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();

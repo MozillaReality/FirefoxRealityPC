@@ -67,6 +67,8 @@ static PROCESS_INFORMATION procInfoFx = { 0 };
 static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
 static int s_windowIndexNext = 1;
 
+static bool s_param_CloseNativeWindowOnClose = true;
+
 #define OPENVR_API_LIBRARY_NAME "openvr_api"
 
 // --------------------------------------------------------------------------
@@ -250,7 +252,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 	m_windowCreatedCallback = windowCreatedCallback;
 }
 
-void fxrStopFx()
+void fxrStopFx(void)
 {
 	m_windowCreatedCallback = nullptr;
 
@@ -294,7 +296,7 @@ bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsR
 {
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
-		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnCloseVRWindow);
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, m_pfnCreateVRWindow, m_pfnSendUIMessage, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr);
 	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
 		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
 	}
@@ -322,6 +324,47 @@ bool fxrSetWindowUnityTextureID(int windowIndex, void *nativeTexturePtr)
 	window_iter->second->setNativePtr(nativeTexturePtr);
 	FXRLOGi("fxrSetWindowUnityTextureID set texturePtr %p.\n", nativeTexturePtr);
 	return true;
+}
+
+void fxrSetParamBool(int param, bool flag)
+{
+	switch (param) {
+		case FxRParam_b_CloseNativeWindowOnClose:
+			s_param_CloseNativeWindowOnClose = flag;
+			break;
+		default:
+			break;
+	}
+}
+
+void fxrSetParamInt(int param, int val)
+{
+}
+
+void fxrSetParamFloat(int param, float val)
+{
+}
+
+bool fxrGetParamBool(int param)
+{
+	switch (param) {
+		case FxRParam_b_CloseNativeWindowOnClose:
+			return s_param_CloseNativeWindowOnClose;
+			break;
+		default:
+			break;
+	}
+	return false;
+}
+
+int fxrGetParamInt(int param)
+{
+	return 0;
+}
+
+float fxrGetParamFloat(int param)
+{
+	return 0.0f;
 }
 
 bool fxrCloseWindow(int windowIndex)
@@ -354,7 +397,7 @@ bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *fo
 	return true;
 }
 
-bool fxrSetWindowSize(int windowIndex, int width, int height)
+bool fxrRequestWindowSizeChange(int windowIndex, int width, int height)
 {
 	auto window_iter = s_windows.find(windowIndex);
 	if (window_iter == s_windows.end()) return false;

@@ -84,4 +84,23 @@ public static class FxRPlugin_pinvoke
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrSetParamBool(int param, bool flag);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrSetParamInt(int param, int flag);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrSetParamFloat(int param, [MarshalAsAttribute(UnmanagedType.I1)] bool flag);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAsAttribute(UnmanagedType.I1)]
+    public static extern bool fxrGetParamBool(int param);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int fxrGetParamInt(int param);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern float fxrGetParamFloat(int param);
 }
