@@ -74,6 +74,9 @@ public class FxRController : MonoBehaviour
         foreach (FxRWindow w in fxrwindows) {
             w.fxr_plugin = fxr_plugin;
         }
+        
+        // VRIME keyboard event registration
+        VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
     }
 
     void OnDisable()
@@ -116,7 +119,8 @@ public class FxRController : MonoBehaviour
         }
         fxr_plugin = null;
 
-
+        // VRIME keyboard event registration
+        VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
     }
 
     void Start()
@@ -131,16 +135,18 @@ public class FxRController : MonoBehaviour
         if (openVRSession != IntPtr.Zero) {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
-        
-        StartCoroutine(ShowKeyboard());
     }
 
-    private IEnumerator ShowKeyboard()
+    public void ToggleKeyboard()
     {
-        yield return new WaitForSeconds(3f);
-        // Keyboard setup.
-        VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
-        VRIME_Manager.Ins.ShowIME("");
+        if (!VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.ShowIME("");
+        }
+        else
+        {
+            VRIME_Manager.Ins.HideIME();
+        }
     }
 
     private void imeShowHandle(bool iShow)
