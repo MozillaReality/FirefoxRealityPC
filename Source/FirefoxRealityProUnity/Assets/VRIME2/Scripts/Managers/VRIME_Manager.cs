@@ -33,7 +33,15 @@ namespace VRIME2
 			get {
 				if(instance == null)
 				{
-					instance = new VRIME_Manager();
+					instance = FindObjectOfType<VRIME_Manager>();
+
+					if (instance == null)
+					{
+						var instanceGameObject = new GameObject();
+						instanceGameObject.name = "VRIME_Manager";
+						instance = instanceGameObject.AddComponent<VRIME_Manager>();
+					}
+					VRIME_KeymapInstance.InitDefaultKeymaps();
 					instance.Init();
 				}
 				return instance;
@@ -145,10 +153,6 @@ namespace VRIME2
 
 		#region Unity Function
 		private void Awake() {
-			if(instance == null) {
-				Init();
-				VRIME_KeymapInstance.InitDefaultKeymaps();
-			}
 			moveAndScale = this.GetComponent<VRIME_MoveAndScale>();
 		}
 		private void OnApplicationQuit() {
@@ -237,26 +241,20 @@ namespace VRIME2
 		#region  private Function
 		private void Init()
 		{
-			instance = this.GetComponent<VRIME_Manager>();
-			if(instance == null)
-			{
-				VRIME_Debugger.LogError("VRIME_Manager Not In Scenes!!!");
-				return;
-			}	
-			if(!ManagerName.Equals(instance.name)) {
-				instance.name = ManagerName;
+			if(!ManagerName.Equals(name)) {
+				name = ManagerName;
 			}
 			// Language Info Set
 			GetNewLanguagePool();
 			SetDefaultLanguage();
 			// Get object root
-			mObjectRoot = instance.transform.Find(RootPathName);
+			mObjectRoot = transform.Find(RootPathName);
 			if(mObjectRoot == null)
 			{
 				// Make obj path
 				GameObject aTmpRoot = new GameObject(RootPathName);
 				mObjectRoot = aTmpRoot.transform;
-				mObjectRoot.parent = instance.transform;
+				mObjectRoot.parent = transform;
 			}
 			// Get storage root
 			mInstanTrans = mObjectRoot.transform.Find(StoragePathName);
@@ -268,9 +266,9 @@ namespace VRIME2
 				mInstanTrans.parent = mObjectRoot;
 			}
 			// Add tracking object
-			mTracking = instance.GetComponent<VRIME_TrackingObject>();
+			mTracking = GetComponent<VRIME_TrackingObject>();
 			if(mTracking == null)
-				mTracking = instance.gameObject.AddComponent<VRIME_TrackingObject>();
+				mTracking = gameObject.AddComponent<VRIME_TrackingObject>();
 			// Init language running system.
 			runSystem = VRIME_LanguageFactory.MakeUsingSystem(VRIME_KeyboardSetting.IMELanguage);
 			// Init Oversee

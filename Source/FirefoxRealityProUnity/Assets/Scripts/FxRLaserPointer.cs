@@ -43,6 +43,7 @@
 
 using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
 using Valve.VR;
 
 public class FxRLaserPointer : MonoBehaviour
@@ -161,18 +162,28 @@ public class FxRLaserPointer : MonoBehaviour
 
     public virtual void OnPointerIn(PointerEventArgs e)
     {
+        IPointerEnterHandler pointerEnterHandler = e.target.GetComponent<IPointerEnterHandler>();
+        pointerEnterHandler?.OnPointerEnter(new PointerEventData(EventSystem.current));
+
         if (PointerIn != null)
             PointerIn(this, e);
     }
 
     public virtual void OnPointerClick(PointerEventArgs e)
     {
+        IPointerClickHandler clickHandler = e.target.GetComponent<IPointerClickHandler>();
+        clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
+
+
         if (PointerClick != null)
             PointerClick(this, e);
     }
 
     public virtual void OnPointerOut(PointerEventArgs e)
     {
+        IPointerExitHandler pointerExitHandler = e.target.GetComponent<IPointerExitHandler>();
+        pointerExitHandler?.OnPointerExit(new PointerEventData(EventSystem.current));
+
         if (PointerOut != null)
             PointerOut(this, e);
     }
