@@ -41,6 +41,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Valve.VR;
@@ -59,6 +60,10 @@ public class FxRLaserPointer : MonoBehaviour
     public float clickThicknesss = 0.0024f;
     public Texture2D hitTargetTexture;
     public float hitTargetRadius = 0.01f;
+    
+    private static List<FxRLaserPointer> AllLaserPointers = new List<FxRLaserPointer>();
+    private static FxRLaserPointer ActiveLaserPointer = null;
+    
     private GameObject hitTarget;
     private GameObject holder;
     private GameObject pointer;
@@ -72,30 +77,38 @@ public class FxRLaserPointer : MonoBehaviour
 
     private void OnEnable()
     {
-        if (pointer != null)
+        if (ActiveLaserPointer != null)
         {
-            pointer.SetActive(true);
-        }
-
-        if (hitTarget != null)
-        {
-            hitTarget.SetActive(true);
+            LaserShowing = ActiveLaserPointer == this;
         }
     }
 
     private void OnDisable()
     {
-        if (pointer != null)
-        {
-            pointer.SetActive(false);
-        }
-
-        if (hitTarget != null)
-        {
-            hitTarget.SetActive(false);
-        }
+        LaserShowing = false;
     }
 
+    private bool LaserShowing
+    {
+        set
+        {
+            if (value != laserShowing)
+            {
+                laserShowing = value;
+                if (pointer != null)
+                {
+                    pointer.SetActive(laserShowing);
+                }
+
+                if (hitTarget != null)
+                {
+                    hitTarget.SetActive(laserShowing);
+                }
+            }
+        }
+    }
+    private bool laserShowing = true;
+    
     private void Start()
     {
         if (pose == null)
@@ -186,6 +199,14 @@ public class FxRLaserPointer : MonoBehaviour
         Material newMaterial = new Material(Shader.Find("Unlit/Color"));
         newMaterial.SetColor("_Color", color);
         pointer.GetComponent<MeshRenderer>().material = newMaterial;
+
+        // Make sure only one laser pointer is showing at once
+        AllLaserPointers.Add(this);
+        if (ActiveLaserPointer == null)
+        {
+            ActiveLaserPointer = this;
+        }
+        LaserShowing = ActiveLaserPointer == this;
     }
 
     public virtual void OnPointerIn(PointerEventArgs e)
@@ -225,6 +246,17 @@ public class FxRLaserPointer : MonoBehaviour
             this.transform.GetChild(0).gameObject.SetActive(true);
         }
 
+        LaserShowing = ActiveLaserPointer == this;
+        if (ActiveLaserPointer != this)
+        {
+            if (interactWithUI.GetStateUp(pose.inputSource))
+            {
+                ActiveLaserPointer = this;
+                LaserShowing = true;
+            }
+
+            return;
+        }
         float dist = 100f;
 
         Ray raycast = new Ray(transform.position, transform.forward);
