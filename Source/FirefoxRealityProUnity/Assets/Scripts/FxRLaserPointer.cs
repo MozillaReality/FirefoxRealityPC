@@ -42,7 +42,6 @@
 //
 
 using UnityEngine;
-using System.Collections;
 using UnityEngine.EventSystems;
 using Valve.VR;
 
@@ -54,8 +53,6 @@ public class FxRLaserPointer : MonoBehaviour
     public SteamVR_Action_Boolean interactWithUI = SteamVR_Input.GetBooleanAction("InteractUI");
     public SteamVR_Action_Vector2 scroll2D = SteamVR_Input.GetVector2Action("Scroll2D");
 
-
-    public bool active = true;
     public Color color = new Color(0.0f, 0.8f, 1.0f, 0.8f);
     public float thickness = 0.002f;
     public Color clickColor = new Color(0.0f, 0.8f, 1.0f, 0.8f);
@@ -73,6 +70,31 @@ public class FxRLaserPointer : MonoBehaviour
 
     Transform previousContact = null;
 
+    private void OnEnable()
+    {
+        if (pointer != null)
+        {
+            pointer.SetActive(true);
+        }
+
+        if (hitTarget != null)
+        {
+            hitTarget.SetActive(true);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (pointer != null)
+        {
+            pointer.SetActive(false);
+        }
+
+        if (hitTarget != null)
+        {
+            hitTarget.SetActive(false);
+        }
+    }
 
     private void Start()
     {
@@ -80,7 +102,7 @@ public class FxRLaserPointer : MonoBehaviour
             pose = this.GetComponent<SteamVR_Behaviour_Pose>();
         if (pose == null)
             Debug.LogError("No SteamVR_Behaviour_Pose component found on this object");
-            
+
         if (interactWithUI == null)
             Debug.LogError("No UI Interaction action has been set on this component.");
         if (scroll2D == null)
@@ -93,13 +115,15 @@ public class FxRLaserPointer : MonoBehaviour
         mat.hideFlags = HideFlags.HideAndDontSave;
         mat.mainTexture = hitTargetTexture;
         Mesh m = new Mesh();
-        m.vertices = new Vector3[] {
+        m.vertices = new Vector3[]
+        {
             new Vector3(-hitTargetRadius, -hitTargetRadius, 0.0f),
-            new Vector3( hitTargetRadius, -hitTargetRadius, 0.0f),
-            new Vector3( hitTargetRadius,  hitTargetRadius, 0.0f),
-            new Vector3(-hitTargetRadius,  hitTargetRadius, 0.0f),
+            new Vector3(hitTargetRadius, -hitTargetRadius, 0.0f),
+            new Vector3(hitTargetRadius, hitTargetRadius, 0.0f),
+            new Vector3(-hitTargetRadius, hitTargetRadius, 0.0f),
         };
-        m.normals = new Vector3[] {
+        m.normals = new Vector3[]
+        {
             new Vector3(0.0f, 0.0f, 1.0f),
             new Vector3(0.0f, 0.0f, 1.0f),
             new Vector3(0.0f, 0.0f, 1.0f),
@@ -109,13 +133,15 @@ public class FxRLaserPointer : MonoBehaviour
         float u2 = 1.0f;
         float v1 = 0.0f;
         float v2 = 1.0f;
-        m.uv = new Vector2[] {
+        m.uv = new Vector2[]
+        {
             new Vector2(u1, v1),
             new Vector2(u2, v1),
             new Vector2(u2, v2),
             new Vector2(u1, v2)
         };
-        m.triangles = new int[] {
+        m.triangles = new int[]
+        {
             2, 1, 0,
             3, 2, 0
         };
@@ -145,6 +171,7 @@ public class FxRLaserPointer : MonoBehaviour
             {
                 collider.isTrigger = true;
             }
+
             Rigidbody rigidBody = pointer.AddComponent<Rigidbody>();
             rigidBody.isKinematic = true;
         }
@@ -152,9 +179,10 @@ public class FxRLaserPointer : MonoBehaviour
         {
             if (collider)
             {
-                Object.Destroy(collider);
+                Destroy(collider);
             }
         }
+
         Material newMaterial = new Material(Shader.Find("Unlit/Color"));
         newMaterial.SetColor("_Color", color);
         pointer.GetComponent<MeshRenderer>().material = newMaterial;
@@ -188,7 +216,7 @@ public class FxRLaserPointer : MonoBehaviour
             PointerOut(this, e);
     }
 
-        
+
     private void Update()
     {
         if (!isActive)
@@ -297,7 +325,6 @@ public class FxRLaserPointer : MonoBehaviour
                 argsClick.target = hit.transform;
                 OnPointerClick(argsClick);
             }
-
         } // bHit
 
         if (interactWithUI != null && interactWithUI.GetState(pose.inputSource))
@@ -310,6 +337,7 @@ public class FxRLaserPointer : MonoBehaviour
             pointer.transform.localScale = new Vector3(thickness, thickness, dist);
             pointer.GetComponent<MeshRenderer>().material.color = color;
         }
+
         pointer.transform.localPosition = new Vector3(0f, 0f, dist / 2f);
     }
 }
