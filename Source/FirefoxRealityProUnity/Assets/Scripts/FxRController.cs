@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections.Generic;
 using Valve.VR;
 using VRIME2;
 
@@ -23,6 +23,22 @@ public class FxRController : MonoBehaviour
 
     public bool DontCloseNativeWindowOnClose = false;
 
+    private List<FxRLaserPointer> LaserPointers
+    {
+        get
+        {
+            if (laserPointers == null)
+            {
+                laserPointers = new List<FxRLaserPointer>();
+                laserPointers.AddRange(FindObjectsOfType<FxRLaserPointer>());
+            }
+
+            return laserPointers;
+        }
+    }
+
+    private List<FxRLaserPointer> laserPointers;
+    
     //
     // MonoBehavior methods.
     //
@@ -156,6 +172,11 @@ public class FxRController : MonoBehaviour
 
     private void imeShowHandle(bool iShow)
     {
+        foreach (var laserPointer in LaserPointers)
+        {
+            laserPointer.enabled = !iShow;    
+        }
+
         if (iShow) {
             SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
             SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
