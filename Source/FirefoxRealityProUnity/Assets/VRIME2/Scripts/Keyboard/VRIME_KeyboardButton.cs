@@ -453,6 +453,7 @@ namespace VRIME2
         private void DeleteLoopAction()
         {
             CancelInvoke("DeleteLoopAction");
+            OnKeyPressed?.Invoke(8); // Backspace
             VRIME_InputFieldOversee.Ins.DeleteButton();
             VRIME_KeyAudioOversee.Ins.DeleteLoop();
         }
