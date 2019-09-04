@@ -134,7 +134,7 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
-	m_pfnCloseVRWindow(m_vrWin);
+	if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin);
 }
 
 FxRWindow::Size FxRWindowDX11::size() {
@@ -182,7 +182,7 @@ void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
 	m_ptLastPointer.y = y;
 
 	// Route this back to the Firefox window for processing
-	m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
+	if (m_pfnSendUIMessage) m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
 }
 
 void FxRWindowDX11::pointerEnter() {
@@ -216,5 +216,15 @@ void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
 }
 
 void FxRWindowDX11::keyPress(int charCode) {
-	m_pfnSendUIMessage(m_vrWin, WM_CHAR, charCode, 0);
+	switch (charCode) {
+		case VK_BACK:
+		case VK_TAB:
+		case VK_RETURN:
+		case VK_ESCAPE:
+			m_pfnSendUIMessage(m_vrWin, WM_KEYDOWN, charCode, 0);
+			m_pfnSendUIMessage(m_vrWin, WM_KEYUP,   charCode, 0);
+			break;
+		default:
+			m_pfnSendUIMessage(m_vrWin, WM_CHAR, charCode, 0);
+	}
 }

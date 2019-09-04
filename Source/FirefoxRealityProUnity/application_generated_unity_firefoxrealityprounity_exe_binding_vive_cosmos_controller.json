@@ -4,6 +4,8 @@
    "app_key" : "application.generated.unity.firefoxrealityprounity.exe",
    "bindings" : {
       "/actions/default" : {
+         "chords" : [],
+         "haptics" : [],
          "poses" : [
             {
                "output" : "/actions/default/in/pose",
@@ -14,6 +16,7 @@
                "path" : "/user/hand/right/pose/raw"
             }
          ],
+         "skeleton" : [],
          "sources" : [
             {
                "inputs" : {
@@ -88,9 +91,22 @@
                "path" : "/user/hand/right/input/trigger"
             },
             {
-               "inputs" : {},
-               "mode" : "none",
-               "path" : "/user/hand/right/input/joystick"
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/grabgrip"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/paddle_heavy"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/grabgrip"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/paddle_heavy"
             }
          ]
       }
@@ -98,7 +114,7 @@
    "category" : "steamvr_input",
    "controller_type" : "vive_cosmos_controller",
    "description" : "",
-   "name" : "My FirefoxRealityProUnity [Testing] configuration for Vive Cosmos Controller",
+   "name" : "My FirefoxReality [Testing] configuration for Vive Cosmos Controller",
    "options" : {},
    "simulated_actions" : []
 }

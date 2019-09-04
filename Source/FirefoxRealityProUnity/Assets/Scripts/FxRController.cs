@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections.Generic;
+using Valve.VR;
+using VRIME2;
 
 public class FxRController : MonoBehaviour
 {
@@ -19,6 +21,24 @@ public class FxRController : MonoBehaviour
     // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
 
+    public bool DontCloseNativeWindowOnClose = false;
+
+    private List<FxRLaserPointer> LaserPointers
+    {
+        get
+        {
+            if (laserPointers == null)
+            {
+                laserPointers = new List<FxRLaserPointer>();
+                laserPointers.AddRange(FindObjectsOfType<FxRLaserPointer>());
+            }
+
+            return laserPointers;
+        }
+    }
+
+    private List<FxRLaserPointer> laserPointers;
+    
     //
     // MonoBehavior methods.
     //
@@ -67,11 +87,17 @@ public class FxRController : MonoBehaviour
         // Give the plugin a place to look for resources.
         fxr_plugin.fxrSetResourcesPath(Application.streamingAssetsPath);
 
+        // Set any launch-time parameters.
+        if (DontCloseNativeWindowOnClose) fxr_plugin.fxrSetParamBool(FxRPlugin.FxRParam.b_CloseNativeWindowOnClose, false);
+
         // Set the reference to the plugin in any other objects in the scene that need it.
         FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
         foreach (FxRWindow w in fxrwindows) {
             w.fxr_plugin = fxr_plugin;
         }
+        
+        // VRIME keyboard event registration
+        VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
     }
 
     void OnDisable()
@@ -114,7 +140,8 @@ public class FxRController : MonoBehaviour
         }
         fxr_plugin = null;
 
-
+        // VRIME keyboard event registration
+        VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
     }
 
     void Start()
@@ -129,7 +156,47 @@ public class FxRController : MonoBehaviour
         if (openVRSession != IntPtr.Zero) {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
+    }
 
+    public void ToggleKeyboard()
+    {
+        if (!VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.ShowIME("");
+        }
+        else
+        {
+            VRIME_Manager.Ins.HideIME();
+        }
+    }
+
+    private void imeShowHandle(bool iShow)
+    {
+        foreach (var laserPointer in LaserPointers)
+        {
+            laserPointer.enabled = !iShow;    
+        }
+
+        if (iShow) {
+            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
+            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
+
+        } else {
+            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
+            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
+
+            //SteamVR_Actions._default.TouchPos.RemoveOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
+            //SteamVR_Actions._default.TouchPos.RemoveOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
+        }
     }
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]

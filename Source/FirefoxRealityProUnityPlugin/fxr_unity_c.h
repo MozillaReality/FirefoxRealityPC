@@ -181,6 +181,19 @@ enum {
 
 FXR_EXTERN void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY);
 
+enum {
+	FxRParam_b_CloseNativeWindowOnClose = 0,
+	FxRParam_Max
+};
+
+FXR_EXTERN void fxrSetParamBool(int param, bool flag);
+FXR_EXTERN void fxrSetParamInt(int param, int val);
+FXR_EXTERN void fxrSetParamFloat(int param, float val);
+FXR_EXTERN bool fxrGetParamBool(int param);
+FXR_EXTERN int fxrGetParamInt(int param);
+FXR_EXTERN float fxrGetParamFloat(int param);
+
+
 #ifdef __cplusplus
 }
 #endif

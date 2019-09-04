@@ -1,0 +1,374 @@
+{
+    "name": "symbol_zhuyin",
+    "layoutType": 1,
+    "rowDatas": [
+        {
+            "atRow": 0,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "word": "1",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 1,
+                    "word": "2",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 2,
+                    "word": "3",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 3,
+                    "word": "4",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 4,
+                    "word": "5",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 5,
+                    "word": "6",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 6,
+                    "word": "7",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 7,
+                    "word": "8",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 8,
+                    "word": "9",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 9,
+                    "word": "0",
+                    "keyFuncType": 19,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 10,
+                    "word": "7",
+                    "keyFuncType": 4,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                }
+            ]
+        },
+        {
+            "atRow": 1,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "word": "~",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 1,
+                    "word": "#",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 2,
+                    "word": "$",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 3,
+                    "word": "%",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 4,
+                    "word": "^",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 5,
+                    "word": "&",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 6,
+                    "word": "*",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 7,
+                    "word": "{",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 8,
+                    "word": "}",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 9,
+                    "word": "`",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 10,
+                    "word": ".com",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                }
+            ]
+        },
+        {
+            "atRow": 2,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "word": "(",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 1,
+                    "word": ")",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 2,
+                    "word": ":",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 3,
+                    "word": ";",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 4,
+                    "word": "\\",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 5,
+                    "word": "°",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 6,
+                    "word": "…",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 7,
+                    "word": "'",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 8,
+                    "word": "\"",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 9,
+                    "word": "%",
+                    "keyFuncType": 5,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                }
+            ]
+        },
+        {
+            "atRow": 3,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "word": "+",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 1,
+                    "word": "-",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 2,
+                    "word": "=",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 3,
+                    "word": "[",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 4,
+                    "word": "]",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 5,
+                    "word": "|",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 6,
+                    "word": "<",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 7,
+                    "word": ">",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 8,
+                    "word": "_",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 9,
+                    "word": "@",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 10,
+                    "word": "/",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                }
+            ]
+        },
+        {
+            "atRow": 4,
+            "objDatas": [
+                {
+                    "index": 0,
+                    "word": "ㄅㄆㄇ",
+                    "keyFuncType": 7,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 1,
+                    "word": ",",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 2,
+                    "word": " ",
+                    "keyFuncType": 17,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 3,
+                    "word": ".",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 4,
+                    "word": "?",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                },
+                {
+                    "index": 5,
+                    "word": "!",
+                    "keyFuncType": 1,
+                    "lowerAccentWords": [],
+                    "upperAccentWords": []
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,4 @@
+This package depends on:
+* Htc.Omni/Common
+* Htc.Omni/UI
+* TextMesh Pro

@@ -98,6 +98,14 @@
             {
                "output" : "/actions/default/in/pose",
                "path" : "/user/hand/right/pose/raw"
+            },
+            {
+               "output" : "none",
+               "path" : "/user/hand/left/pose/handgrip"
+            },
+            {
+               "output" : "none",
+               "path" : "/user/hand/right/pose/handgrip"
             }
          ],
          "sources" : [
@@ -198,6 +206,24 @@
                },
                "mode" : "scroll",
                "path" : "/user/hand/right/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/grabgrip"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/grabgrip"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
             }
          ]
       },
@@ -245,7 +271,7 @@
    "category" : "steamvr_input",
    "controller_type" : "holographic_controller",
    "description" : "",
-   "name" : "My FirefoxRealityProUnity [Testing] configuration for Windows Mixed Reality Controller",
+   "name" : "My FirefoxReality [Testing] configuration for Windows Mixed Reality Controller",
    "options" : {},
    "simulated_actions" : []
 }

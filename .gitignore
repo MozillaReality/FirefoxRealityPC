@@ -16,6 +16,9 @@ Source/FirefoxRealityProUnity/UnityGenerated/
 Source/FirefoxRealityProUnity/Assets/AssetStoreTools*
 Source/FirefoxRealityProUnity/.vs
 
+# Unity VR client-specific
+Source/FirefoxRealityProUnity/unityProject.vrmanifest
+
 # Unity3D Generated file on crash reports
 sysinfo.txt
 
@@ -375,3 +378,5 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+Source/FirefoxRealityProUnity/Assets/Playground/
+Source/FirefoxRealityProUnity/Assets/Playground.meta
