@@ -22,6 +22,7 @@ public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] strin
 
 // Delegate type declaration for window size callback.
 public delegate void FxRPluginWindowCreatedCallback(int uid, int windowIndex, int pixelWidth, int pixelHeight, int format);
+public delegate void FxRPluginWindowResizedCallback(int uid, int pixelWidth, int pixelHeight);
 
 public class FxRPlugin
 {
@@ -30,6 +31,8 @@ public class FxRPlugin
     private GCHandle logCallbackGCH;
     private FxRPluginWindowCreatedCallback windowCreatedCallback = null;
     private GCHandle windowCreatedCallbackGCH;
+    private FxRPluginWindowResizedCallback windowResizedCallback = null;
+    private GCHandle windowResizedCallbackGCH;
 
     public void fxrRegisterLogCallback(FxRPluginLogCallback lcb)
     {
@@ -63,6 +66,9 @@ public class FxRPlugin
         windowCreatedCallback = wccb;
         // Create the callback stub prior to registering the callback on the native side.
         windowCreatedCallbackGCH = GCHandle.Alloc(windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
+        
+        // TODO: Create the resize callback and register it...
+//        windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
         FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback);
     }
 
@@ -70,8 +76,10 @@ public class FxRPlugin
     {
         FxRPlugin_pinvoke.fxrStopFx();
         windowCreatedCallback = null;
-        // Free the callback stub after deregistering the callback on the native side.
+        windowResizedCallback = null;
+        // Free the callback stubs after deregistering the callbacks on the native side.
         windowCreatedCallbackGCH.Free();
+//        windowResizedCallbackGCH.Free();
     }
 
     public void fxrSetResourcesPath(string path)
@@ -97,6 +105,11 @@ public class FxRPlugin
     public bool fxrRequestNewWindow(int uid, int widthPixelsRequested, int heightPixelsRequested)
     {
         return FxRPlugin_pinvoke.fxrRequestNewWindow(uid, widthPixelsRequested, heightPixelsRequested);
+    }
+    
+    public bool fxrRequestWindowSizeChange(int windowIndex, int widthPixelsRequested, int heightPixelsRequested)
+    {
+        return FxRPlugin_pinvoke.fxrRequestWindowSizeChange(windowIndex, widthPixelsRequested, heightPixelsRequested);
     }
 
     public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
@@ -212,5 +225,4 @@ public class FxRPlugin
     {
         return FxRPlugin_pinvoke.fxrGetParamFloat((int)param);
     }
-
 }

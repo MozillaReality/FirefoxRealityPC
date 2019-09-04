@@ -20,6 +20,7 @@ public class FxRWindow : MonoBehaviour
     public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
 
     private int _windowIndex = 0;
+    private TextureFormat _textureFormat;
 
     public static FxRWindow FindWindowWithUID(int uid)
     {
@@ -53,7 +54,7 @@ public class FxRWindow : MonoBehaviour
     private void HandleKeyPressed(int keycode)
     {
         // TODO: All windows with respond to all keyboard presses. Since we only ever have one at the moment...
-        FxRPlugin_pinvoke.fxrKeyEvent(_windowIndex, keycode);
+        fxr_plugin.fxrKeyEvent(_windowIndex, keycode);
     }
 
     void Start()
@@ -73,10 +74,16 @@ public class FxRWindow : MonoBehaviour
         }
     }
 
+    public bool Resize(int widthPixels, int heightPixels)
+    {
+        return fxr_plugin.fxrRequestWindowSizeChange(_windowIndex, widthPixels, heightPixels);
+    }
+
     public void WasCreated(int windowIndex, int widthPixels, int heightPixels, TextureFormat format)
     {
         Debug.Log("FxRWindow.WasCreated(windowIndex:" + windowIndex + ", widthPixels:" + widthPixels + ", heightPixels:" + heightPixels + ", format:" + format + ")");
         _windowIndex = windowIndex;
+        _textureFormat = format;
 
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
@@ -89,6 +96,18 @@ public class FxRWindow : MonoBehaviour
         _videoMeshGO.transform.localRotation = Quaternion.identity;
     }
 
+    public void WasResized(int widthPixels, int heightPixels)
+    { 
+        Height = (Width / widthPixels) * heightPixels;
+        videoSize = new Vector2Int(widthPixels, heightPixels);
+
+        var oldTexture = _videoTexture;
+        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
+        Destroy(oldTexture);
+        
+        ConfigureWindow(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height);
+    }
+    
     // Update is called once per frame
     void Update()
     {
@@ -228,52 +247,81 @@ public class FxRWindow : MonoBehaviour
         Shader shaderSource = Shader.Find("TextureNoLight");
         Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
         vm.hideFlags = HideFlags.HideAndDontSave;
-        vm.mainTexture = vt;
         //Debug.Log("Created video material");
 
+        MeshFilter filter = vmgo.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = vmgo.AddComponent<MeshRenderer>();
+        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        meshRenderer.receiveShadows = false;
+ 
+        vmgo.GetComponent<Renderer>().material = vm;
+        vmgo.AddComponent<MeshCollider>();
+
+        ConfigureWindow(vmgo, vt, textureScaleU, textureScaleV, width, height);
+        return vmgo;
+    }
+
+    private void ConfigureWindow(GameObject vmgo, Texture2D vt, float textureScaleU, float textureScaleV,
+        float width, float height)
+    {
+        // Check parameters.
+        if (!vt) {
+            Debug.LogError("Error: CreateWindowMesh null Texture2D");
+            return;
+        }
+        // Create the mesh
+        var m = CreateVideoMesh(textureScaleU, textureScaleV, width, height);
+        
+        // Assign the texture to the window's material
+        Material vm = vmgo.GetComponent<Renderer>().material;
+        vm.mainTexture = vt;
+
+        // Assign the mesh to the mesh filter
+        MeshFilter filter = vmgo.GetComponent<MeshFilter>();
+        filter.mesh = m;
+
+        // Update the mesh collider mesh
+        MeshCollider vmc = vmgo.GetComponent<MeshCollider>();;
+        vmc.sharedMesh = filter.sharedMesh;
+    }
+
+    private Mesh CreateVideoMesh(float textureScaleU, float textureScaleV, float width, float height)
+    {
         // Now create a mesh appropriate for displaying the video, a mesh filter to instantiate that mesh,
         // and a mesh renderer to render the material on the instantiated mesh.
         Mesh m = new Mesh();
         m.Clear();
-        m.vertices = new Vector3[] {
-                new Vector3(-width*0.5f, 0.0f, 0.0f),
-                new Vector3(width*0.5f, 0.0f, 0.0f),
-                new Vector3(width*0.5f,  height, 0.0f),
-                new Vector3(-width*0.5f,  height, 0.0f),
-            };
-        m.normals = new Vector3[] {
-                new Vector3(0.0f, 0.0f, 1.0f),
-                new Vector3(0.0f, 0.0f, 1.0f),
-                new Vector3(0.0f, 0.0f, 1.0f),
-                new Vector3(0.0f, 0.0f, 1.0f),
-            };
+        m.vertices = new Vector3[]
+        {
+            new Vector3(-width * 0.5f, 0.0f, 0.0f),
+            new Vector3(width * 0.5f, 0.0f, 0.0f),
+            new Vector3(width * 0.5f, height, 0.0f),
+            new Vector3(-width * 0.5f, height, 0.0f),
+        };
+        m.normals = new Vector3[]
+        {
+            new Vector3(0.0f, 0.0f, 1.0f),
+            new Vector3(0.0f, 0.0f, 1.0f),
+            new Vector3(0.0f, 0.0f, 1.0f),
+            new Vector3(0.0f, 0.0f, 1.0f),
+        };
         float u1 = flipX ? textureScaleU : 0.0f;
         float u2 = flipX ? 0.0f : textureScaleU;
         float v1 = flipY ? textureScaleV : 0.0f;
         float v2 = flipY ? 0.0f : textureScaleV;
-        m.uv = new Vector2[] {
-                new Vector2(u1, v1),
-                new Vector2(u2, v1),
-                new Vector2(u2, v2),
-                new Vector2(u1, v2)
-            };
-        m.triangles = new int[] {
-                2, 1, 0,
-                3, 2, 0
-            };
-
-        MeshFilter filter = vmgo.AddComponent<MeshFilter>();
-        filter.mesh = m;
-
-        MeshRenderer meshRenderer = vmgo.AddComponent<MeshRenderer>();
-        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        meshRenderer.receiveShadows = false;
-        vmgo.GetComponent<Renderer>().material = vm;
-
-        MeshCollider vmc = vmgo.AddComponent<MeshCollider>();
-        vmc.sharedMesh = filter.sharedMesh;
-
-        return vmgo;
+        m.uv = new Vector2[]
+        {
+            new Vector2(u1, v1),
+            new Vector2(u2, v1),
+            new Vector2(u2, v2),
+            new Vector2(u1, v2)
+        };
+        m.triangles = new int[]
+        {
+            2, 1, 0,
+            3, 2, 0
+        };
+        return m;
     }
 
     private void DestroyWindow()
