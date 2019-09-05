@@ -61,15 +61,15 @@ public class FxRPlugin
         else return "";
     }
 
-    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb)
+    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb, FxRPluginWindowResizedCallback wrcb)
     {
         windowCreatedCallback = wccb;
+        windowResizedCallback = wrcb;
         // Create the callback stub prior to registering the callback on the native side.
         windowCreatedCallbackGCH = GCHandle.Alloc(windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
+        windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
         
-        // TODO: Create the resize callback and register it...
-//        windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
-        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback);
+        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback, windowResizedCallback);
     }
 
     public void fxrStopFx()
@@ -79,7 +79,7 @@ public class FxRPlugin
         windowResizedCallback = null;
         // Free the callback stubs after deregistering the callbacks on the native side.
         windowCreatedCallbackGCH.Free();
-//        windowResizedCallbackGCH.Free();
+        windowResizedCallbackGCH.Free();
     }
 
     public void fxrSetResourcesPath(string path)

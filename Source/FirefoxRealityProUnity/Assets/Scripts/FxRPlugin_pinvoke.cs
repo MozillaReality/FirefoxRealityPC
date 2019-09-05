@@ -35,7 +35,7 @@ public static class FxRPlugin_pinvoke
     public static extern bool fxrGetFxVersion([MarshalAs(UnmanagedType.LPStr)]StringBuilder buffer, int length);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback);
+    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback, FxRPluginWindowResizedCallback resizedCallback);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrStopFx();

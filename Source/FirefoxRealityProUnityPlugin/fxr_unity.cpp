@@ -62,6 +62,7 @@ static PFN_CREATEVRWINDOW m_pfnCreateVRWindow = nullptr;
 static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
 static PFN_CLOSEVRWINDOW m_pfnCloseVRWindow = nullptr;
 static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
+static PFN_WINDOWRESIZEDCALLBACK m_windowResizedCallback = nullptr;
 static PROCESS_INFORMATION procInfoFx = { 0 };
 
 static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
@@ -202,7 +203,7 @@ void fxrSetResourcesPath(const char *path)
 	}
 }
 
-void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
+void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback)
 {
 	assert(m_hVRHost == nullptr);
 
@@ -250,11 +251,14 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 	assert(fCreateContentProc);
 
 	m_windowCreatedCallback = windowCreatedCallback;
+	m_windowResizedCallback = windowResizedCallback;
+
 }
 
 void fxrStopFx(void)
 {
 	m_windowCreatedCallback = nullptr;
+	m_windowResizedCallback = nullptr;
 
 	::FreeLibrary(m_hVRHost);
 	m_hVRHost = nullptr;
@@ -403,7 +407,11 @@ bool fxrRequestWindowSizeChange(int windowIndex, int width, int height)
 	if (window_iter == s_windows.end()) return false;
 	
 	window_iter->second->setSize({ width, height });
-	return true;
+
+	if (m_windowResizedCallback) (*m_windowResizedCallback)(window_iter->second->uidExt(), width, height);
+
+	// TODO: Return true once above method implemented...
+	return false;
 }
 
 void fxrRequestWindowUpdate(int windowIndex, float timeDelta)

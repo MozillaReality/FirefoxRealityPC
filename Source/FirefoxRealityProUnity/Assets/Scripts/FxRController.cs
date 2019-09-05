@@ -154,8 +154,7 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        // TODO: Register the window resized callback...
-        fxr_plugin.fxrStartFx(OnFxWindowCreated);
+        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized);
 
         IntPtr openVRSession = UnityEngine.XR.XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
@@ -250,7 +249,23 @@ public class FxRController : MonoBehaviour
         }
 
         window.WasCreated(windowIndex, widthPixels, heightPixels, format);
+
+//        StartCoroutine(TestRsize(window));
     }
+
+//    private IEnumerator TestRsize(FxRWindow window)
+//    {
+//        while (true)
+//        {
+//            yield return new WaitForSeconds(5f);
+//            int width = Mathf.CeilToInt(Random.Range(1000f, 1080f));
+//            int height = Mathf.CeilToInt(Random.Range(1000f, 1080f));
+//            if (!window.Resize(width, height))
+//            {
+//                Debug.LogWarning(">>> unsuccessful at resizing window.");
+//            }
+//        }
+//    }
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowResizedCallback))]
     void OnFxWindowResized(int uid, int widthPixels, int heightPixels)
