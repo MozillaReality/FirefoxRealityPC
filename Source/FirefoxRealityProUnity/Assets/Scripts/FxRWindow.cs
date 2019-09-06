@@ -5,11 +5,11 @@ using VRIME2;
 
 public class FxRWindow : MonoBehaviour
 {
-    public static float DefaultWidth = 4.0f;
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
     public bool flipX = false;
     public bool flipY = false;
-    public float Width = DefaultWidth;
+    private static float DefaultWidth = 3.0f;
+    private float Width = DefaultWidth;
     private float Height;
     private Vector2Int videoSize;
     private float textureScaleU;
@@ -74,6 +74,12 @@ public class FxRWindow : MonoBehaviour
         }
     }
 
+    public void RequestSizeMultiple(float sizeMultiple)
+    {
+        Width = DefaultWidth * sizeMultiple;
+        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple), Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
+    }
+    
     public bool Resize(int widthPixels, int heightPixels)
     {
         return fxr_plugin.fxrRequestWindowSizeChange(_windowIndex, widthPixels, heightPixels);

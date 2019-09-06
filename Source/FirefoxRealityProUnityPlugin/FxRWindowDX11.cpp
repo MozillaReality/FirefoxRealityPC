@@ -79,7 +79,7 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 	assert(hThreadFxWin != nullptr);
 
 	HANDLE fxTexHandle = nullptr;
-	DWORD waitResult = ::WaitForSingleObject(hThreadFxWin, 10000); // 10 seconds
+	DWORD waitResult = ::WaitForSingleObject(hThreadFxWin, 30000); // 30 seconds
 	if (waitResult == WAIT_TIMEOUT) {
 		FXRLOGe("Gave up waiting for Firefox VR window.\n");
 		return false;

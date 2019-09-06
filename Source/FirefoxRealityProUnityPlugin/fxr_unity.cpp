@@ -408,8 +408,12 @@ bool fxrRequestWindowSizeChange(int windowIndex, int width, int height)
 	
 	window_iter->second->setSize({ width, height });
 
-	if (m_windowResizedCallback) (*m_windowResizedCallback)(window_iter->second->uidExt(), width, height);
-
+	if (m_windowResizedCallback)
+	{
+		// Once window resize request has completed, get the size that actually was set, and call back to Unity
+		FxRWindow::Size size = window_iter->second->size();
+		(*m_windowResizedCallback)(window_iter->second->uidExt(), size.w, size.h);
+	}
 	// TODO: Return true once above method implemented...
 	return false;
 }
