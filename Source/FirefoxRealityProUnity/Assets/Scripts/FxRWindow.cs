@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
 using VRIME2;
 
@@ -20,6 +19,7 @@ public class FxRWindow : MonoBehaviour
     public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
 
     private int _windowIndex = 0;
+    private TextureFormat _videoFormat;
 
     public static FxRWindow FindWindowWithUID(int uid)
     {
@@ -32,6 +32,25 @@ public class FxRWindow : MonoBehaviour
         }
         return null;
     }
+    
+    public void ShowVideo()
+    {
+        // TODO: Request video from plug-in upon request for full screen video... 
+        _videoMeshGO.GetComponent<Renderer>().material.mainTexture = null;
+        Destroy(_videoTexture);
+        _videoTexture = null;
+        var videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _videoFormat, out textureScaleU, out textureScaleV);
+        FxRVideoController.Instance.ShowVideo(videoTexture, _windowIndex);
+    }
+
+    private void HandleFullScreenVideoClosed(int windowIndex)
+    {
+        if (windowIndex == _windowIndex)
+        {
+            _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _videoFormat, out textureScaleU, out textureScaleV);
+            _videoMeshGO.GetComponent<Renderer>().material.mainTexture = _videoTexture;
+        }
+    }
 
     public static FxRWindow CreateNewInParent(GameObject parent)
     {
@@ -43,11 +62,15 @@ public class FxRWindow : MonoBehaviour
     private void OnEnable()
     {
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
+        // TODO: Revisit this when we allow for multiple windows, as each window will want to control its own full screen video
+        FxRVideoController.OnImmersiveVideoClosed += HandleFullScreenVideoClosed;
     }
-
+    
     private void OnDisable()
     {
         VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
+        // TODO: Revisit this when we allow for multiple windows, as each window will want to control its own full screen video
+        FxRVideoController.OnImmersiveVideoClosed -= HandleFullScreenVideoClosed;
     }
 
     private void HandleKeyPressed(int keycode)
@@ -81,8 +104,9 @@ public class FxRWindow : MonoBehaviour
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
 
-        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, format, out textureScaleU, out textureScaleV);
-
+        _videoFormat = format;
+        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _videoFormat, out textureScaleU, out textureScaleV);
+        
         _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;

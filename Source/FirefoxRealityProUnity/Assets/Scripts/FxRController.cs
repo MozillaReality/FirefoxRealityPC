@@ -18,6 +18,8 @@ public class FxRController : MonoBehaviour
     [SerializeField]
     private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
 
+    [SerializeField] private FxRVideoController VideoController;
+
     // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
 
@@ -95,7 +97,8 @@ public class FxRController : MonoBehaviour
         foreach (FxRWindow w in fxrwindows) {
             w.fxr_plugin = fxr_plugin;
         }
-        
+
+        FxRVideoController.Instance.fxr_plugin = fxr_plugin;
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
     }
@@ -169,7 +172,7 @@ public class FxRController : MonoBehaviour
             VRIME_Manager.Ins.HideIME();
         }
     }
-
+    
     private void imeShowHandle(bool iShow)
     {
         foreach (var laserPointer in LaserPointers)
