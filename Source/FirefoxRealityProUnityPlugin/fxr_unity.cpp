@@ -62,6 +62,8 @@ static PFN_CREATEVRWINDOW m_pfnCreateVRWindow = nullptr;
 static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
 static PFN_CLOSEVRWINDOW m_pfnCloseVRWindow = nullptr;
 static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
+static PFN_FULLSCREENBEGINCALLBACK m_fullScreenBeginCallback = nullptr;
+static PFN_FULLSCREENENDCALLBACK m_fullScreenEndCallback = nullptr;
 static PROCESS_INFORMATION procInfoFx = { 0 };
 
 static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
@@ -168,6 +170,27 @@ extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRen
 //
 // FxR plugin implementation.
 //
+
+void fxrRegisterFullScreenBeginCallback(PFN_FULLSCREENBEGINCALLBACK fullScreenBeginCallback)
+{
+	m_fullScreenBeginCallback = fullScreenBeginCallback;
+}
+
+void fxrRegisterFullScreenEndCallback(PFN_FULLSCREENENDCALLBACK fullScreenEndCallback)
+{
+	m_fullScreenEndCallback = fullScreenEndCallback;
+}
+
+void fxrTriggerFullScreenBeginEvent()
+{
+	FXRLOGw("Triggering full screen begin.\n");
+	auto window_iter = s_windows.find(1);
+	if (window_iter != s_windows.end()) {
+		FxRWindow::Size size = window_iter->second->size();
+		m_fullScreenBeginCallback(size.w, size.h, window_iter->second->format(), FxRVideoProjection_360);
+		FXRLOGw("Triggered full screen begin.\n");
+	}
+}
 
 void fxrRegisterLogCallback(PFN_LOGCALLBACK logCallback)
 {
