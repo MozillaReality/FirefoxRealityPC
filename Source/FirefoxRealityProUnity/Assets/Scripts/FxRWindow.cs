@@ -40,16 +40,13 @@ public class FxRWindow : MonoBehaviour
 
     public void ShowVideo()
     {
+        // TODO: Stopgap until video textures are supported in plugin
         fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, IntPtr.Zero);
         _videoMeshGO.GetComponent<Renderer>().material.mainTexture = null;
         Destroy(_videoTexture);
         _videoTexture = null;
 
         fxr_plugin?.fxrTriggerFullScreenBeginEvent();
-//        // TODO: Request video from plug-in upon request for full screen video... 
-//        var videoTexture =
-//            CreateWindowTexture(videoSize.x, videoSize.y, _videoFormat, out textureScaleU, out textureScaleV);
-//        FxRVideoController.Instance.ShowVideo(videoTexture, _windowIndex);
     }
 
     // TODO: This is only necessary in the current state of affairs where we are sharing a video texture id between video and windows...

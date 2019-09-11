@@ -19,10 +19,8 @@ public class FxRVideoController : Singleton<FxRVideoController>
 
    public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
 
-//    [SerializeField] protected List<GameObject> ObjectsToHide;
     [SerializeField] protected GameObject VideoControls;
 
-//    private List<GameObject> _objectsHidden = new List<GameObject>();
     private Texture2D _videoTexture = null; // Texture object with the video image.
 
     private GameObject _videoProjection;
@@ -52,7 +50,7 @@ public class FxRVideoController : Singleton<FxRVideoController>
         }
         var videoTexture = CreateVideoTexture(pixelwidth, pixelheight, format);
 
-        // TODO: Support multiple video modes: 360 Video, 180 left/right, 180 top/bottom, etc
+        // TODO: Support multiple video projection modes: 360 Video, 180 left/right, 180 top/bottom, etc
         switch (projectionMode)
         {
             case FXR_VIDEO_PROJECTION_MODE.VIDEO_PROJECTION_360:
@@ -119,15 +117,6 @@ public class FxRVideoController : Singleton<FxRVideoController>
         // TODO: Should rotate so it is oriented to direction user is facing when video starts?
         _videoProjection.transform.localRotation = Quaternion.identity;
 
-//        foreach (var objectToHide in ObjectsToHide)
-//        {
-//            if (objectToHide.activeSelf)
-//            {
-//                objectToHide.SetActive(false);
-//                _objectsHidden.Add(objectToHide);
-//            }
-//        }
-
         VideoControlsVisible = true;
     }
 
@@ -149,12 +138,6 @@ public class FxRVideoController : Singleton<FxRVideoController>
             _videoProjection = null;
         }
 
-//        foreach (var objectHidden in _objectsHidden)
-//        {
-//            objectHidden.SetActive(true);
-//        }
-//
-//        _objectsHidden.Clear();
         VideoControlsVisible = false;
         
         _windowIndex = 0;
