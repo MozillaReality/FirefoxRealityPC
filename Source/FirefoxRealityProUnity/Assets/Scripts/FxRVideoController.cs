@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FxRVideoController : Singleton<FxRVideoController>
+public class FxRVideoController : MonoBehaviour
 {
     public enum FXR_VIDEO_PROJECTION_MODE
     {

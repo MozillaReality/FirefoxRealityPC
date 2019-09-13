@@ -139,7 +139,7 @@ public class FxRController : MonoBehaviour
             w.fxr_plugin = fxr_plugin;
         }
 
-        FxRVideoController.Instance.fxr_plugin = fxr_plugin;
+        VideoController.fxr_plugin = fxr_plugin;
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
     }
