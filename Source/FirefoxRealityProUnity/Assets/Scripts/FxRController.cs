@@ -19,6 +19,42 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
 
+    [SerializeField] private FxRVideoController VideoController;
+
+    public enum FXR_BROWSING_MODE
+    {
+        FXR_BROWSER_MODE_WEB_BROWSING,
+        FXR_BROWSER_MODE_FULLSCREEN_VIDEO,
+        FXR_BROWSER_MODE_WEBXR
+    }
+
+    public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
+
+    public static BrowsingModeChanged OnBrowsingModeChanged;
+
+    public static FXR_BROWSING_MODE CurrentBrowsingMode
+    {
+        get => currentBrowsingMode;
+        private set
+        {
+            if (currentBrowsingMode != value)
+            {
+                OnBrowsingModeChanged?.Invoke(value);
+                if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
+                    && VRIME_Manager.Ins.ShowState)
+                {
+                    VRIME_Manager.Ins.HideIME();
+                }
+            }
+
+            currentBrowsingMode = value;
+        }
+    }
+
+    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+
+    public FxRPlugin Plugin => fxr_plugin;
+
     // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
 
@@ -85,6 +121,10 @@ public class FxRController : MonoBehaviour
                 break;
         }
 
+        // Register the full screen video callbacks
+        fxr_plugin.fxrRegisterFullScreenBeginCallback(HandleFullScreenBegin);
+        fxr_plugin.fxrRegisterFullScreenEndCallback(HandleFullScreenEnd);
+
         // Give the plugin a place to look for resources.
         fxr_plugin.fxrSetResourcesPath(Application.streamingAssetsPath);
 
@@ -99,9 +139,43 @@ public class FxRController : MonoBehaviour
             w.fxr_plugin = fxr_plugin;
         }
 
+        FxRVideoController.Instance.fxr_plugin = fxr_plugin;
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
     }
+
+    private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
+    {
+        FxRVideoController.FXR_VIDEO_PROJECTION_MODE projectionMode =
+            (FxRVideoController.FXR_VIDEO_PROJECTION_MODE) projection;
+
+        if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode))
+        {
+            CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_FULLSCREEN_VIDEO;
+        }
+        else
+        {
+            Debug.LogError("FxRController::HandleFullScreenBegin: Couldn't start full screen video.");
+        }
+    }
+
+    public void UserExitFullScreenVideo()
+    {
+        // TODO: Notify plugin we are closing video
+        HandleFullScreenEnd();
+    }
+
+    private void HandleFullScreenEnd()
+    {
+        VideoController.ExitVideo();
+        CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow window in fxrwindows)
+        {
+            window.RecreateVideoTexture();
+        }
+    }
+
 
     void OnDisable()
     {
@@ -141,6 +215,9 @@ public class FxRController : MonoBehaviour
             default:
                 break;
         }
+
+        fxr_plugin.fxrRegisterFullScreenBeginCallback(null);
+        fxr_plugin.fxrRegisterFullScreenEndCallback(null);
 
         fxr_plugin = null;
 

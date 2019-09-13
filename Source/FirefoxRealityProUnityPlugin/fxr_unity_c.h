@@ -108,6 +108,15 @@ enum  {
 	FxRTextureFormat_RGB565 = 9
 };
 
+enum {
+	FxRVideoProjection_2D = 0,
+	FxRVideoProjection_360 = 1,
+	FxRVideoProjection_360S = 2, // 360 stereo
+	FxRVideoProjection_180 = 3,
+	FxRVideoProjection_180LR = 4, // 180 left to right
+	FxRVideoProjection_180TB = 5, // 180 top to bottom
+	FxRVideoProjection_3D = 6 // 3D side by side
+};
 //
 // FxR custom plugin interface API.
 //
@@ -117,12 +126,22 @@ typedef void (FXR_CALLBACK *PFN_LOGCALLBACK)(const char* msg);
 typedef void (FXR_CALLBACK *PFN_WINDOWCREATEDCALLBACK)(int uidExt, int windowIndex, int pixelWidth, int pixelHeight, int format);
 typedef void (FXR_CALLBACK *PFN_WINDOWRESIZEDCALLBACK)(int uidExt, int pixelWidth, int pixelHeight);
 
+typedef void (FXR_CALLBACK *PFN_FULLSCREENBEGINCALLBACK)(int pixelWidth, int pixelHeight, int format, int projection);
+
+typedef void (FXR_CALLBACK *PFN_FULLSCREENENDCALLBACK)();
+
+FXR_EXTERN void fxrTriggerFullScreenBeginEvent();
+
 /**
  * Registers a callback function to use when a message is logged.
  * If the callback is to become invalid, be sure to call this function with NULL
  * first so that the callback is unregistered.
  */
 FXR_EXTERN void fxrRegisterLogCallback(PFN_LOGCALLBACK logCcallback);
+
+FXR_EXTERN void fxrRegisterFullScreenBeginCallback(PFN_FULLSCREENBEGINCALLBACK);
+
+FXR_EXTERN void fxrRegisterFullScreenEndCallback(PFN_FULLSCREENENDCALLBACK);
 
 FXR_EXTERN void fxrSetLogLevel(const int logLevel);
 
