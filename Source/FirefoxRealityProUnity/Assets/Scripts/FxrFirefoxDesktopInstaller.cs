@@ -34,6 +34,8 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
 
     void Start()
     {
+        // TODO: Prompt user
+        // TODO: Keep track of whether we have already asked to install
         StartCoroutine(RetrieveLatestFirefoxVersion((wasSuccessful, versionString) =>
         {
             if (wasSuccessful)
@@ -73,7 +75,7 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
             ? GetInstalledVersion(Registry.CurrentUser, releaseAndBetaPath)
             : releaseVersion;
 
-        string nightlyPath = @"SOFTWARE\mozilla.org\Mozilla";
+        string nightlyPath = @"SOFTWARE\Mozilla\Nightly";
         string nightlyVersion = GetInstalledVersion(Registry.LocalMachine, nightlyPath);
         nightlyVersion = string.IsNullOrEmpty(nightlyVersion)
             ? GetInstalledVersion(Registry.CurrentUser, nightlyPath)
@@ -186,13 +188,8 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
     {
         using (var key = scope.OpenSubKey(path))
         {
-            // First check the value of the (Default) entry, which is non-null for release/debug, but is empty for nightly
-            string versionString = key?.GetValue("")?.ToString();
-            // Grab the "CurrentVersion" if (Default) entry is null or empty string, which is the case for nightly
-            versionString = string.IsNullOrEmpty(versionString)
-                ? key?.GetValue("CurrentVersion")?.ToString()
-                : versionString;
-            return versionString;
+            // Grab the value of the (Default) entry which contains the unadorned version number, e.g. 69.0, or 71.0a1
+            return key?.GetValue("")?.ToString();;
         }
     }
 
