@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
 
-public class FxrFirefoxDesktopInstaller : MonoBehaviour
+public class FxRFirefoxDesktopInstaller : MonoBehaviour
 {
     private class FirefoxVersions
     {
@@ -34,13 +34,12 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
 
     void Start()
     {
-        // TODO: Prompt user
         // TODO: Keep track of whether we have already asked to install
         StartCoroutine(RetrieveLatestFirefoxVersion((wasSuccessful, versionString) =>
         {
             if (wasSuccessful)
             {
-                string[] majorMinor = versionString.Split(new char[] {'.'});
+                string[] majorMinor = versionString.Split('.');
                 int releaseMajor = int.Parse(majorMinor[0]);
                 string releaseMinor = "";
                 for (int i = 1; i < majorMinor.Length; i++)
@@ -48,26 +47,75 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
                     releaseMinor += majorMinor[i];
                 }
 
-                if (IsFirefoxDesktopInstallationRequired(releaseMajor, releaseMinor))
+                var installTypeRequired = IsFirefoxDesktopInstallationRequired(releaseMajor, releaseMinor);
+                if (installTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                    // TODO: Handle update differently from new install...
+                    || installTypeRequired == INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING)
                 {
-                    TestDesktopFirefoxInstall();
+                    InitiateDesktopFirefoxInstall(installTypeRequired);
                 }
             }
             else
             {
                 // Fallback - couldn't retrieve latest from REST call
                 // TODO: DO we want a fallback, or just fail silently and try again another time?
-                if (IsFirefoxDesktopInstallationRequired(69, "0"))
+                var installTypeRequired = IsFirefoxDesktopInstallationRequired(69, "0");
+                if (installTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                    // TODO: Handle update differently from new install...
+                    || installTypeRequired == INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING)
                 {
-                    TestDesktopFirefoxInstall();
+                    InitiateDesktopFirefoxInstall(installTypeRequired);
                 }
             }
         }));
     }
 
+    private void InitiateDesktopFirefoxInstall(INSTALLATION_TYPE_REQUIRED installationTypeRequired)
+    {
+        // TODO: Update copy
+        var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+            ? "It appears you don't have Firefox Desktop installed."
+            : "There is an update to Firefox Desktop available.";
+        var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+            ? "Would you like to install Firefox Desktop?"
+            : "Would you like to update Firefox Desktop?";
+        var dialogButtons = new FxRDialogButton.ButtonConfig[2];
+        var updateOrInstall = (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
+        dialogButtons[0] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Later", null, Color.gray);
+        dialogButtons[1] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Now", () =>
+        {
+            var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
+            removeHeadsetPrompt.Show("Firefox Desktop Installation Started", "Please remove your headset to continue the Desktop Firefox install process", new FxRDialogButton.ButtonConfig("OK", null));
+            
+            // TODO: Put a progress bar in dialog once we allow for full desktop installation
+            var progress = new Progress<float>(percent => { Debug.Log("Download progress: " + percent.ToString("P1")); });
+            DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error) =>
+            { 
+                if (wasSuccessful)
+                {
+                    Debug.Log("Firefox Desktop installation successfully launched");
+                }
+                else
+                {
+                    Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
+                }
+            });
+        }, Color.blue);
+        
+        FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, dialogButtons);
+    }
+
+    public enum INSTALLATION_TYPE_REQUIRED
+    {
+        NONE,
+        INSTALL_NEW,
+        UPDATE_EXISTING
+    }
+
     // Check if Firefox Desktop is installed
     // We'll compare minor version #'s ordinally, as they can contain letters
-    public bool IsFirefoxDesktopInstallationRequired(int majorVersionRequired, string minorVersionRequired)
+    public INSTALLATION_TYPE_REQUIRED IsFirefoxDesktopInstallationRequired(int majorVersionRequired,
+        string minorVersionRequired)
     {
         string releaseAndBetaPath = @"SOFTWARE\Mozilla\Mozilla Firefox";
         string releaseVersion = GetInstalledVersion(Registry.LocalMachine, releaseAndBetaPath);
@@ -81,19 +129,23 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
             ? GetInstalledVersion(Registry.CurrentUser, nightlyPath)
             : nightlyVersion;
 
-        if (!string.IsNullOrEmpty(releaseVersion))
+        bool hasReleaseVersion = !string.IsNullOrEmpty(releaseVersion);
+        if (hasReleaseVersion)
         {
             if (InstalledVersionNewEnough(releaseVersion, majorVersionRequired, minorVersionRequired))
-                return false;
+                return INSTALLATION_TYPE_REQUIRED.NONE;
         }
 
-        if (!string.IsNullOrEmpty(nightlyVersion))
+        bool hasNightlyVersion = !string.IsNullOrEmpty(nightlyVersion);
+        if (hasNightlyVersion)
         {
             if (InstalledVersionNewEnough(nightlyVersion, majorVersionRequired, minorVersionRequired))
-                return false;
+                return INSTALLATION_TYPE_REQUIRED.NONE;
         }
 
-        return true;
+        return (hasReleaseVersion || hasNightlyVersion)
+            ? INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING
+            : INSTALLATION_TYPE_REQUIRED.INSTALL_NEW;
     }
 
     private bool InstalledVersionNewEnough(string installedVersion, int majorVersionRequired,
@@ -169,6 +221,7 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
                     // Run with admin priviliges
                     installProcess.StartInfo.Verb = "runas";
                     installProcess.Start();
+                    // TODO: Do we want to have this process run in a co-routine so we can wait for it to exit? i.e. Do we care about the exit status?
                     successCallback?.Invoke(true, "");
                 }
                 catch (Exception e)
@@ -189,7 +242,8 @@ public class FxrFirefoxDesktopInstaller : MonoBehaviour
         using (var key = scope.OpenSubKey(path))
         {
             // Grab the value of the (Default) entry which contains the unadorned version number, e.g. 69.0, or 71.0a1
-            return key?.GetValue("")?.ToString();;
+            return key?.GetValue("")?.ToString();
+            ;
         }
     }
 
