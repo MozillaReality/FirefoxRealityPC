@@ -21,12 +21,21 @@ public static class FxRPlugin_pinvoke
     // The name of the external library containing the native functions
     private const string LIBRARY_NAME = "fxr_unity";
 
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrTriggerFullScreenBeginEvent();
+
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.StdCall)]
     public static extern IntPtr GetRenderEventFunc();
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrRegisterLogCallback(FxRPluginLogCallback callback);
 
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrRegisterFullScreenBeginCallback(FxRPluginFullScreenBeginCallback callback);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrRegisterFullScreenEndCallback(FxRPluginFullEndCallback callback);
+    
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrSetLogLevel(int logLevel);
 
@@ -35,7 +44,7 @@ public static class FxRPlugin_pinvoke
     public static extern bool fxrGetFxVersion([MarshalAs(UnmanagedType.LPStr)]StringBuilder buffer, int length);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback);
+    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback, FxRPluginWindowResizedCallback resizedCallback);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrStopFx();

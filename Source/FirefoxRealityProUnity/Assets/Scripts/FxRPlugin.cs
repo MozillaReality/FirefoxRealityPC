@@ -22,6 +22,11 @@ public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] strin
 
 // Delegate type declaration for window size callback.
 public delegate void FxRPluginWindowCreatedCallback(int uid, int windowIndex, int pixelWidth, int pixelHeight, int format);
+public delegate void FxRPluginWindowResizedCallback(int uid, int pixelWidth, int pixelHeight);
+
+// Delegate type declarations for full screen video callbacks
+public delegate void FxRPluginFullScreenBeginCallback(int pixelWidth, int pixelHeight, int format, int projection);
+public delegate void FxRPluginFullEndCallback();
 
 public class FxRPlugin
 {
@@ -31,6 +36,14 @@ public class FxRPlugin
     private FxRPluginWindowCreatedCallback windowCreatedCallback = null;
     private GCHandle windowCreatedCallbackGCH;
 
+    private FxRPluginWindowResizedCallback windowResizedCallback = null;
+    private GCHandle windowResizedCallbackGCH;
+
+
+    private FxRPluginFullScreenBeginCallback fullScreenBeginCallback = null;
+    private GCHandle fullScreenBeginCallbackGCH;
+    private FxRPluginFullEndCallback fullScreenEndCallback = null;
+    private GCHandle fullScreenEndCallbackGCH;
     public void fxrRegisterLogCallback(FxRPluginLogCallback lcb)
     {
         logCallback = lcb; // Set or unset.
@@ -45,6 +58,34 @@ public class FxRPlugin
         }
     }
 
+    public void fxrRegisterFullScreenBeginCallback(FxRPluginFullScreenBeginCallback fsbc)
+    {
+        fullScreenBeginCallback = fsbc;
+        if (fsbc != null)
+        {
+            fullScreenBeginCallbackGCH = GCHandle.Alloc(fullScreenBeginCallback);
+        }
+        FxRPlugin_pinvoke.fxrRegisterFullScreenBeginCallback(fullScreenBeginCallback);
+        if (fsbc == null)
+        {
+            fullScreenBeginCallbackGCH.Free();
+        }
+    }
+
+    public void fxrRegisterFullScreenEndCallback(FxRPluginFullEndCallback fsec)
+    {
+        fullScreenEndCallback = fsec;
+        if (fsec != null)
+        {
+            fullScreenEndCallbackGCH = GCHandle.Alloc(fullScreenEndCallback);
+        }
+        FxRPlugin_pinvoke.fxrRegisterFullScreenEndCallback(fullScreenEndCallback);
+        if (fsec == null)
+        {
+            fullScreenEndCallbackGCH.Free();
+        }
+    }
+    
     public void fxrSetLogLevel(int logLevel)
     {
         FxRPlugin_pinvoke.fxrSetLogLevel(logLevel);
@@ -58,20 +99,25 @@ public class FxRPlugin
         else return "";
     }
 
-    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb)
+    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb, FxRPluginWindowResizedCallback wrcb)
     {
         windowCreatedCallback = wccb;
+        windowResizedCallback = wrcb;
         // Create the callback stub prior to registering the callback on the native side.
         windowCreatedCallbackGCH = GCHandle.Alloc(windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
-        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback);
+        windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
+        
+        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback, windowResizedCallback);
     }
 
     public void fxrStopFx()
     {
         FxRPlugin_pinvoke.fxrStopFx();
         windowCreatedCallback = null;
-        // Free the callback stub after deregistering the callback on the native side.
+        windowResizedCallback = null;
+        // Free the callback stubs after deregistering the callbacks on the native side.
         windowCreatedCallbackGCH.Free();
+        windowResizedCallbackGCH.Free();
     }
 
     public void fxrSetResourcesPath(string path)
@@ -99,6 +145,46 @@ public class FxRPlugin
         return FxRPlugin_pinvoke.fxrRequestNewWindow(uid, widthPixelsRequested, heightPixelsRequested);
     }
 
+    public bool fxrRequestWindowSizeChange(int windowIndex, int widthPixelsRequested, int heightPixelsRequested)
+    {
+        return FxRPlugin_pinvoke.fxrRequestWindowSizeChange(windowIndex, widthPixelsRequested, heightPixelsRequested);
+    }
+    public TextureFormat NativeFormatToTextureFormat(int formatNative)
+    {
+        switch (formatNative)
+        {
+            case 1:
+                return TextureFormat.RGBA32;
+                break;
+            case 2:
+                return TextureFormat.BGRA32;
+                break;
+            case 3:
+                return TextureFormat.ARGB32;
+                break;
+            //case 4:
+            //    format = TextureFormat.ABGR32;
+            //    break;
+            case 5:
+                return TextureFormat.RGB24;
+                break;
+            //case 6:
+            //    format = TextureFormat.BGR24;
+            //    break;
+            case 7:
+                return TextureFormat.RGBA4444;
+                break;
+            //case 8:
+            //    format = TextureFormat.RGBA5551;
+            //    break;
+            case 9:
+                return TextureFormat.RGB565;
+                break;
+            default:
+                return (TextureFormat)0;
+        }    
+    }
+    
     public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
     {
         int formatNative;
@@ -106,41 +192,14 @@ public class FxRPlugin
         FxRPlugin_pinvoke.fxrGetWindowTextureFormat(windowIndex, out width, out height, out formatNative, out mipChain, out linear, nativeTextureIDHandle);
         nativeTexureID = nativeTextureIDHandle[0];
 
-        switch (formatNative)
+        format = NativeFormatToTextureFormat(formatNative);
+        if (format == (TextureFormat) 0)
         {
-            case 1:
-                format = TextureFormat.RGBA32;
-                break;
-            case 2:
-                format = TextureFormat.BGRA32;
-                break;
-            case 3:
-                format = TextureFormat.ARGB32;
-                break;
-            //case 4:
-            //    format = TextureFormat.ABGR32;
-            //    break;
-            case 5:
-                format = TextureFormat.RGB24;
-                break;
-            //case 6:
-            //    format = TextureFormat.BGR24;
-            //    break;
-            case 7:
-                format = TextureFormat.RGBA4444;
-                break;
-            //case 8:
-            //    format = TextureFormat.RGBA5551;
-            //    break;
-            case 9:
-                format = TextureFormat.RGB565;
-                break;
-            default:
-                format = (TextureFormat)0;
-                return false;
+            return false;
         }
         return true;
     }
+
 
     public bool fxrSetWindowUnityTextureID(int windowIndex, IntPtr nativeTexturePtr)
     {
@@ -211,6 +270,12 @@ public class FxRPlugin
     public float fxrGetParamFloat(FxRParam param)
     {
         return FxRPlugin_pinvoke.fxrGetParamFloat((int)param);
+    }
+
+    // Test method to fake notification coming from browser that we're entering full screen video
+    public void fxrTriggerFullScreenBeginEvent()
+    {
+        FxRPlugin_pinvoke.fxrTriggerFullScreenBeginEvent();
     }
 
 }

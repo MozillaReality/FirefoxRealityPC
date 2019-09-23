@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Valve.VR;
 using VRIME2;
+using Random = UnityEngine.Random;
 
 public class FxRController : MonoBehaviour
 {
@@ -15,8 +17,43 @@ public class FxRController : MonoBehaviour
         FXR_LOG_LEVEL_REL_INFO
     }
 
-    [SerializeField]
-    private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
+    [SerializeField] private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
+
+    [SerializeField] private FxRVideoController VideoController;
+
+    public enum FXR_BROWSING_MODE
+    {
+        FXR_BROWSER_MODE_WEB_BROWSING,
+        FXR_BROWSER_MODE_FULLSCREEN_VIDEO,
+        FXR_BROWSER_MODE_WEBXR
+    }
+
+    public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
+
+    public static BrowsingModeChanged OnBrowsingModeChanged;
+
+    public static FXR_BROWSING_MODE CurrentBrowsingMode
+    {
+        get => currentBrowsingMode;
+        private set
+        {
+            if (currentBrowsingMode != value)
+            {
+                OnBrowsingModeChanged?.Invoke(value);
+                if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
+                    && VRIME_Manager.Ins.ShowState)
+                {
+                    VRIME_Manager.Ins.HideIME();
+                }
+            }
+
+            currentBrowsingMode = value;
+        }
+    }
+
+    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+
+    public FxRPlugin Plugin => fxr_plugin;
 
     // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
     private FxRPlugin fxr_plugin = null;
@@ -38,7 +75,7 @@ public class FxRController : MonoBehaviour
     }
 
     private List<FxRLaserPointer> laserPointers;
-    
+
     //
     // MonoBehavior methods.
     //
@@ -53,7 +90,7 @@ public class FxRController : MonoBehaviour
     {
         if (msg.StartsWith("[error]")) Debug.LogError(msg);
         else if (msg.StartsWith("[warning]")) Debug.LogWarning(msg);
-        else Debug.Log (msg); // incldues [info] and [debug].
+        else Debug.Log(msg); // incldues [info] and [debug].
     }
 
     void OnEnable()
@@ -67,38 +104,78 @@ public class FxRController : MonoBehaviour
         // Register the log callback.
         switch (Application.platform)
         {
-            case RuntimePlatform.OSXEditor:                        // Unity Editor on OS X.
-            case RuntimePlatform.OSXPlayer:                        // Unity Player on OS X.
-            case RuntimePlatform.WindowsEditor:                    // Unity Editor on Windows.
-            case RuntimePlatform.WindowsPlayer:                    // Unity Player on Windows.
+            case RuntimePlatform.OSXEditor: // Unity Editor on OS X.
+            case RuntimePlatform.OSXPlayer: // Unity Player on OS X.
+            case RuntimePlatform.WindowsEditor: // Unity Editor on Windows.
+            case RuntimePlatform.WindowsPlayer: // Unity Player on Windows.
             case RuntimePlatform.LinuxEditor:
             case RuntimePlatform.LinuxPlayer:
-            case RuntimePlatform.WSAPlayerX86:                     // Unity Player on Windows Store X86.
-            case RuntimePlatform.WSAPlayerX64:                     // Unity Player on Windows Store X64.
-            case RuntimePlatform.WSAPlayerARM:                     // Unity Player on Windows Store ARM.
-            case RuntimePlatform.Android:                          // Unity Player on Android.
-            case RuntimePlatform.IPhonePlayer:                     // Unity Player on iOS.
+            case RuntimePlatform.WSAPlayerX86: // Unity Player on Windows Store X86.
+            case RuntimePlatform.WSAPlayerX64: // Unity Player on Windows Store X64.
+            case RuntimePlatform.WSAPlayerARM: // Unity Player on Windows Store ARM.
+            case RuntimePlatform.Android: // Unity Player on Android.
+            case RuntimePlatform.IPhonePlayer: // Unity Player on iOS.
                 fxr_plugin.fxrRegisterLogCallback(Log);
                 break;
             default:
                 break;
         }
 
+        // Register the full screen video callbacks
+        fxr_plugin.fxrRegisterFullScreenBeginCallback(HandleFullScreenBegin);
+        fxr_plugin.fxrRegisterFullScreenEndCallback(HandleFullScreenEnd);
+
         // Give the plugin a place to look for resources.
         fxr_plugin.fxrSetResourcesPath(Application.streamingAssetsPath);
 
         // Set any launch-time parameters.
-        if (DontCloseNativeWindowOnClose) fxr_plugin.fxrSetParamBool(FxRPlugin.FxRParam.b_CloseNativeWindowOnClose, false);
+        if (DontCloseNativeWindowOnClose)
+            fxr_plugin.fxrSetParamBool(FxRPlugin.FxRParam.b_CloseNativeWindowOnClose, false);
 
         // Set the reference to the plugin in any other objects in the scene that need it.
         FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-        foreach (FxRWindow w in fxrwindows) {
+        foreach (FxRWindow w in fxrwindows)
+        {
             w.fxr_plugin = fxr_plugin;
         }
-        
+
+        VideoController.fxr_plugin = fxr_plugin;
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
     }
+
+    private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
+    {
+        FxRVideoController.FXR_VIDEO_PROJECTION_MODE projectionMode =
+            (FxRVideoController.FXR_VIDEO_PROJECTION_MODE) projection;
+
+        if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode))
+        {
+            CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_FULLSCREEN_VIDEO;
+        }
+        else
+        {
+            Debug.LogError("FxRController::HandleFullScreenBegin: Couldn't start full screen video.");
+        }
+    }
+
+    public void UserExitFullScreenVideo()
+    {
+        // TODO: Notify plugin we are closing video
+        HandleFullScreenEnd();
+    }
+
+    private void HandleFullScreenEnd()
+    {
+        VideoController.ExitVideo();
+        CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow window in fxrwindows)
+        {
+            window.RecreateVideoTexture();
+        }
+    }
+
 
     void OnDisable()
     {
@@ -138,6 +215,10 @@ public class FxRController : MonoBehaviour
             default:
                 break;
         }
+
+        fxr_plugin.fxrRegisterFullScreenBeginCallback(null);
+        fxr_plugin.fxrRegisterFullScreenEndCallback(null);
+
         fxr_plugin = null;
 
         // VRIME keyboard event registration
@@ -150,10 +231,11 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        fxr_plugin.fxrStartFx(OnFxWindowCreated);
+        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized);
 
         IntPtr openVRSession = UnityEngine.XR.XRDevice.GetNativePtr();
-        if (openVRSession != IntPtr.Zero) {
+        if (openVRSession != IntPtr.Zero)
+        {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
     }
@@ -174,22 +256,28 @@ public class FxRController : MonoBehaviour
     {
         foreach (var laserPointer in LaserPointers)
         {
-            laserPointer.enabled = !iShow;    
+            laserPointer.enabled = !iShow;
         }
 
-        if (iShow) {
-            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
-            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
+        if (iShow)
+        {
+            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
+                SteamVR_Input_Sources.LeftHand);
+            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
+                SteamVR_Input_Sources.RightHand);
 
             //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
             //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
 
             //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
             //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
-
-        } else {
-            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.LeftHand);
-            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle, SteamVR_Input_Sources.RightHand);
+        }
+        else
+        {
+            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
+                SteamVR_Input_Sources.LeftHand);
+            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
+                SteamVR_Input_Sources.RightHand);
 
             //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
             //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
@@ -202,12 +290,15 @@ public class FxRController : MonoBehaviour
     [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
     void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
     {
-        Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" + widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
+        Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" +
+                  widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
 
         FxRWindow window = FxRWindow.FindWindowWithUID(uid);
-        if (window == null) {
+        if (window == null)
+        {
             window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
         }
+
         TextureFormat format;
         switch (formatNative)
         {
@@ -230,11 +321,42 @@ public class FxRController : MonoBehaviour
                 format = TextureFormat.RGB565;
                 break;
             default:
-                format = (TextureFormat)0;
+                format = (TextureFormat) 0;
                 break;
         }
+
         window.WasCreated(windowIndex, widthPixels, heightPixels, format);
+
+//        StartCoroutine(TestRsize(window));
     }
+
+//    private IEnumerator TestRsize(FxRWindow window)
+//    {
+//        while (true)
+//        {
+//            yield return new WaitForSeconds(5f);
+//            int width = Mathf.CeilToInt(Random.Range(1000f, 1080f));
+//            int height = Mathf.CeilToInt(Random.Range(1000f, 1080f));
+//            if (!window.Resize(width, height))
+//            {
+//                Debug.LogWarning(">>> unsuccessful at resizing window.");
+//            }
+//        }
+//    }
+
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowResizedCallback))]
+    void OnFxWindowResized(int uid, int widthPixels, int heightPixels)
+    {
+        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
+        if (window == null)
+        {
+            Debug.LogError("FxRController.OnFxWindowResized: Received update request for a window that doesn't exist.");
+            return;
+        }
+
+        window.WasResized(widthPixels, heightPixels);
+    }
+
 
     private void OnApplicationQuit()
     {
@@ -251,17 +373,12 @@ public class FxRController : MonoBehaviour
 
     public FXR_LOG_LEVEL LogLevel
     {
-        get
-        {
-            return currentLogLevel;
-        }
+        get { return currentLogLevel; }
 
         set
         {
             currentLogLevel = value;
-            fxr_plugin.fxrSetLogLevel((int)currentLogLevel);
+            fxr_plugin.fxrSetLogLevel((int) currentLogLevel);
         }
     }
-
-
 }
