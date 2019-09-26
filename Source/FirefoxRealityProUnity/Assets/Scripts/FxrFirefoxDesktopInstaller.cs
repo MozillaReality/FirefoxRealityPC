@@ -3,6 +3,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Microsoft.Win32;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -10,26 +11,35 @@ using Debug = UnityEngine.Debug;
 
 public class FxRFirefoxDesktopInstaller : MonoBehaviour
 {
+    private const int MAJOR_RELEASE_REQUIRED_FALLBACK = 69;
+
+    private const string MINOR_RELEASE_REQUIRED_FALLBACK = "0";
+
+    // Class to represent JSON downloaded from Firefox latest version service
     private class FirefoxVersions
     {
         public string LATEST_FIREFOX_VERSION;
     }
 
-    // Test method that kicks of the download, spits out download progress to the log, and then launches the downloaded installer 
-    public void TestDesktopFirefoxInstall()
+    private enum DOWNLOAD_TYPE
     {
-        var progress = new Progress<float>(percent => { Debug.Log("Download progress: " + percent.ToString("P1")); });
-        DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error) =>
-        {
-            if (wasSuccessful)
-            {
-                Debug.Log("Firefox Desktop successfully installed");
-            }
-            else
-            {
-                Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
-            }
-        });
+        STUB,
+        RELEASE
+
+        //        , NIGHTLY
+    }
+
+    private enum INSTALLATION_TYPE_REQUIRED
+    {
+        NONE,
+        INSTALL_NEW,
+        UPDATE_EXISTING
+    }
+
+    private enum INSTALLATION_SCOPE
+    {
+        LOCAL_MACHINE,
+        LOCAL_USER
     }
 
     void Start()
@@ -37,42 +47,35 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         // TODO: Keep track of whether we have already asked to install
         StartCoroutine(RetrieveLatestFirefoxVersion((wasSuccessful, versionString) =>
         {
+            int releaseMajor = MAJOR_RELEASE_REQUIRED_FALLBACK;
+            string releaseMinor = MINOR_RELEASE_REQUIRED_FALLBACK;
             if (wasSuccessful)
             {
-                string[] majorMinor = versionString.Split('.');
-                int releaseMajor = int.Parse(majorMinor[0]);
-                string releaseMinor = "";
-                for (int i = 1; i < majorMinor.Length; i++)
-                {
-                    releaseMinor += majorMinor[i];
-                }
-
-                var installTypeRequired = IsFirefoxDesktopInstallationRequired(releaseMajor, releaseMinor);
-                if (installTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-                    // TODO: Handle update differently from new install...
-                    || installTypeRequired == INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING)
-                {
-                    InitiateDesktopFirefoxInstall(installTypeRequired);
-                }
+                ParseBrowserVersion(versionString, out releaseMajor, out releaseMinor);
             }
-            else
+
+            INSTALLATION_TYPE_REQUIRED? installTypeRequired;
+            DOWNLOAD_TYPE? downloadTypeRequired;
+            INSTALLATION_SCOPE? installationScope;
+            DetermineFirefoxDesktopInstallationRequirements(releaseMajor, releaseMinor
+                , out installTypeRequired
+                , out downloadTypeRequired
+                , out installationScope);
+            if (installTypeRequired != null && installTypeRequired != INSTALLATION_TYPE_REQUIRED.NONE &&
+                downloadTypeRequired != null &&
+                installationScope != null)
             {
-                // Fallback - couldn't retrieve latest from REST call
-                // TODO: DO we want a fallback, or just fail silently and try again another time?
-                var installTypeRequired = IsFirefoxDesktopInstallationRequired(69, "0");
-                if (installTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-                    // TODO: Handle update differently from new install...
-                    || installTypeRequired == INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING)
-                {
-                    InitiateDesktopFirefoxInstall(installTypeRequired);
-                }
+                InitiateDesktopFirefoxInstall(installTypeRequired.Value, downloadTypeRequired.Value,
+                    installationScope.Value);
             }
         }));
     }
 
-    private void InitiateDesktopFirefoxInstall(INSTALLATION_TYPE_REQUIRED installationTypeRequired)
+    private void InitiateDesktopFirefoxInstall(INSTALLATION_TYPE_REQUIRED installationTypeRequired,
+        DOWNLOAD_TYPE downloadType, INSTALLATION_SCOPE installationScope)
     {
         // TODO: Update copy
+        // TODO: i18n and l10n
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
             ? "It appears you don't have Firefox Desktop installed."
             : "There is an update to Firefox Desktop available.";
@@ -80,17 +83,21 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
             ? "Would you like to install Firefox Desktop?"
             : "Would you like to update Firefox Desktop?";
         var dialogButtons = new FxRDialogButton.ButtonConfig[2];
-        var updateOrInstall = (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
+        var updateOrInstall =
+            (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
         dialogButtons[0] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Later", null, Color.gray);
         dialogButtons[1] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Now", () =>
         {
             var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
-            removeHeadsetPrompt.Show("Firefox Desktop Installation Started", "Please remove your headset to continue the Desktop Firefox install process", new FxRDialogButton.ButtonConfig("OK", null));
-            
+            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
+                "Please remove your headset to continue the Desktop Firefox install process",
+                new FxRDialogButton.ButtonConfig("OK", null));
+
             // TODO: Put a progress bar in dialog once we allow for full desktop installation
-            var progress = new Progress<float>(percent => { Debug.Log("Download progress: " + percent.ToString("P1")); });
+            var progress =
+                new Progress<float>(percent => { Debug.Log("Download progress: " + percent.ToString("P1")); });
             DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error) =>
-            { 
+            {
                 if (wasSuccessful)
                 {
                     Debug.Log("Firefox Desktop installation successfully launched");
@@ -99,65 +106,95 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
                 {
                     Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
                 }
-            });
+            }, downloadType, installationScope);
         }, Color.blue);
-        
+
         FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, dialogButtons);
     }
 
-    public enum INSTALLATION_TYPE_REQUIRED
-    {
-        NONE,
-        INSTALL_NEW,
-        UPDATE_EXISTING
-    }
+    private static readonly string RELEASE_AND_BETA_REGISTRY_PATH = @"SOFTWARE\Mozilla\Mozilla Firefox";
+    private static readonly string NIGHTLY_REGISTRY_PATH = @"SOFTWARE\Mozilla\Nightly";
 
     // Check if Firefox Desktop is installed
+    // Logic for installation:
+    // * If user has no Nightly or Release version installed, we download and install the stub installer
+    // * If the user has an old Release version, we download and install the release installer into the existing release location
+    // * If the user has an up-to-date Release version, or don't have a Release version but have any Nightly version, we don't prompt them to install
     // We'll compare minor version #'s ordinally, as they can contain letters
-    public INSTALLATION_TYPE_REQUIRED IsFirefoxDesktopInstallationRequired(int majorVersionRequired,
-        string minorVersionRequired)
-    {
-        string releaseAndBetaPath = @"SOFTWARE\Mozilla\Mozilla Firefox";
-        string releaseVersion = GetInstalledVersion(Registry.LocalMachine, releaseAndBetaPath);
-        releaseVersion = string.IsNullOrEmpty(releaseVersion)
-            ? GetInstalledVersion(Registry.CurrentUser, releaseAndBetaPath)
-            : releaseVersion;
+    private void DetermineFirefoxDesktopInstallationRequirements(int majorVersionRequired,
+        string minorVersionRequired, out INSTALLATION_TYPE_REQUIRED? installationTypeRequired,
+        out DOWNLOAD_TYPE? downloadTypeRequired, out INSTALLATION_SCOPE? installationScope
+    )
 
-        string nightlyPath = @"SOFTWARE\Mozilla\Nightly";
-        string nightlyVersion = GetInstalledVersion(Registry.LocalMachine, nightlyPath);
-        nightlyVersion = string.IsNullOrEmpty(nightlyVersion)
-            ? GetInstalledVersion(Registry.CurrentUser, nightlyPath)
-            : nightlyVersion;
+    {
+        downloadTypeRequired = null;
+        installationScope = INSTALLATION_SCOPE.LOCAL_MACHINE;
+
+        string nightlyVersion = GetInstalledVersion(Registry.LocalMachine, NIGHTLY_REGISTRY_PATH);
+        if (string.IsNullOrEmpty(nightlyVersion))
+        {
+            nightlyVersion = GetInstalledVersion(Registry.CurrentUser, NIGHTLY_REGISTRY_PATH);
+//            if (!string.IsNullOrEmpty(nightlyVersion))
+//            {
+//                installationScope = INSTALLATION_SCOPE.LOCAL_USER;
+//            }
+        }
+
+        string releaseVersion = GetInstalledVersion(Registry.LocalMachine, RELEASE_AND_BETA_REGISTRY_PATH);
+        if (string.IsNullOrEmpty(releaseVersion))
+        {
+            releaseVersion = GetInstalledVersion(Registry.CurrentUser, RELEASE_AND_BETA_REGISTRY_PATH);
+            if (!string.IsNullOrEmpty(releaseVersion))
+            {
+                installationScope = INSTALLATION_SCOPE.LOCAL_USER;
+            }
+        }
 
         bool hasReleaseVersion = !string.IsNullOrEmpty(releaseVersion);
         if (hasReleaseVersion)
         {
             if (InstalledVersionNewEnough(releaseVersion, majorVersionRequired, minorVersionRequired))
-                return INSTALLATION_TYPE_REQUIRED.NONE;
+            {
+                installationTypeRequired = INSTALLATION_TYPE_REQUIRED.NONE;
+                return;
+            }
+            else
+            {
+                downloadTypeRequired = DOWNLOAD_TYPE.RELEASE;
+            }
         }
 
         bool hasNightlyVersion = !string.IsNullOrEmpty(nightlyVersion);
-        if (hasNightlyVersion)
+        // If user has Nightly installed, and don't have Release installed, we won't prompt them to download and install
+        if (hasNightlyVersion && !hasReleaseVersion)
         {
-            if (InstalledVersionNewEnough(nightlyVersion, majorVersionRequired, minorVersionRequired))
-                return INSTALLATION_TYPE_REQUIRED.NONE;
+            installationTypeRequired = INSTALLATION_TYPE_REQUIRED.NONE;
+            return;
+//            if (InstalledVersionNewEnough(nightlyVersion, majorVersionRequired, minorVersionRequired))
+//            {
+//                return INSTALLATION_TYPE_REQUIRED.NONE;
+//            }
+//            else if (!hasReleaseVersion)
+//            {
+//                downloadTypeRequired = DOWNLOAD_TYPE.NIGHTLY;
+//            }
         }
 
-        return (hasReleaseVersion || hasNightlyVersion)
-            ? INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING
-            : INSTALLATION_TYPE_REQUIRED.INSTALL_NEW;
+        if (hasReleaseVersion) // || hasNightlyVersion)
+        {
+            installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
+        }
+        else
+        {
+            downloadTypeRequired = DOWNLOAD_TYPE.STUB;
+            installationTypeRequired = INSTALLATION_TYPE_REQUIRED.INSTALL_NEW;
+        }
     }
 
     private bool InstalledVersionNewEnough(string installedVersion, int majorVersionRequired,
         string minorVersionRequired)
     {
-        string[] majorMinor = installedVersion.Split(new char[] {'.'});
-        int releaseMajor = int.Parse(majorMinor[0]);
-        string releaseMinor = "";
-        for (int i = 1; i < majorMinor.Length; i++)
-        {
-            releaseMinor += majorMinor[i];
-        }
+        ParseBrowserVersion(installedVersion, out var releaseMajor, out var releaseMinor);
 
         if (releaseMajor > majorVersionRequired
             || (releaseMajor == majorVersionRequired
@@ -170,7 +207,14 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         return false;
     }
 
-    public IEnumerator RetrieveLatestFirefoxVersion(Action<bool, string> successCallback)
+    private static void ParseBrowserVersion(string versionString, out int releaseMajor, out string releaseMinor)
+    {
+        string[] majorMinor = versionString.Split(new char[] {'.'});
+        releaseMajor = int.Parse(majorMinor[0]);
+        releaseMinor = string.Join(".", majorMinor.Skip(1).Take(majorMinor.Length - 1).ToArray());
+    }
+
+    private IEnumerator RetrieveLatestFirefoxVersion(Action<bool, string> successCallback)
     {
         string RESTUrl = "https://product-details.mozilla.org/1.0/firefox_versions.json";
         var webRequest = new UnityWebRequest(RESTUrl);
@@ -190,11 +234,27 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
     }
 
     // Download the Firefox stub installer
-    public IEnumerator DownloadFirefox(IProgress<float> percentDownloaded, Action<bool, string> successCallback)
+    private IEnumerator DownloadFirefox(IProgress<float> percentDownloaded, Action<bool, string> successCallback,
+        DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB)
     {
-        // TODO: Currently assumes English. Should we grab user's locale?
-        string downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang=" +
-                             CultureInfo.CurrentCulture.Name;
+        string downloadURL = null;
+
+        switch (downloadType)
+        {
+            case DOWNLOAD_TYPE.STUB:
+                downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang=" +
+                              CultureInfo.CurrentCulture.Name;
+                break;
+            case DOWNLOAD_TYPE.RELEASE:
+                downloadURL = "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=" +
+                              CultureInfo.CurrentCulture.Name;
+                break;
+//            case DOWNLOAD_TYPE.NIGHTLY:
+//                downloadURL = "https://download.mozilla.org/?product=firefox-nightly-latest-l10n-ssl&os=win64&lang=" +
+//                             CultureInfo.CurrentCulture.Name;
+//                break;
+        }
+
         var webRequest = new UnityWebRequest(downloadURL);
         webRequest.downloadHandler = new DownloadHandlerFile(FirefoxInstallerDownloadPath, false);
         var downloadOperation = webRequest.SendWebRequest();
@@ -207,8 +267,9 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error), webRequest.error);
     }
 
-    public void DownloadAndInstallDesktopFirefox(IProgress<float> percentDownloaded,
-        Action<bool, string> successCallback)
+    private void DownloadAndInstallDesktopFirefox(IProgress<float> percentDownloaded,
+        Action<bool, string> successCallback, DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB,
+        INSTALLATION_SCOPE installationScope = INSTALLATION_SCOPE.LOCAL_MACHINE)
     {
         StartCoroutine(DownloadFirefox(percentDownloaded, (wasSuccessful, error) =>
         {
@@ -218,8 +279,30 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
                 {
                     Process installProcess = new Process();
                     installProcess.StartInfo.FileName = FirefoxInstallerDownloadPath;
-                    // Run with admin priviliges
+
+                    var registryKey = installationScope == INSTALLATION_SCOPE.LOCAL_USER
+                        ? Registry.CurrentUser
+                        : Registry.LocalMachine;
+                    string installPath = "";
+//                    if (downloadType == DOWNLOAD_TYPE.NIGHTLY)
+//                    {
+//                        installPath = GetInstallationLocation(
+//                            registryKey, NIGHTLY_REGISTRY_PATH);
+//                    }
+//                    else 
+                    if (downloadType == DOWNLOAD_TYPE.RELEASE)
+                    {
+                        installPath = GetInstallationLocation(
+                            registryKey, RELEASE_AND_BETA_REGISTRY_PATH);
+                    }
+
+                    // Run with admin privileges
                     installProcess.StartInfo.Verb = "runas";
+                    if (!string.IsNullOrEmpty(installPath))
+                    {
+                        installProcess.StartInfo.Arguments = "/InstallDirectoryPath=" + installPath;
+                    }
+
                     installProcess.Start();
                     // TODO: Do we want to have this process run in a co-routine so we can wait for it to exit? i.e. Do we care about the exit status?
                     successCallback?.Invoke(true, "");
@@ -234,7 +317,7 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
             {
                 successCallback?.Invoke(false, error);
             }
-        }));
+        }, downloadType));
     }
 
     private static string GetInstalledVersion(RegistryKey scope, string path)
@@ -243,8 +326,24 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         {
             // Grab the value of the (Default) entry which contains the unadorned version number, e.g. 69.0, or 71.0a1
             return key?.GetValue("")?.ToString();
-            ;
         }
+    }
+
+    private static string GetInstallationLocation(RegistryKey scope, string path)
+    {
+        using (var key = scope.OpenSubKey(path))
+        {
+            string versionString = key?.GetValue("CurrentVersion")?.ToString();
+            if (!string.IsNullOrEmpty(versionString))
+            {
+                using (var versionKey = scope.OpenSubKey(path + "\\" + versionString + "\\Main"))
+                {
+                    return versionKey?.GetValue("Install Directory")?.ToString();
+                }
+            }
+        }
+
+        return null;
     }
 
     private string FirefoxInstallerDownloadPath =>
