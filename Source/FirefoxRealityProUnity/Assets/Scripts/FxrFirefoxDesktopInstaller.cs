@@ -11,9 +11,15 @@ using Debug = UnityEngine.Debug;
 
 public class FxRFirefoxDesktopInstaller : MonoBehaviour
 {
-    private const int MAJOR_RELEASE_REQUIRED_FALLBACK = 69;
+    private const bool FORCE_DESKTOP_BROWSER_CHECK = true;
 
+    private const int MAJOR_RELEASE_REQUIRED_FALLBACK = 69;
     private const string MINOR_RELEASE_REQUIRED_FALLBACK = "0";
+
+    private const string NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY = "NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY";
+    private const string FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY = "FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY";
+
+    int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
 
     // Class to represent JSON downloaded from Firefox latest version service
     private class FirefoxVersions
@@ -45,6 +51,30 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
     void Start()
     {
         // TODO: Keep track of whether we have already asked to install
+
+        if (!FORCE_DESKTOP_BROWSER_CHECK)
+        {
+            int browserChecks = PlayerPrefs.GetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, 0);
+            string lastBrowserCheckFxRVersion =
+                PlayerPrefs.GetString(FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY, Application.version);
+            PlayerPrefs.SetString(FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY, Application.version);
+
+            if (CompareVersions(lastBrowserCheckFxRVersion, Application.version) < 0)
+            {
+                // User upgraded since we last checked desktop browser, so reset our checks
+                PlayerPrefs.SetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, 0);
+                browserChecks = 0;
+            }
+            else if (browserChecks >= NUMBER_OF_TIMES_TO_CHECK_BROWSER)
+            {
+                return;
+            }
+
+            PlayerPrefs.SetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, browserChecks + 1);
+            PlayerPrefs.SetString(FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY, Application.version);
+            PlayerPrefs.Save();
+        }
+
         StartCoroutine(RetrieveLatestFirefoxVersion((wasSuccessful, versionString) =>
         {
             int releaseMajor = MAJOR_RELEASE_REQUIRED_FALLBACK;
@@ -205,6 +235,30 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         }
 
         return false;
+    }
+
+    private int CompareVersions(string versionA, string versionB)
+    {
+        if (versionA.Equals(versionB))
+        {
+            return 0;
+        }
+
+        ParseBrowserVersion(versionA, out var majorA, out var minorA);
+        ParseBrowserVersion(versionB, out var majorB, out var minorB);
+
+        if (majorA < majorB)
+        {
+            return -1;
+        }
+        else if (majorA > majorB)
+        {
+            return 1;
+        }
+        else
+        {
+            return string.CompareOrdinal(versionA, versionB);
+        }
     }
 
     private static void ParseBrowserVersion(string versionString, out int releaseMajor, out string releaseMinor)
