@@ -13,10 +13,24 @@
 // Prototypes for exported functions from vrhost.dll
 
 #pragma once
-#include <Windows.h>
 #include <stdint.h>
 
-typedef void(*PFN_CREATEVRWINDOW)(UINT* windowId, HANDLE* hTex, HANDLE* hEvt, uint64_t* width, uint64_t* height);
-typedef void(*PFN_SENDUIMESSAGE)(UINT nVRWindow, UINT msg, uint64_t wparam, uint64_t lparam);
-typedef void(*PFN_CLOSEVRWINDOW)(UINT nVRWindow);
+// void SampleExport();
+typedef void(*PFN_SAMPLE)();
 
+typedef void(*PFN_CREATEVRWINDOW)(char* firefoxFolderPath,
+	char* firefoxProfilePath,
+	uint32_t dxgiAdapterID, uint32_t widthHost,
+	uint32_t heightHost, uint32_t* windowId,
+	void** hTex, uint32_t* width,
+	uint32_t* height);
+
+typedef void(*PFN_CLOSEVRWINDOW)(uint32_t nVRWindowID, bool waitForTerminate);
+
+typedef void(*PFN_SENDUIMSG)(uint32_t nVRWindowID, uint32_t msg,
+	uint64_t wparam, uint64_t lparam);
+
+
+//typedef void(*PFN_CREATEVRWINDOW)(UINT* windowId, HANDLE* hTex, HANDLE* hEvt, uint64_t* width, uint64_t* height);
+//typedef void(*PFN_SENDUIMESSAGE)(UINT nVRWindow, UINT msg, uint64_t wparam, uint64_t lparam);
+//typedef void(*PFN_CLOSEVRWINDOW)(UINT nVRWindow);
