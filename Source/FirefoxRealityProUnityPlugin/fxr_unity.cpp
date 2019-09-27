@@ -244,7 +244,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	assert(m_hVRHost != nullptr);
 
 	m_pfnCreateVRWindow = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
-	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessage");
+	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessageToVRWindow");
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
 
 	CHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
