@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using TMPro;
-using UnityEditor.SceneManagement;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
