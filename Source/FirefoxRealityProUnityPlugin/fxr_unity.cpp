@@ -232,11 +232,11 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 
 	int err;
 #ifndef USE_HARDCODED_FX_PATHS
-	err = swprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), L"%S/%S", s_ResourcesPath, "fxbin/firefox.exe");
+	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "fxbin/firefox.exe");
 	assert(err > 0);
 	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "fxbin/vrhost.dll");
 	assert(err > 0);
-	err = swprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), L"%S/%S", s_ResourcesPath, "fxbin/fxr-profile");
+	err = sprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), "%s/%s", s_ResourcesPath, "fxbin/fxr-profile");
 	assert(err > 0);
 #endif
 
