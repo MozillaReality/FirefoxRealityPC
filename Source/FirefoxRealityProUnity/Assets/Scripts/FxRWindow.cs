@@ -7,7 +7,7 @@ public class FxRWindow : MonoBehaviour
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
     public bool flipX = false;
     public bool flipY = false;
-    private static float DefaultWidth = 2.0f;
+    private static float DefaultWidth = 3.0f;
     private float Width = DefaultWidth;
     private float Height;
     private Vector2Int videoSize;
