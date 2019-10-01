@@ -11,6 +11,8 @@ using Debug = UnityEngine.Debug;
 
 public class FxRFirefoxDesktopInstaller : MonoBehaviour
 {
+    [SerializeField] protected Sprite FirefoxIcon;
+
     private const bool FORCE_DESKTOP_BROWSER_CHECK = true;
 
     private const int MAJOR_RELEASE_REQUIRED_FALLBACK = 69;
@@ -118,14 +120,35 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         dialogButtons[0] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Later", null, Color.gray);
         dialogButtons[1] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Now", () =>
         {
-            var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
-            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
-                "Please remove your headset to continue the Desktop Firefox install process",
-                new FxRDialogButton.ButtonConfig("OK", null));
+            var downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
+            downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
+                new FxRDialogButton.ButtonConfig("Cancel",
+                    () =>
+                    {
+                        // TODO: Allow cancel of download...
+                    }));
 
             // TODO: Put a progress bar in dialog once we allow for full desktop installation
             var progress =
-                new Progress<float>(percent => { Debug.Log("Download progress: " + percent.ToString("P1")); });
+                new Progress<float>(zeroToOne =>
+                {
+                    if (downloadProgressDialog == null) return;
+                    if (Mathf.Approximately(zeroToOne, 1f))
+                    {
+                        downloadProgressDialog.Close();
+                        var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
+                        removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
+                            "Please remove your headset to continue the Desktop Firefox install process",
+                            FirefoxIcon,
+                            new FxRDialogButton.ButtonConfig("OK", null));
+                    }
+                    else
+                    {
+                        downloadProgressDialog.ShowProgress(zeroToOne);
+                    }
+
+                    Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
+                });
             DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error) =>
             {
                 if (wasSuccessful)
@@ -139,7 +162,7 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
             }, downloadType, installationScope);
         }, Color.blue);
 
-        FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, dialogButtons);
+        FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
     }
 
     private static readonly string RELEASE_AND_BETA_REGISTRY_PATH = @"SOFTWARE\Mozilla\Mozilla Firefox";
