@@ -322,12 +322,12 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         switch (downloadType)
         {
             case DOWNLOAD_TYPE.STUB:
-                downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang=" +
-                              CultureInfo.CurrentCulture.Name;
+                downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang=en-US";
+//                              + CultureInfo.CurrentCulture.Name;
                 break;
             case DOWNLOAD_TYPE.RELEASE:
-                downloadURL = "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=" +
-                              CultureInfo.CurrentCulture.Name;
+                downloadURL = "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US";
+//                              + CultureInfo.CurrentCulture.Name;
                 break;
 //            case DOWNLOAD_TYPE.NIGHTLY:
 //                downloadURL = "https://download.mozilla.org/?product=firefox-nightly-latest-l10n-ssl&os=win64&lang=" +
