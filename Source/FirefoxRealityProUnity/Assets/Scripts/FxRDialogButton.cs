@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -34,6 +35,7 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         PressedTextColor = Color.white
     };
 
+    [Serializable]
     public class ButtonColorConfig
     {
         public Color NormalColor;
@@ -47,14 +49,15 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         public Color BorderColor;
     }
 
+    [Serializable]
     public class ButtonConfig
     {
         public static readonly Color DEFAULT_BACKGROUND_COLOR = Color.gray;
         public static readonly Color DEFAULT_TEXT_COLOR = Color.white;
 
         public string ButtonLabel;
-        public UnityAction ButtonPressedAction;
-        public ButtonColorConfig ColorConfig;
+        [SerializeField] public UnityAction ButtonPressedAction;
+        [SerializeField] public ButtonColorConfig ColorConfig;
 
         public ButtonConfig(string label, UnityAction pressAction, ButtonColorConfig colorConfig = null)
         {
@@ -74,7 +77,10 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         set
         {
             config = value;
-            Button.onClick.AddListener(config.ButtonPressedAction);
+            if (config.ButtonPressedAction != null)
+            {
+                Button.onClick.AddListener(config.ButtonPressedAction);
+            }
             ButtonLabel.text = config.ButtonLabel;
             ButtonLabel.color = config.ColorConfig.NormalTextColor;
             BackgroundImage.color = config.ColorConfig.NormalColor;
@@ -85,9 +91,19 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         private get { return config; }
     }
 
+    [SerializeField]
     private ButtonConfig config;
 
     bool boxColliderSizeSet;
+
+    private void OnEnable()
+    {
+        // Initialize the config, if necessary
+        if (config != null)
+        {
+            Config = config;
+        }
+    }
 
     private void Update()
     {
@@ -113,6 +129,7 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         BackgroundImage.color = Config.ColorConfig.NormalColor;
         ButtonLabel.color = Config.ColorConfig.NormalTextColor;
         Border.gameObject.SetActive(config.ColorConfig.HasBorder);
+        Debug.LogWarning(">>> OnPointerExit");
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -120,6 +137,7 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         BackgroundImage.color = Config.ColorConfig.PressedColor;
         ButtonLabel.color = Config.ColorConfig.PressedTextColor;
         Border.gameObject.SetActive(false);
+        Debug.LogWarning(">>> OnPointerDown");
     }
 
     public void OnPointerUp(PointerEventData eventData)
