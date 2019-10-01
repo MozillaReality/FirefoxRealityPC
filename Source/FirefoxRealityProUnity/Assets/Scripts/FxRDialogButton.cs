@@ -129,7 +129,6 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         BackgroundImage.color = Config.ColorConfig.NormalColor;
         ButtonLabel.color = Config.ColorConfig.NormalTextColor;
         Border.gameObject.SetActive(config.ColorConfig.HasBorder);
-        Debug.LogWarning(">>> OnPointerExit");
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -137,7 +136,6 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         BackgroundImage.color = Config.ColorConfig.PressedColor;
         ButtonLabel.color = Config.ColorConfig.PressedTextColor;
         Border.gameObject.SetActive(false);
-        Debug.LogWarning(">>> OnPointerDown");
     }
 
     public void OnPointerUp(PointerEventData eventData)
