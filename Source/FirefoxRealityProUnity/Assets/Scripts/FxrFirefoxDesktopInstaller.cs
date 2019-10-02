@@ -126,10 +126,7 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
             var downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
             downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
                 new FxRDialogButton.ButtonConfig("Cancel",
-                    () =>
-                    {
-                        // TODO: Allow cancel of download...
-                    }, FxRDialogButton.SecondaryButtonColorConfig));
+                    () => { downloadCancelled = true; }, FxRDialogButton.SecondaryButtonColorConfig));
 
             // TODO: Put a progress bar in dialog once we allow for full desktop installation
             var progress =
@@ -152,9 +149,13 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
 
                     Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
                 });
-            DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error) =>
+            DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
             {
-                if (wasSuccessful)
+                if (wasCancelled)
+                {
+                    Debug.Log("Firefox Desktop download cancelled");
+                }
+                else if (wasSuccessful)
                 {
                     Debug.Log("Firefox Desktop installation successfully launched");
                 }
@@ -170,6 +171,7 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
 
     private static readonly string RELEASE_AND_BETA_REGISTRY_PATH = @"SOFTWARE\Mozilla\Mozilla Firefox";
     private static readonly string NIGHTLY_REGISTRY_PATH = @"SOFTWARE\Mozilla\Nightly";
+    private bool downloadCancelled;
 
     // Check if Firefox Desktop is installed
     // Logic for installation:
@@ -314,8 +316,9 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
     }
 
     // Download the Firefox stub installer
-    private IEnumerator DownloadFirefox(IProgress<float> percentDownloaded, Action<bool, string> successCallback,
-        DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB)
+    private IEnumerator DownloadFirefox(IProgress<float> percentDownloaded,
+        Action<bool, string, bool> successCallback // <was successful, error, was cancelled>
+        , DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB)
     {
         string downloadURL = null;
 
@@ -337,23 +340,32 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
 
         var webRequest = new UnityWebRequest(downloadURL);
         webRequest.downloadHandler = new DownloadHandlerFile(FirefoxInstallerDownloadPath, false);
+        downloadCancelled = false;
         var downloadOperation = webRequest.SendWebRequest();
-        while (!downloadOperation.isDone)
+        while (!downloadOperation.isDone && !downloadCancelled)
         {
             yield return new WaitForSeconds(.25f);
             percentDownloaded.Report(downloadOperation.progress);
         }
 
-        successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error), webRequest.error);
+        if (downloadCancelled)
+        {
+            webRequest.Abort();
+            successCallback?.Invoke(true, "", true);
+        }
+        else
+        {
+            successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error), webRequest.error, false);
+        }
     }
 
     private void DownloadAndInstallDesktopFirefox(IProgress<float> percentDownloaded,
-        Action<bool, string> successCallback, DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB,
+        Action<bool, string, bool> successCallback, DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB,
         INSTALLATION_SCOPE installationScope = INSTALLATION_SCOPE.LOCAL_MACHINE)
     {
-        StartCoroutine(DownloadFirefox(percentDownloaded, (wasSuccessful, error) =>
+        StartCoroutine(DownloadFirefox(percentDownloaded, (wasSuccessful, error, wasCancelled) =>
         {
-            if (wasSuccessful)
+            if (!wasCancelled && wasSuccessful)
             {
                 try
                 {
@@ -385,17 +397,21 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
 
                     installProcess.Start();
                     // TODO: Do we want to have this process run in a co-routine so we can wait for it to exit? i.e. Do we care about the exit status?
-                    successCallback?.Invoke(true, "");
+                    successCallback?.Invoke(true, "", false);
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e, this);
-                    successCallback?.Invoke(false, e.Message);
+                    successCallback?.Invoke(false, e.Message, false);
                 }
+            }
+            else if (wasCancelled)
+            {
+                successCallback?.Invoke(true, "", true);
             }
             else
             {
-                successCallback?.Invoke(false, error);
+                successCallback?.Invoke(false, error, false);
             }
         }, downloadType));
     }
