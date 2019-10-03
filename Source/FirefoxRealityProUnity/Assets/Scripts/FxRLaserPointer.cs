@@ -211,8 +211,11 @@ public class FxRLaserPointer : MonoBehaviour
 
     public virtual void OnPointerIn(PointerEventArgs e)
     {
-        IPointerEnterHandler pointerEnterHandler = e.target.GetComponent<IPointerEnterHandler>();
-        pointerEnterHandler?.OnPointerEnter(new PointerEventData(EventSystem.current));
+        IPointerEnterHandler[] pointerEnterHandlers = e.target.GetComponents<IPointerEnterHandler>();
+        foreach (var pointerEnterHandler in pointerEnterHandlers)
+        {
+            pointerEnterHandler?.OnPointerEnter(new PointerEventData(EventSystem.current));
+        }
 
         if (PointerIn != null)
             PointerIn(this, e);
@@ -220,18 +223,41 @@ public class FxRLaserPointer : MonoBehaviour
 
     public virtual void OnPointerClick(PointerEventArgs e)
     {
-        IPointerClickHandler clickHandler = e.target.GetComponent<IPointerClickHandler>();
-        clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
-
-
+        IPointerClickHandler[] clickHandlers = e.target.GetComponents<IPointerClickHandler>();
+        foreach (var clickHandler in clickHandlers)
+        {
+            clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
+        }
+        
         if (PointerClick != null)
             PointerClick(this, e);
+    }
+    
+    private void OnPointerDown(PointerEventArgs e)
+    {
+        IPointerDownHandler[] downHandlers = e.target.GetComponents<IPointerDownHandler>();
+        foreach (var downHandler in downHandlers)
+        {
+            downHandler?.OnPointerDown(new PointerEventData(EventSystem.current));
+        }
+    }
+    
+    private void OnPointerUp(PointerEventArgs e)
+    {
+        IPointerUpHandler[] upHandlers = e.target.GetComponents<IPointerUpHandler>();
+        foreach (var upHandler in upHandlers)
+        {
+            upHandler?.OnPointerUp(new PointerEventData(EventSystem.current));    
+        }
     }
 
     public virtual void OnPointerOut(PointerEventArgs e)
     {
-        IPointerExitHandler pointerExitHandler = e.target.GetComponent<IPointerExitHandler>();
-        pointerExitHandler?.OnPointerExit(new PointerEventData(EventSystem.current));
+        IPointerExitHandler[] pointerExitHandlers = e.target.GetComponents<IPointerExitHandler>();
+        foreach (var pointerExitHandler in pointerExitHandlers)
+        {
+            pointerExitHandler?.OnPointerExit(new PointerEventData(EventSystem.current));
+        }
 
         if (PointerOut != null)
             PointerOut(this, e);
@@ -338,6 +364,12 @@ public class FxRLaserPointer : MonoBehaviour
                 {
                     fxrWindow.PointerPress(hit.textureCoord);
                 }
+                PointerEventArgs argsClick = new PointerEventArgs();
+                argsClick.fromInputSource = pose.inputSource;
+                argsClick.distance = hit.distance;
+                argsClick.flags = 0;
+                argsClick.target = hit.transform;
+                OnPointerDown(argsClick);
             }
 
             if (interactWithUI.GetStateUp(pose.inputSource))
@@ -356,6 +388,7 @@ public class FxRLaserPointer : MonoBehaviour
                 argsClick.flags = 0;
                 argsClick.target = hit.transform;
                 OnPointerClick(argsClick);
+                OnPointerUp(argsClick);
             }
         } // bHit
 

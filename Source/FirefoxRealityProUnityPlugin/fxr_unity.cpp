@@ -53,13 +53,13 @@ static WCHAR s_pszFxPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\firefox
 static WCHAR s_pszVrHostPath[] = L"e:\\src4\\gecko_build_release\\dist\\bin\\vrhost.dll";
 static WCHAR s_pszFxProfile[] = L"e:\\src4\\gecko_build_release\\tmp\\profile-default";
 #else
-static WCHAR s_pszFxPath[MAX_PATH] = { 0 };
+static CHAR s_pszFxPath[MAX_PATH] = { 0 };
 static WCHAR s_pszVrHostPath[MAX_PATH] = { 0 };
-static WCHAR s_pszFxProfile[MAX_PATH] = { 0 };
+static CHAR s_pszFxProfile[MAX_PATH] = { 0 };
 #endif
 static HINSTANCE m_hVRHost = nullptr;
 static PFN_CREATEVRWINDOW m_pfnCreateVRWindow = nullptr;
-static PFN_SENDUIMESSAGE m_pfnSendUIMessage = nullptr;
+static PFN_SENDUIMSG m_pfnSendUIMessage = nullptr;
 static PFN_CLOSEVRWINDOW m_pfnCloseVRWindow = nullptr;
 static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
 static PFN_WINDOWRESIZEDCALLBACK m_windowResizedCallback = nullptr;
@@ -232,11 +232,11 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 
 	int err;
 #ifndef USE_HARDCODED_FX_PATHS
-	err = swprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), L"%S/%S", s_ResourcesPath, "fxbin/firefox.exe");
+	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/firefox.exe");
 	assert(err > 0);
-	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "fxbin/vrhost.dll");
+	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "firefox/vrhost.dll");
 	assert(err > 0);
-	err = swprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), L"%S/%S", s_ResourcesPath, "fxbin/fxr-profile");
+	err = sprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), "%s/%s", s_ResourcesPath, "fxr-profile");
 	assert(err > 0);
 #endif
 
@@ -244,21 +244,21 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	assert(m_hVRHost != nullptr);
 
 	m_pfnCreateVRWindow = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
-	m_pfnSendUIMessage = (PFN_SENDUIMESSAGE)::GetProcAddress(m_hVRHost, "SendUIMessage");
+	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessageToVRWindow");
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
 
-	WCHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
-	err = swprintf_s(
+	CHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
+	err = sprintf_s(
 		fxCmd,
 		ARRAYSIZE(fxCmd),
-		L"%s -wait-for-browser -profile %s --fxr",
+		"%s -wait-for-browser -profile %s --fxr",
 		s_pszFxPath,
 		s_pszFxProfile
 	);
 	assert(err > 0);
 
-	STARTUPINFO startupInfoFx = { 0 };
-	bool fCreateContentProc = ::CreateProcess(
+	STARTUPINFOA startupInfoFx = { 0 };
+	bool fCreateContentProc = ::CreateProcessA(
 		nullptr,  // lpApplicationName,
 		fxCmd,
 		nullptr,  // lpProcessAttributes,
@@ -323,7 +323,7 @@ bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsR
 {
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
-		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, m_pfnCreateVRWindow, m_pfnSendUIMessage, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr);
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr);
 	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
 		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
 	}

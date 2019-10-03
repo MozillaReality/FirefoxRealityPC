@@ -24,19 +24,25 @@ static ID3D11Device* s_D3D11Device = nullptr;
 
 struct CreateVRWindowParams {
 	PFN_CREATEVRWINDOW lpfnCreate;
-	UINT vrWin;
-	HANDLE fxTexHandle;
-	HANDLE hSignal;
+	char* firefoxFolderPath;
+	char* firefoxProfilePath;
+	uint32_t vrWin;
+	void* fxTexHandle;
+//	HANDLE hSignal;
 };
 
 DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 	CreateVRWindowParams* pParams = static_cast<CreateVRWindowParams*>(lpParameter);
 
-	uint64_t width;
-	uint64_t height;
+	uint32_t width;
+	uint32_t height;
 
-	pParams->lpfnCreate(&pParams->vrWin, &pParams->fxTexHandle, &pParams->hSignal, &width, &height);
+//	pParams->lpfnCreate(&par&pParams->vrWin, &pParams->fxTexHandle, &pParams->hSignal, &width, &height);
+	//::ExitThread(0);
+
+	pParams->lpfnCreate(pParams->firefoxFolderPath, pParams->firefoxProfilePath, 0, 0, 0, &pParams->vrWin, &pParams->fxTexHandle, &width, &height);
 	::ExitThread(0);
+
 }
 
 
@@ -49,9 +55,11 @@ void FxRWindowDX11::finalizeDevice() {
 	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMESSAGE pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
+FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMSG pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
 	FxRWindow(uid, uidExt),
 	m_pfnCreateVRWindow(pfnCreateVRWindow),
+	m_firefoxFolderPath(pfirefoxFolderPath),
+	m_firefoxProfilePath(pfirefoxProfilePath),
 	m_pfnSendUIMessage(pfnSendUIMessage),
 	m_pfnCloseVRWindow(pfnCloseVRWindow),
 	m_vrWin(0),
@@ -66,6 +74,8 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 {
 	CreateVRWindowParams* pParams = new CreateVRWindowParams;
 	pParams->lpfnCreate = m_pfnCreateVRWindow;
+	pParams->firefoxFolderPath = m_firefoxFolderPath;
+	pParams->firefoxProfilePath = m_firefoxProfilePath;
 
 	DWORD dwTid = 0;
 	HANDLE hThreadFxWin =
@@ -134,7 +144,7 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
-	if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin);
+	if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin, false);
 }
 
 FxRWindow::Size FxRWindowDX11::size() {

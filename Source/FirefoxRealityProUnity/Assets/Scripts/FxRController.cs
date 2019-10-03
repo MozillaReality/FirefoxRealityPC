@@ -1,13 +1,17 @@
-﻿using UnityEngine;
+﻿#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
+
+using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Valve.VR;
 using VRIME2;
-using Random = UnityEngine.Random;
 
 public class FxRController : MonoBehaviour
 {
+#if UNITY_EDITOR
+    // Set the following to the location of your local desktop firefox build to use in editor
+    private const string HardcodedFirefoxPath = "d:\\patri\\dev\\Mozilla\\gecko_build_release";
+#endif
     public enum FXR_LOG_LEVEL
     {
         FXR_LOG_LEVEL_DEBUG = 0,
@@ -31,7 +35,7 @@ public class FxRController : MonoBehaviour
     public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
 
     public static BrowsingModeChanged OnBrowsingModeChanged;
-
+    
     public static FXR_BROWSING_MODE CurrentBrowsingMode
     {
         get => currentBrowsingMode;
@@ -126,7 +130,13 @@ public class FxRController : MonoBehaviour
         fxr_plugin.fxrRegisterFullScreenEndCallback(HandleFullScreenEnd);
 
         // Give the plugin a place to look for resources.
-        fxr_plugin.fxrSetResourcesPath(Application.streamingAssetsPath);
+
+        string resourcesPath = Application.streamingAssetsPath;
+
+#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
+        resourcesPath = HardcodedFirefoxPath;
+#endif
+        fxr_plugin.fxrSetResourcesPath(resourcesPath);
 
         // Set any launch-time parameters.
         if (DontCloseNativeWindowOnClose)

@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4991406573691675434
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4991406573691675432}
+  - component: {fileID: 4991406573691675433}
+  m_Layer: 0
+  m_Name: TestPalette
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4991406573691675432
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4991406573691675434}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4991406573691675433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4991406573691675434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7827dccd19494a41a8f34b5afc45426, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  NamedColors:
+  - Name: 0
+    Color: {r: 1, g: 0, b: 1, a: 1}
+  - Name: 1
+    Color: {r: 0.11372549, g: 0.18039216, b: 0.23137255, a: 1}
+  - Name: 2
+    Color: {r: 0.29803923, g: 0.28627452, b: 0.36078432, a: 1}
+  - Name: 3
+    Color: {r: 0.49019608, g: 0.53333336, b: 0.5882353, a: 1}
+  - Name: 4
+    Color: {r: 0.7019608, g: 0.74509805, b: 0.8, a: 1}
+  - Name: 5
+    Color: {r: 0.8352941, g: 0.8862745, b: 0.9490196, a: 1}
+  - Name: 6
+    Color: {r: 0.9339623, g: 0.8909294, b: 0.47843137, a: 1}
+  - Name: 7
+    Color: {r: 0, g: 0.7019608, b: 0.8901961, a: 1}
+  - Name: 8
+    Color: {r: 0.3372549, g: 0.8509804, b: 0.9647059, a: 1}
+  - Name: 9
+    Color: {r: 0.03529412, g: 0.40784314, b: 0.7137255, a: 1}
+  - Name: 10
+    Color: {r: 0.94509804, g: 0.18431373, b: 0.18431373, a: 1}
+  - Name: 11
+    Color: {r: 0.94509804, g: 0.48235294, b: 0.30980393, a: 1}
+  - Name: 12
+    Color: {r: 0.078431375, g: 0.1882353, b: 0.26666668, a: 1}
+  - Name: 13
+    Color: {r: 0.20073056, g: 1, b: 0, a: 1}
+  - Name: 14
+    Color: {r: 0.06222248, g: 0, b: 1, a: 1}
+  - Name: 15
+    Color: {r: 0.8901961, g: 0.9372549, b: 0.9882353, a: 1}
+  - Name: 16
+    Color: {r: 0.90588236, g: 0.91764706, b: 0.9411765, a: 1}
+  - Name: 17
+    Color: {r: 0.9490196, g: 0.95686275, b: 0.972549, a: 1}
+  - Name: 18
+    Color: {r: 0.9490196, g: 0.42745098, b: 0.42745098, a: 1}
