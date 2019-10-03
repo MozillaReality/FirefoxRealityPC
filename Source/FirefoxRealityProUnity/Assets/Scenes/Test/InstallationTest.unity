@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d4254ab45f6f8541a06312d827ec24f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ColorPalettePrefab: {fileID: 3084728934473471384, guid: 0c1b2bfa23e06a04e81388c4c7432bf7,
+  ColorPalettePrefab: {fileID: 4991406573691675433, guid: 1a8167dc931a267498d9b32ad7455df7,
     type: 3}
 --- !u!4 &658900336
 Transform:

@@ -63,6 +63,10 @@ public class FxRColorPalette : MonoBehaviour
             BorderColor = COLOR_NAME.COLOR_08
         };
 
+    public Color NormalBrowsingDialogBackgroundColor => ColorForName(COLOR_NAME.COLOR_06);
+    public Color DialogTitleTextColor => ColorForName(COLOR_NAME.COLOR_13);
+    public Color DialogBodyTextColor => ColorForName(COLOR_NAME.COLOR_14);
+
     public FxRButtonColorConfig CreateButtonColorConfigForLogicalConfig(FxRButtonLogicalColorConfig logicalColorConfig)
     {
         FxRButtonColorConfig colorConfig = new FxRButtonColorConfig()

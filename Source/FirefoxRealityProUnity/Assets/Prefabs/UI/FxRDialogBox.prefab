@@ -88,7 +88,7 @@ GameObject:
   - component: {fileID: 1930789538974366823}
   - component: {fileID: 1930789538974366824}
   m_Layer: 5
-  m_Name: Header Text
+  m_Name: Title Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -293,9 +293,10 @@ MonoBehaviour:
     type: 3}
   ButtonContainer: {fileID: 1930789538657542192}
   Icon: {fileID: 6238625477274495373}
-  HeaderText: {fileID: 1930789538974366824}
-  MessageText: {fileID: 1930789539254972707}
+  TitleText: {fileID: 1930789538974366824}
+  BodyText: {fileID: 1930789539254972707}
   ProgressBar: {fileID: 3201660183111757387}
+  BackgroundImage: {fileID: 1930789539795721024}
 --- !u!1 &1930789539254972709
 GameObject:
   m_ObjectHideFlags: 0
@@ -308,7 +309,7 @@ GameObject:
   - component: {fileID: 1930789539254972706}
   - component: {fileID: 1930789539254972707}
   m_Layer: 5
-  m_Name: Message Text
+  m_Name: Body Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

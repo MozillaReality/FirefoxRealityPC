@@ -8,9 +8,10 @@ public class FxRDialogBox : MonoBehaviour
     [SerializeField] protected FxRButton DialogButtonPrefab;
     [SerializeField] protected Transform ButtonContainer;
     [SerializeField] protected Image Icon;
-    [SerializeField] protected TMP_Text HeaderText;
-    [SerializeField] protected TMP_Text MessageText;
+    [SerializeField] protected TMP_Text TitleText;
+    [SerializeField] protected TMP_Text BodyText;
     [SerializeField] protected Image ProgressBar;
+    [SerializeField] protected Image BackgroundImage;
 
     // TODO: Do dialogs need to have an option to close them without pressing a button?
     public void Show(string title, string message, Sprite icon, params FxRButton.ButtonConfig[] buttonConfigs)
@@ -30,12 +31,15 @@ public class FxRDialogBox : MonoBehaviour
             button.Config = buttonConfig;
         }
 
-        HeaderText.text = title;
-        MessageText.text = message;
+        TitleText.text = title;
+        BodyText.text = message;
         gameObject.SetActive(true);
         ProgressBar.gameObject.SetActive(false);
         Icon.sprite = icon;
         Icon.gameObject.SetActive(icon != null);
+        BackgroundImage.color = FxRConfiguration.Instance.ColorPalette.NormalBrowsingDialogBackgroundColor;
+        TitleText.color = FxRConfiguration.Instance.ColorPalette.DialogTitleTextColor;
+        BodyText.color = FxRConfiguration.Instance.ColorPalette.DialogBodyTextColor;
     }
 
     public void ShowProgress(float zeroToOne)
