@@ -6,42 +6,15 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
-public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler,
+public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler,
     IPointerUpHandler
 {
-    // TODO: Do we need to support image-only dialog buttons?
-
-    public static ButtonColorConfig SecondaryButtonColorConfig = new ButtonColorConfig()
-    {
-        // TODO: Pull out these specific colors into a configurable set
-        NormalColor = Color.white,
-        HoverColor = new Color(.0f, 179f/255f, 227f/255f),
-        PressedColor = new Color(9f/255f, 104f/255f, 182f/255f),
-        NormalTextColor = new Color(44f/255f,58f/255f,80f/255f),
-        HoverTextColor = new Color(44f/255f,58f/255f,80f/255f),
-        PressedTextColor = Color.white,
-        HasBorder =  true,
-        BorderColor = new Color(.0f, 179f/255f, 227f/255f)
-    };
-
-    public static ButtonColorConfig PrimaryButtonColorConfig = new ButtonColorConfig()
-    {
-        // TODO: Pull out these specific colors into a configurable set
-        NormalColor = new Color(86f/255f, 217f/255f, 246f/255f),
-        HoverColor = new Color(.0f, 179f/255f, 227f/255f),
-        PressedColor = new Color(9f/255f, 104f/255f, 182f/255f),
-        NormalTextColor = new Color(44f/255f,58f/255f,80f/255f),
-        HoverTextColor = new Color(44f/255f,58f/255f,80f/255f),
-        PressedTextColor = Color.white
-    };
-
     [Serializable]
     public class ButtonColorConfig
     {
         public Color NormalColor;
         public Color HoverColor;
         public Color PressedColor;
-        public Color TextColor;
         public Color NormalTextColor;
         public Color HoverTextColor;
         public Color PressedTextColor;
@@ -52,18 +25,30 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [Serializable]
     public class ButtonConfig
     {
-        public static readonly Color DEFAULT_BACKGROUND_COLOR = Color.gray;
-        public static readonly Color DEFAULT_TEXT_COLOR = Color.white;
-
         public string ButtonLabel;
         [SerializeField] public UnityAction ButtonPressedAction;
-        [SerializeField] public ButtonColorConfig ColorConfig;
+        [SerializeField] protected FxRButtonLogicalColorConfig LogicalColorConfig;
 
-        public ButtonConfig(string label, UnityAction pressAction, ButtonColorConfig colorConfig = null)
+        public FxRButtonColorConfig ColorConfig
+        {
+            get
+            {
+                if (colorConfig == null)
+                {
+                    colorConfig = FxRConfiguration.Instance.ColorPalette.CreateButtonColorConfigForLogicalConfig(LogicalColorConfig);
+                }
+
+                return colorConfig;
+            }
+        }
+
+        private FxRButtonColorConfig colorConfig;
+
+        public ButtonConfig(string label, UnityAction pressAction, FxRButtonLogicalColorConfig colorConfig)
         {
             ButtonLabel = label;
             ButtonPressedAction = pressAction;
-            ColorConfig = (colorConfig == null) ? SecondaryButtonColorConfig : colorConfig;
+            LogicalColorConfig = colorConfig;
         }
     }
 
@@ -81,6 +66,7 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
             {
                 Button.onClick.AddListener(config.ButtonPressedAction);
             }
+
             ButtonLabel.text = config.ButtonLabel;
             ButtonLabel.color = config.ColorConfig.NormalTextColor;
             BackgroundImage.color = config.ColorConfig.NormalColor;
@@ -91,8 +77,7 @@ public class FxRDialogButton : MonoBehaviour, IPointerEnterHandler, IPointerExit
         private get { return config; }
     }
 
-    [SerializeField]
-    private ButtonConfig config;
+    [SerializeField] private ButtonConfig config;
 
     bool boxColliderSizeSet;
 

@@ -21,8 +21,6 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
     private const string NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY = "NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY";
     private const string FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY = "FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY";
 
-    private Color DialogBackgroundColor = new Color(0f, 179f, 227f);
-
     int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
 
     // Class to represent JSON downloaded from Firefox latest version service
@@ -116,17 +114,19 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
             ? "Would you like to install Firefox Desktop?"
             : "Would you like to update Firefox Desktop?";
-        var dialogButtons = new FxRDialogButton.ButtonConfig[2];
+        var dialogButtons = new FxRButton.ButtonConfig[2];
         var updateOrInstall =
             (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
-        dialogButtons[0] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Later", null,
-            FxRDialogButton.SecondaryButtonColorConfig);
-        dialogButtons[1] = new FxRDialogButton.ButtonConfig(updateOrInstall + " Now", () =>
+        dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstall + " Later", null,
+            FxRConfiguration
+                .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
+        dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now", () =>
         {
             var downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
             downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
-                new FxRDialogButton.ButtonConfig("Cancel",
-                    () => { downloadCancelled = true; }, FxRDialogButton.SecondaryButtonColorConfig));
+                new FxRButton.ButtonConfig("Cancel",
+                    () => { downloadCancelled = true; }, FxRConfiguration
+                        .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 
             // TODO: Put a progress bar in dialog once we allow for full desktop installation
             var progress =
@@ -140,7 +140,8 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
                         removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
                             "Please remove your headset to continue the Desktop Firefox install process",
                             FirefoxIcon,
-                            new FxRDialogButton.ButtonConfig("OK", null, FxRDialogButton.SecondaryButtonColorConfig));
+                            new FxRButton.ButtonConfig("OK", null, FxRConfiguration
+                                .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
                     }
                     else
                     {
@@ -164,7 +165,8 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
                     Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
                 }
             }, downloadType, installationScope);
-        }, FxRDialogButton.PrimaryButtonColorConfig);
+        }, FxRConfiguration
+            .Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
 
         FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
     }

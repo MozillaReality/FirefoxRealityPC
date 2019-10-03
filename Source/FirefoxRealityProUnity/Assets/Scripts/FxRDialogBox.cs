@@ -1,10 +1,11 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class FxRDialogBox : MonoBehaviour
 {
-    [SerializeField] protected FxRDialogButton DialogButtonPrefab;
+    [SerializeField] protected FxRButton DialogButtonPrefab;
     [SerializeField] protected Transform ButtonContainer;
     [SerializeField] protected Image Icon;
     [SerializeField] protected TMP_Text HeaderText;
@@ -12,11 +13,11 @@ public class FxRDialogBox : MonoBehaviour
     [SerializeField] protected Image ProgressBar;
 
     // TODO: Do dialogs need to have an option to close them without pressing a button?
-    public void Show(string title, string message, Sprite icon, params FxRDialogButton.ButtonConfig[] buttonConfigs)
+    public void Show(string title, string message, Sprite icon, params FxRButton.ButtonConfig[] buttonConfigs)
     {
         foreach (var buttonConfig in buttonConfigs)
         {
-            FxRDialogButton button = Instantiate<FxRDialogButton>(DialogButtonPrefab, ButtonContainer.position,
+            FxRButton button = Instantiate<FxRButton>(DialogButtonPrefab, ButtonContainer.position,
                 ButtonContainer.rotation, ButtonContainer);
             button.transform.localScale = Vector3.one;
 
