@@ -10,19 +10,6 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     IPointerUpHandler
 {
     [Serializable]
-    public class ButtonColorConfig
-    {
-        public Color NormalColor;
-        public Color HoverColor;
-        public Color PressedColor;
-        public Color NormalTextColor;
-        public Color HoverTextColor;
-        public Color PressedTextColor;
-        public bool HasBorder = false;
-        public Color BorderColor;
-    }
-
-    [Serializable]
     public class ButtonConfig
     {
         public string ButtonLabel;
@@ -56,6 +43,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     [SerializeField] protected TMP_Text ButtonLabel;
     [SerializeField] protected Image BackgroundImage;
     [SerializeField] protected Image Border;
+    [SerializeField] protected Image Icon;
 
     public ButtonConfig Config
     {
@@ -72,6 +60,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
             BackgroundImage.color = config.ColorConfig.NormalColor;
             Border.color = config.ColorConfig.BorderColor;
             Border.gameObject.SetActive(config.ColorConfig.HasBorder);
+            Icon.color = config.ColorConfig.NormalIconColor;
         }
 
         private get { return config; }
@@ -106,6 +95,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     {
         BackgroundImage.color = Config.ColorConfig.HoverColor;
         ButtonLabel.color = Config.ColorConfig.HoverTextColor;
+        Icon.color = config.ColorConfig.HoverIconColor;
         Border.gameObject.SetActive(false);
     }
 
@@ -113,6 +103,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     {
         BackgroundImage.color = Config.ColorConfig.NormalColor;
         ButtonLabel.color = Config.ColorConfig.NormalTextColor;
+        Icon.color = config.ColorConfig.NormalIconColor;
         Border.gameObject.SetActive(config.ColorConfig.HasBorder);
     }
 
@@ -120,6 +111,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     {
         BackgroundImage.color = Config.ColorConfig.PressedColor;
         ButtonLabel.color = Config.ColorConfig.PressedTextColor;
+        Icon.color = config.ColorConfig.PressedIconColor;
         Border.gameObject.SetActive(false);
     }
 
@@ -127,6 +119,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     {
         BackgroundImage.color = Config.ColorConfig.NormalColor;
         ButtonLabel.color = Config.ColorConfig.NormalTextColor;
+        Icon.color = config.ColorConfig.NormalIconColor;
         Border.gameObject.SetActive(config.ColorConfig.HasBorder);
     }
 }

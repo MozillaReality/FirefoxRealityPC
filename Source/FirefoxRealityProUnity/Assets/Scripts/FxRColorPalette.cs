@@ -78,7 +78,10 @@ public class FxRColorPalette : MonoBehaviour
             PressedColor = ColorForName(logicalColorConfig.PressedColor),
             HoverTextColor = ColorForName(logicalColorConfig.HoverTextColor),
             NormalTextColor = ColorForName(logicalColorConfig.NormalTextColor),
-            PressedTextColor = ColorForName(logicalColorConfig.PressedTextColor)
+            PressedTextColor = ColorForName(logicalColorConfig.PressedTextColor),
+            HoverIconColor = ColorForName(logicalColorConfig.HoverIconColor),
+            NormalIconColor = ColorForName(logicalColorConfig.NormalIconColor),
+            PressedIconColor = ColorForName(logicalColorConfig.PressedIconColor)
         };
         return colorConfig;
     }
