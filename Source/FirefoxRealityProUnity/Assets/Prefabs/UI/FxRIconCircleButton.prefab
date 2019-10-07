@@ -80,12 +80,12 @@ PrefabInstance:
     - target: {fileID: 8296133632850541399, guid: 0d921f2993676f346abc61c093432293,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 44
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296133632850541399, guid: 0d921f2993676f346abc61c093432293,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 44
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296133632850541399, guid: 0d921f2993676f346abc61c093432293,
         type: 3}
