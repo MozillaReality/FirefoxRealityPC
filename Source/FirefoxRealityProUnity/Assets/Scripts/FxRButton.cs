@@ -55,7 +55,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
                 Button.onClick.AddListener(config.ButtonPressedAction);
             }
 
-            ButtonLabel.text = config.ButtonLabel;
+            ButtonLabel.text = !string.IsNullOrEmpty(config.ButtonLabel) ? config.ButtonLabel : ButtonLabel.text;
             ButtonLabel.color = config.ColorConfig.NormalTextColor;
             BackgroundImage.color = config.ColorConfig.NormalColor;
             Border.color = config.ColorConfig.BorderColor;

@@ -123,7 +123,7 @@ public class FxRWindow : MonoBehaviour
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
 
-        _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0);
+        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0, flipX, flipY);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
         _videoMeshGO.transform.localRotation = Quaternion.identity;
@@ -137,8 +137,8 @@ public class FxRWindow : MonoBehaviour
         var oldTexture = _videoTexture;
         _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
-        
-        ConfigureWindow(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height);
+
+        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height, flipX, flipY);
     }
     
     // Update is called once per frame
@@ -224,108 +224,6 @@ public class FxRWindow : MonoBehaviour
         fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, nativeTexPtr);
 
         return vt;
-    }
-
-    // Creates a GameObject in layer 'layer' which renders a mesh displaying the video stream.
-    private GameObject CreateWindowGameObject(Texture2D vt, float textureScaleU, float textureScaleV, float width,
-        float height, int layer)
-    {
-        // Check parameters.
-        if (!vt)
-        {
-            Debug.LogError("Error: CreateWindowMesh null Texture2D");
-            return null;
-        }
-
-        // Create new GameObject to hold mesh.
-        GameObject vmgo = new GameObject("Video source");
-        if (vmgo == null)
-        {
-            Debug.LogError("Error: CreateWindowMesh cannot create GameObject.");
-            return null;
-        }
-
-        vmgo.layer = layer;
-
-        // Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
-        Shader shaderSource = Shader.Find("TextureNoLight");
-        Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
-        vm.hideFlags = HideFlags.HideAndDontSave;
-        //Debug.Log("Created video material");
-
-        MeshFilter filter = vmgo.AddComponent<MeshFilter>();
-        MeshRenderer meshRenderer = vmgo.AddComponent<MeshRenderer>();
-        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        meshRenderer.receiveShadows = false;
- 
-        vmgo.GetComponent<Renderer>().material = vm;
-        vmgo.AddComponent<MeshCollider>();
-
-        ConfigureWindow(vmgo, vt, textureScaleU, textureScaleV, width, height);
-        return vmgo;
-    }
-
-    private void ConfigureWindow(GameObject vmgo, Texture2D vt, float textureScaleU, float textureScaleV,
-        float width, float height)
-    {
-        // Check parameters.
-        if (!vt) {
-            Debug.LogError("Error: CreateWindowMesh null Texture2D");
-            return;
-        }
-        // Create the mesh
-        var m = CreateVideoMesh(textureScaleU, textureScaleV, width, height);
-        
-        // Assign the texture to the window's material
-        Material vm = vmgo.GetComponent<Renderer>().material;
-        vm.mainTexture = vt;
-
-        // Assign the mesh to the mesh filter
-        MeshFilter filter = vmgo.GetComponent<MeshFilter>();
-        filter.mesh = m;
-
-        // Update the mesh collider mesh
-        MeshCollider vmc = vmgo.GetComponent<MeshCollider>();;
-        vmc.sharedMesh = filter.sharedMesh;
-    }
-
-    private Mesh CreateVideoMesh(float textureScaleU, float textureScaleV, float width, float height)
-    {
-        // Now create a mesh appropriate for displaying the video, a mesh filter to instantiate that mesh,
-        // and a mesh renderer to render the material on the instantiated mesh.
-        Mesh m = new Mesh();
-        m.Clear();
-        m.vertices = new Vector3[]
-        {
-            new Vector3(-width * 0.5f, 0.0f, 0.0f),
-            new Vector3(width * 0.5f, 0.0f, 0.0f),
-            new Vector3(width * 0.5f, height, 0.0f),
-            new Vector3(-width * 0.5f, height, 0.0f),
-        };
-        m.normals = new Vector3[]
-        {
-            new Vector3(0.0f, 0.0f, 1.0f),
-            new Vector3(0.0f, 0.0f, 1.0f),
-            new Vector3(0.0f, 0.0f, 1.0f),
-            new Vector3(0.0f, 0.0f, 1.0f),
-        };
-        float u1 = flipX ? textureScaleU : 0.0f;
-        float u2 = flipX ? 0.0f : textureScaleU;
-        float v1 = flipY ? textureScaleV : 0.0f;
-        float v2 = flipY ? 0.0f : textureScaleV;
-        m.uv = new Vector2[] {
-                new Vector2(u1, v1),
-                new Vector2(u2, v1),
-                new Vector2(u2, v2),
-                new Vector2(u1, v2)
-            };
-        m.triangles = new int[] {
-                2, 1, 0,
-                3, 2, 0
-            };
-
-
-        return m;
     }
 
     private void DestroyWindow()

@@ -1,25 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class FxRVideoController : MonoBehaviour
 {
-    public enum FXR_VIDEO_PROJECTION_MODE
-    {
-        VIDEO_PROJECTION_2D = 0,
-        VIDEO_PROJECTION_360 = 1,
-        VIDEO_PROJECTION_360S = 2, // 360 stereo
-        VIDEO_PROJECTION_180 = 3,
-        VIDEO_PROJECTION_180LR = 4, // 180 left to right
-        VIDEO_PROJECTION_180TB = 5, // 180 top to bottom
-        VIDEO_PROJECTION_3D = 6 // 3D side by side
-
-    }
-    public delegate void ImmersiveScreenVideoClosed(int windowIndex);
-
-   public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
+    public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
 
     [SerializeField] protected GameObject VideoControls;
+    [SerializeField] protected GameObject ProjectionSelectionMenu;
+    [SerializeField] protected GameObject FullScreenVideoMenu;
+    [SerializeField] protected Transform FullScreenVideoParent;
+    
 
     private Texture2D _videoTexture = null; // Texture object with the video image.
 
@@ -34,33 +26,90 @@ public class FxRVideoController : MonoBehaviour
         {
             _videoControlsVisible = value;
             VideoControls.SetActive(_videoControlsVisible);
+            if (_videoControlsVisible)
+            {
+                FullScreenVideoMenu.SetActive(false);    
+            }
+            
+        }
+    }
+    private bool _videoControlsVisible = true;
+    
+    private bool ProjectionSelectionMenuVisible
+    {
+        get { return _projectionSelectionMenuVisible; }
+        set
+        {
+            _projectionSelectionMenuVisible = value;
+            ProjectionSelectionMenu.SetActive(_projectionSelectionMenuVisible);
+        }
+    }
+    private bool _projectionSelectionMenuVisible = true;
+
+    public void ToggleProjectionSelectionMenuVisible()
+    {
+        ProjectionSelectionMenuVisible = !ProjectionSelectionMenuVisible;
+    }
+    
+    public void SwitchProjectionMode(FxRVideoProjectionMode projectionMode)
+    {
+        SwitchProjectionMode(projectionMode.Projection);
+        ProjectionSelectionMenu.SetActive(false);
+    }
+    
+    public void SwitchProjectionMode(FxRVideoProjectionMode.PROJECTION_MODE projectionMode)
+    {
+        // TODO: Support multiple video projection modes: 360 Video, 180 left/right, 180 top/bottom, etc
+        // TODO: If already in mode being requested, just return
+        if (_videoProjection != null)
+        {
+            _videoProjection.GetComponent<Renderer>().material = null;
+            DetachVideoTexture();
+            Destroy(_videoProjection);
+        }
+
+        switch (projectionMode)
+        {
+            case FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D:
+                ProjectVideo2D();
+                break;
+            case FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_360:
+                ProjectVideo360(_videoTexture);
+                break;
+            default:
+                Debug.LogError("FxRVideoController::ShowVideo: Received request for unknown projection mode.");
+                return;
         }
     }
 
-    private bool _videoControlsVisible = true;
-
-    public bool ShowVideo(int pixelwidth, int pixelheight, int nativeFormat, FXR_VIDEO_PROJECTION_MODE projectionMode)
+    private void ProjectVideo2D()
     {
-        _windowIndex = 1;
+        // TODO: Decide on width of full screen video, and put it in a configurable spot
+        var width = 4.0f;
+        var height = (width / _videoTexture.width) * _videoTexture.height;
+
+        _videoProjection = FxRTextureUtils.Create2DVideoSurface(_videoTexture, 1, 1, width, height, 0, false, true);
+        
+        _videoProjection.transform.SetParent(FullScreenVideoParent);
+        _videoProjection.transform.localPosition = Vector3.zero;
+        // TODO: Should rotate so it is oriented to direction user is facing when video starts?
+        _videoProjection.transform.localRotation = Quaternion.identity;
+
+        VideoControlsVisible = false;
+        FullScreenVideoMenu.SetActive(true);
+    }
+
+    public bool ShowVideo(int pixelwidth, int pixelheight, int nativeFormat, FxRVideoProjectionMode.PROJECTION_MODE projectionMode, int hackWindowIndex)
+    {
+        _windowIndex = hackWindowIndex;
         TextureFormat format = fxr_plugin.NativeFormatToTextureFormat(nativeFormat);
         if (format == (TextureFormat) 0)
         {
             Debug.LogError("FxRVideoController::ShowVideo: Received request for unknown texture format.");
             return false;
         }
-        var videoTexture = CreateVideoTexture(pixelwidth, pixelheight, format);
-
-        // TODO: Support multiple video projection modes: 360 Video, 180 left/right, 180 top/bottom, etc
-        switch (projectionMode)
-        {
-            case FXR_VIDEO_PROJECTION_MODE.VIDEO_PROJECTION_360:
-                ProjectVideo360(videoTexture);
-                break;
-            default:
-                Debug.LogError("FxRVideoController::ShowVideo: Received request for unknown projection mode.");
-                return false;
-        }
-
+        _videoTexture = CreateVideoTexture(pixelwidth, pixelheight, format);
+        SwitchProjectionMode(projectionMode);
 
         return true;
     }
@@ -106,7 +155,7 @@ public class FxRVideoController : MonoBehaviour
 
         // Set up the mesh renderer
         MeshRenderer meshRenderer = _videoProjection.GetComponent<MeshRenderer>();
-        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
         _videoProjection.GetComponent<Renderer>().material = vm;
 
@@ -120,27 +169,26 @@ public class FxRVideoController : MonoBehaviour
         VideoControlsVisible = true;
     }
 
-    public void ToggleVideoControlsVisibility()
-    {
-        VideoControlsVisible = !VideoControlsVisible;
-    }
-
     public void ExitVideo()
     {
         if (_videoProjection != null)
         {
             fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, IntPtr.Zero);
 
-            var videoTexture = _videoProjection.GetComponentInChildren<MeshRenderer>().material.mainTexture;
-            _videoProjection.GetComponentInChildren<MeshRenderer>().material.mainTexture = null;
+             DetachVideoTexture();
             Destroy(_videoProjection);
-            Destroy(videoTexture);
+            Destroy(_videoTexture);
             _videoProjection = null;
         }
 
         VideoControlsVisible = false;
         
         _windowIndex = 0;
+    }
+
+    private void DetachVideoTexture()
+    {
+        _videoProjection.GetComponentInChildren<MeshRenderer>().material.mainTexture = null;
     }
 
     void Update()
@@ -156,5 +204,17 @@ public class FxRVideoController : MonoBehaviour
     private void OnEnable()
     {
         VideoControlsVisible = false;
+        FullScreenVideoMenu.SetActive(false);
+        ProjectionSelectionMenuVisible = false;
+        
+        FxRController.OnBrowsingModeChanged += HandleBrowsingModeChanged;
+    }
+
+    private void HandleBrowsingModeChanged(FxRController.FXR_BROWSING_MODE browsingMode)
+    {
+        if (browsingMode == FxRController.FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING)
+        {
+            FullScreenVideoMenu.SetActive(false);
+        }
     }
 }
