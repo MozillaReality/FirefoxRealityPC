@@ -1,23 +1,58 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class FxRToggle : FxRButton
+[RequireComponent(typeof(Toggle))]
+public class FxRToggle : FxRSelectable
 {
-    [SerializeField] protected Toggle ToggleButton;
     [SerializeField] protected FxRButtonLogicalColorConfig LogicalToggleOnColorConfig;
     [SerializeField] protected Sprite ToggleOnIconSprite;
     [SerializeField] protected Sprite ToggleOffIconSprite;
-    public UnityEvent<bool> ToggleValueChanged;
 
+    [Serializable]
+    public class ToggleConfig : SelectableConfig
+    {
+        [HideInInspector] public UnityAction<bool> ToggleValueChangedListener;
+
+        public ToggleConfig(string label, UnityAction<bool> toggleValueChangedListener,
+            FxRButtonLogicalColorConfig colorConfig) : base(
+            label, colorConfig)
+        {
+            ToggleValueChangedListener = toggleValueChangedListener;
+        }
+
+        public ToggleConfig(SelectableConfig config) : this(config.ButtonLabel, null, config.LogicialColors)
+        {
+        }
+    }
+
+    public ToggleConfig ConfigAsToggleConfig => (ToggleConfig) Config;
+    
+    public override SelectableConfig Config
+    {
+        set
+        {
+            base.Config = value;
+            if (ConfigAsToggleConfig.ToggleValueChangedListener != null)
+            {
+                ToggleButton.onValueChanged.RemoveAllListeners();
+                ToggleButton.onValueChanged.AddListener(ConfigAsToggleConfig.ToggleValueChangedListener);
+            }
+
+        }
+    }
+
+    protected Toggle ToggleButton => (Toggle) Selectable;
     private FxRButtonLogicalColorConfig LogicalToggleOffColorConfig;
-
+    
     protected override void OnEnable()
     {
         ToggleButton.onValueChanged.AddListener(HandleToggleValueChanged);
 
         if (Config != null)
         {
+            Config = new ToggleConfig(Config);
             LogicalToggleOffColorConfig = Config.LogicialColors;
             ConfigureStyle(ToggleButton.isOn);
         }
@@ -35,8 +70,9 @@ public class FxRToggle : FxRButton
         ConfigureStyle(isOn);
         // Reset the config, to re-initialize
         Config = Config;
-        // Invoke any on change listener, if any
-        ToggleValueChanged?.Invoke(isOn);
+
+        // Call the listener, if any
+        ConfigAsToggleConfig.ToggleValueChangedListener?.Invoke(isOn);
     }
 
     private void ConfigureStyle(bool isOn)
