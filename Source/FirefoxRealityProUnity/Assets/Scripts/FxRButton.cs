@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(Button))]
+[RequireComponent(typeof(Selectable))]
 public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler,
     IPointerUpHandler
 {
@@ -16,13 +16,26 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         [SerializeField] public UnityAction ButtonPressedAction;
         [SerializeField] protected FxRButtonLogicalColorConfig LogicalColorConfig;
 
+        public FxRButtonLogicalColorConfig LogicialColors
+        {
+            get => LogicalColorConfig;
+            set
+            {
+                LogicalColorConfig = value;
+                // Reset color config, so it gets re-created next time it is needed
+                colorConfig = null;
+            }
+        }
+
         public FxRButtonColorConfig ColorConfig
         {
             get
             {
                 if (colorConfig == null)
                 {
-                    colorConfig = FxRConfiguration.Instance.ColorPalette.CreateButtonColorConfigForLogicalConfig(LogicalColorConfig);
+                    colorConfig =
+                        FxRConfiguration.Instance.ColorPalette.CreateButtonColorConfigForLogicalConfig(
+                            LogicalColorConfig);
                 }
 
                 return colorConfig;
@@ -52,6 +65,7 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
             config = value;
             if (config.ButtonPressedAction != null)
             {
+                Button.onClick.RemoveAllListeners();
                 Button.onClick.AddListener(config.ButtonPressedAction);
             }
 
@@ -63,14 +77,14 @@ public class FxRButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
             Icon.color = config.ColorConfig.NormalIconColor;
         }
 
-        private get { return config; }
+        protected get { return config; }
     }
 
     [SerializeField] private ButtonConfig config;
 
     bool boxColliderSizeSet;
 
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         // Initialize the config, if necessary
         if (config != null)
