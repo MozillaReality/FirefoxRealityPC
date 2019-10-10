@@ -380,3 +380,5 @@ healthchecksdb
 MigrationBackup/
 Source/FirefoxRealityProUnity/Assets/Playground/
 Source/FirefoxRealityProUnity/Assets/Playground.meta
+*.blend1
+*.blend1.meta
