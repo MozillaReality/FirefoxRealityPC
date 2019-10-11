@@ -2,7 +2,7 @@
 using System;
 using VRIME2;
 
-public class FxRWindow : MonoBehaviour
+public class FxRWindow : FxRPointableSurface
 {
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
     public bool flipX = false;
@@ -10,7 +10,6 @@ public class FxRWindow : MonoBehaviour
     private static float DefaultWidth = 3.0f;
     private float Width = DefaultWidth;
     private float Height;
-    private Vector2Int videoSize;
     private float textureScaleU;
     private float textureScaleV;
 
@@ -18,9 +17,7 @@ public class FxRWindow : MonoBehaviour
         _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
 
     private Texture2D _videoTexture = null; // Texture object with the video image.
-    public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
 
-    private int _windowIndex = 0;
     private TextureFormat _textureFormat;
 
     public static FxRWindow FindWindowWithUID(int uid)
@@ -156,49 +153,6 @@ public class FxRWindow : MonoBehaviour
     }
 
     // Pointer events from FxRLaserPointer.
-    public void PointerEnter()
-    {
-        //Debug.Log("PointerEnter()");
-        fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Enter, -1, -1);
-    }
-
-    public void PointerExit()
-    {
-        //Debug.Log("PointerExit()");
-        fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Exit, -1, -1);
-    }
-
-    public void PointerOver(Vector2 texCoord)
-    {
-        int x = (int) (texCoord.x * videoSize.x);
-        int y = (int) (texCoord.y * videoSize.y);
-        //Debug.Log("PointerOver(" + x + ", " + y + ")");
-        fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Over, x, y);
-    }
-
-    public void PointerPress(Vector2 texCoord)
-    {
-        int x = (int) (texCoord.x * videoSize.x);
-        int y = (int) (texCoord.y * videoSize.y);
-        //Debug.Log("PointerPress(" + x + ", " + y + ")");
-        fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Press, x, y);
-    }
-
-    public void PointerRelease(Vector2 texCoord)
-    {
-        int x = (int) (texCoord.x * videoSize.x);
-        int y = (int) (texCoord.y * videoSize.y);
-        //Debug.Log("PointerRelease(" + x + ", " + y + ")");
-        fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Release, x, y);
-    }
-
-    public void PointerScrollDiscrete(Vector2 delta)
-    {
-        int x = (int) (delta.x);
-        int y = (int) (delta.y);
-        //Debug.Log("PointerScroll(" + x + ", " + y + ")");
-        fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.ScrollDiscrete, x, y);
-    }
 
     //
     private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, TextureFormat format,

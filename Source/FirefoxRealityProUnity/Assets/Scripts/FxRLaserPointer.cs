@@ -317,7 +317,7 @@ public class FxRLaserPointer : MonoBehaviour
         }
         else
         {
-            FxRWindow fxrWindow = hit.transform.gameObject.GetComponentInParent(typeof(FxRWindow)) as FxRWindow;
+            FxRPointableSurface fxrWindow = hit.transform.gameObject.GetComponentInParent(typeof(FxRPointableSurface)) as FxRPointableSurface;
 
             if (previousContact != hit.transform)
             {

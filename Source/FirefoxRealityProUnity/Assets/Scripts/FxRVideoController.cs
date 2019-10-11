@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class FxRVideoController : MonoBehaviour
+public class FxRVideoController : FxRPointableSurface
 {
-    public FxRPlugin fxr_plugin = null; // Reference to the plugin. Will be set/cleared by FxRController.
-
     [SerializeField] protected GameObject VideoControls;
     [SerializeField] protected GameObject ProjectionSelectionMenu;
     [SerializeField] protected GameObject FullScreenVideoMenu;
@@ -22,9 +20,6 @@ public class FxRVideoController : MonoBehaviour
     private Texture2D _videoTexture = null; // Texture object with the video image.
 
     private GameObject _videoProjection;
-
-    // TODO: Remove _windowIndex once full screen video uses its own texture mechanism
-    private int _windowIndex = 0;
 
     private bool VideoControlsVisible
     {
@@ -224,6 +219,7 @@ public class FxRVideoController : MonoBehaviour
         FxRVideoProjectionMode.PROJECTION_MODE projectionMode, int hackWindowIndex)
     {
         _windowIndex = hackWindowIndex;
+        videoSize = new Vector2Int(pixelwidth, pixelheight);
         TextureFormat format = fxr_plugin.NativeFormatToTextureFormat(nativeFormat);
         if (format == (TextureFormat) 0)
         {
