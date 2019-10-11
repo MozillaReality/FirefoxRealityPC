@@ -159,6 +159,7 @@ public class FxRController : MonoBehaviour
 
     private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
     {
+        Debug.Log("Received Full Screen Begin from Plugin");
         FxRVideoProjectionMode.PROJECTION_MODE projectionMode =
             (FxRVideoProjectionMode.PROJECTION_MODE) projection;
         

@@ -175,11 +175,11 @@ public class FxRVideoController : FxRPointableSurface
         
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
         leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
-        leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
+        leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
         ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
         rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
-        rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
+        rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
 
         _videoProjection = stereoVideoRig.gameObject;
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
