@@ -188,6 +188,8 @@ FXR_EXTERN bool fxrCloseAllWindows(void);
 //     (*GetRenderEventFunc())(1);
 FXR_EXTERN void fxrRequestWindowUpdate(int windowIndex, float timeDelta);
 
+FXR_EXTERN void fxrWaitForVREvent(int windowIndex, int *eventType, int *eventData1, int *eventData2);
+
 FXR_EXTERN void fxrSetRenderEventFunc1Params(int windowIndex, float timeDelta);
 
 enum {
