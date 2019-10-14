@@ -31,6 +31,14 @@ struct CreateVRWindowParams {
 //	HANDLE hSignal;
 };
 
+struct WaitForVREventParams {
+  PFN_WAITFORVREVENT lpfnWait;
+  uint32_t vrWin;
+  FxRWindow::FxEventType fxEventType;
+  int fxEventData1;
+  int fxEventData2;
+};
+
 DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 	CreateVRWindowParams* pParams = static_cast<CreateVRWindowParams*>(lpParameter);
 
@@ -45,6 +53,12 @@ DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 
 }
 
+DWORD FxRWindowDX11::WaitForVREvent(_In_ LPVOID lpParameter) {
+  WaitForVREventParams* pParams = static_cast<WaitForVREventParams*>(lpParameter);
+
+  pParams->lpfnWait(pParams->vrWin, (int &)pParams->fxEventType, pParams->fxEventData1, pParams->fxEventData2);
+  ::ExitThread(0);
+}
 
 void FxRWindowDX11::initDevice(IUnityInterfaces* unityInterfaces) {
 	IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
@@ -55,12 +69,13 @@ void FxRWindowDX11::finalizeDevice() {
 	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMSG pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
+FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
 	FxRWindow(uid, uidExt),
 	m_pfnCreateVRWindow(pfnCreateVRWindow),
 	m_firefoxFolderPath(pfirefoxFolderPath),
 	m_firefoxProfilePath(pfirefoxProfilePath),
 	m_pfnSendUIMessage(pfnSendUIMessage),
+	m_pfnWaitForVREvent(pfnWaitForVREvent),
 	m_pfnCloseVRWindow(pfnCloseVRWindow),
 	m_vrWin(0),
 	m_fxTexPtr(nullptr),
@@ -185,6 +200,51 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
 	}
 
 	ctx->Release();
+}
+
+bool FxRWindowDX11::waitForVREvent(int& eventType, int &eventData1, int &eventData2) {
+  WaitForVREventParams* pParams = new WaitForVREventParams;
+  pParams->fxEventType = FxRWindow::FxEventType(eventType);
+  pParams->lpfnWait = m_pfnWaitForVREvent;
+
+  DWORD dwTid = 0;
+  HANDLE hThreadFxWin =
+    ::CreateThread(
+      nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+      0,        // SIZE_T dwStackSize,
+      WaitForVREvent,
+      pParams,  //__drv_aliasesMem LPVOID lpParameter,
+      0,     // DWORD dwCreationFlags,
+      &dwTid);
+  assert(hThreadFxWin != nullptr);
+
+  DWORD waitResult = ::WaitForSingleObject(hThreadFxWin, 30000); // 30 seconds
+  if (waitResult == WAIT_TIMEOUT) {
+    FXRLOGe("Gave up waiting for Firefox VR window.\n");
+    return false;
+  }
+  else if (waitResult != WAIT_OBJECT_0) {
+    FXRLOGe("Error waiting for Firefox VR window.\n");
+    return false;
+  }
+  else {
+    m_vrWin = pParams->vrWin;
+		eventType = (int)pParams->fxEventType;
+
+    switch (pParams->fxEventType) {
+    case FxEventType::IME:
+      // FxEventType::IME type only has one event from VRFxIMEState
+      // in GECKO/moz_external_vr.h.
+      eventData1 = pParams->fxEventData1;
+      eventData2 = pParams->fxEventData2;
+      break;
+    default:
+      FXRLOGe("Unknown FxEventType.\n");
+      break;
+    }
+  }
+
+  return true;
 }
 
 void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {

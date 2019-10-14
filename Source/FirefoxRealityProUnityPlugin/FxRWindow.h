@@ -29,6 +29,14 @@ public:
 		DirectX11,
 		OpenGLCore
 	};
+
+	// This enum needs to match to moz_external_vr/VRFxEventType
+	enum class FxEventType : uint8_t {
+		None = 0,
+		IME,
+		Total
+	};
+
 	struct Size {
 		int w;
 		int h;
@@ -45,6 +53,7 @@ public:
 	virtual void setNativePtr(void* texPtr) = 0;
 	virtual void* nativePtr() = 0;
 	virtual void requestUpdate(float timeDelta) = 0;
+	virtual bool waitForVREvent(int& eventType, int &eventData1, int &eventData2) = 0;
 
 	virtual void pointerEnter() = 0;
 	virtual void pointerExit() = 0;
