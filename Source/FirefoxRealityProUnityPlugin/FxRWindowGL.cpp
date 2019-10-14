@@ -222,6 +222,12 @@ void FxRWindowGL::requestUpdate(float timeDelta) {
 	//glTexSubImage2D(GL_TEXTURE_RECTANGLE, 0, 0, 0, m_size.w, m_size.h, GL_RGBA, GL_UNSIGNED_BYTE, m_buf);
 }
 
+bool FxRWindowGL::waitForVREvent(int& eventType, int &eventData1, int &eventData2) {
+  // TODO: ...
+  FXRLOGi("FxRWindowGL::waitForVREvent()\n");
+  return true;
+}
+
 void FxRWindowGL::pointerEnter() {
 	FXRLOGi("FxRWindowGL::pointerEnter()\n");
 }

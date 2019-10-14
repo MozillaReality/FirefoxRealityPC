@@ -61,6 +61,7 @@ static HINSTANCE m_hVRHost = nullptr;
 static PFN_CREATEVRWINDOW m_pfnCreateVRWindow = nullptr;
 static PFN_SENDUIMSG m_pfnSendUIMessage = nullptr;
 static PFN_CLOSEVRWINDOW m_pfnCloseVRWindow = nullptr;
+static PFN_WAITFORVREVENT m_pfnWaitForVREvent = nullptr;
 static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
 static PFN_WINDOWRESIZEDCALLBACK m_windowResizedCallback = nullptr;
 static PFN_FULLSCREENBEGINCALLBACK m_fullScreenBeginCallback = nullptr;
@@ -246,6 +247,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	m_pfnCreateVRWindow = (PFN_CREATEVRWINDOW)::GetProcAddress(m_hVRHost, "CreateVRWindow");
 	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessageToVRWindow");
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
+	m_pfnWaitForVREvent = (PFN_WAITFORVREVENT)::GetProcAddress(m_hVRHost, "WaitForVREvent");
 
 	CHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
 	err = sprintf_s(
@@ -323,7 +325,7 @@ bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsR
 {
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
-		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr);
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnWaitForVREvent, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr);
 	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
 		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
 	}
@@ -449,6 +451,18 @@ void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
 		return;
 	}
 	window_iter->second->requestUpdate(timeDelta);
+}
+
+// In terms of eventType, please refer VRFxEventType in GECKO/moz_external_vr.h.
+void fxrWaitForVREvent(int windowIndex, int *eventType, int *eventData1, int *eventData2)
+{
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter == s_windows.end()) {
+		FXRLOGe("Wait for VR event for non-existent window with index %d.\n", windowIndex);
+		return;
+	}
+
+	window_iter->second->waitForVREvent(*eventType, *eventData1, *eventData2);
 }
 
 void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY)
