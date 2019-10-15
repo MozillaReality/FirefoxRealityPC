@@ -44,16 +44,22 @@ public class FxRPlugin
     private GCHandle fullScreenBeginCallbackGCH;
     private FxRPluginFullEndCallback fullScreenEndCallback = null;
     private GCHandle fullScreenEndCallbackGCH;
+
     public void fxrRegisterLogCallback(FxRPluginLogCallback lcb)
     {
         logCallback = lcb; // Set or unset.
         if (lcb != null)
-        { // If setting, create the callback stub prior to registering the callback on the native side.
-            logCallbackGCH = GCHandle.Alloc(logCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
+        {
+            // If setting, create the callback stub prior to registering the callback on the native side.
+            logCallbackGCH =
+                GCHandle.Alloc(
+                    logCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
         }
+
         FxRPlugin_pinvoke.fxrRegisterLogCallback(logCallback);
         if (lcb == null)
-        { // If unsetting, free the callback stub after deregistering the callback on the native side.
+        {
+            // If unsetting, free the callback stub after deregistering the callback on the native side.
             logCallbackGCH.Free();
         }
     }
@@ -65,6 +71,7 @@ public class FxRPlugin
         {
             fullScreenBeginCallbackGCH = GCHandle.Alloc(fullScreenBeginCallback);
         }
+
         FxRPlugin_pinvoke.fxrRegisterFullScreenBeginCallback(fullScreenBeginCallback);
         if (fsbc == null)
         {
@@ -79,13 +86,14 @@ public class FxRPlugin
         {
             fullScreenEndCallbackGCH = GCHandle.Alloc(fullScreenEndCallback);
         }
+
         FxRPlugin_pinvoke.fxrRegisterFullScreenEndCallback(fullScreenEndCallback);
         if (fsec == null)
         {
             fullScreenEndCallbackGCH.Free();
         }
     }
-    
+
     public void fxrSetLogLevel(int logLevel)
     {
         FxRPlugin_pinvoke.fxrSetLogLevel(logLevel);
@@ -104,9 +112,11 @@ public class FxRPlugin
         windowCreatedCallback = wccb;
         windowResizedCallback = wrcb;
         // Create the callback stub prior to registering the callback on the native side.
-        windowCreatedCallbackGCH = GCHandle.Alloc(windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
+        windowCreatedCallbackGCH =
+            GCHandle.Alloc(
+                windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
         windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
-        
+
         FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback, windowResizedCallback);
     }
 
@@ -149,6 +159,7 @@ public class FxRPlugin
     {
         return FxRPlugin_pinvoke.fxrRequestWindowSizeChange(windowIndex, widthPixelsRequested, heightPixelsRequested);
     }
+
     public TextureFormat NativeFormatToTextureFormat(int formatNative)
     {
         switch (formatNative)
@@ -181,15 +192,17 @@ public class FxRPlugin
                 return TextureFormat.RGB565;
                 break;
             default:
-                return (TextureFormat)0;
-        }    
+                return (TextureFormat) 0;
+        }
     }
-    
-    public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format, out bool mipChain, out bool linear, out IntPtr nativeTexureID)
+
+    public bool fxrGetTextureFormat(int windowIndex, out int width, out int height, out TextureFormat format,
+        out bool mipChain, out bool linear, out IntPtr nativeTexureID)
     {
         int formatNative;
         IntPtr[] nativeTextureIDHandle = new IntPtr[1];
-        FxRPlugin_pinvoke.fxrGetWindowTextureFormat(windowIndex, out width, out height, out formatNative, out mipChain, out linear, nativeTextureIDHandle);
+        FxRPlugin_pinvoke.fxrGetWindowTextureFormat(windowIndex, out width, out height, out formatNative, out mipChain,
+            out linear, nativeTextureIDHandle);
         nativeTexureID = nativeTextureIDHandle[0];
 
         format = NativeFormatToTextureFormat(formatNative);
@@ -197,6 +210,7 @@ public class FxRPlugin
         {
             return false;
         }
+
         return true;
     }
 
@@ -213,7 +227,8 @@ public class FxRPlugin
         GL.IssuePluginEvent(FxRPlugin_pinvoke.GetRenderEventFunc(), 1);
     }
 
-    public enum FxRPointerEventID {
+    public enum FxRPointerEventID
+    {
         Enter = 0,
         Exit = 1,
         Over = 2,
@@ -224,8 +239,29 @@ public class FxRPlugin
 
     public void fxrWindowPointerEvent(int windowIndex, FxRPointerEventID eventID, int windowX, int windowY)
     {
-        FxRPlugin_pinvoke.fxrWindowPointerEvent(windowIndex, (int)eventID, windowX, windowY);
+        FxRPlugin_pinvoke.fxrWindowPointerEvent(windowIndex, (int) eventID, windowX, windowY);
     }
+
+    public enum FxREventType
+    {
+        None = 0,
+        IME = 1,
+        Total = 2
+    };
+
+    public enum FxRIMEState
+    {
+        Blur = 0,
+        Focus = 1
+    };
+
+    public void fxrWaitForVREvent(int windowIndex, out FxREventType eventType, out int eventData1, out int eventData2)
+    {
+        int eventTypeInt;
+        FxRPlugin_pinvoke.fxrWaitForVREvent(windowIndex, out eventTypeInt, out eventData1, out eventData2);
+        eventType = (FxREventType) eventTypeInt;
+    }
+
 
     public bool fxrCloseWindow(int windowIndex)
     {

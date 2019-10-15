@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using VRIME2;
 
 public class FxRWindow : MonoBehaviour
@@ -86,6 +89,59 @@ public class FxRWindow : MonoBehaviour
 
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
+//        StartVREventLoop();
+        VREventSynchronous();
+    }
+
+    private void VREventSynchronous()
+    {
+        fxr_plugin.fxrWaitForVREvent(_windowIndex, out var eventType, out var imeStateInt,
+            out _);
+
+        if (eventType == FxRPlugin.FxREventType.IME)
+        {
+            FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
+            if (imeState == FxRPlugin.FxRIMEState.Focus)
+            {
+                VRIME_Manager.Ins.ShowIME("");
+            }
+            else if (imeState == FxRPlugin.FxRIMEState.Blur)
+            {
+                VRIME_Manager.Ins.HideIME();
+            }
+        }
+    }
+
+    async void StartVREventLoop()
+    {
+        await VREventLoopAsync();
+    }
+    
+    async Task VREventLoopAsync()
+    {
+        while (true)
+        {
+            // Start a background thread to wait for event
+            await new WaitForBackgroundThread();
+            fxr_plugin.fxrWaitForVREvent(_windowIndex, out var eventType, out var imeStateInt,
+                out _);
+
+            // Return to Unity main thread
+            await new WaitForUpdate();
+
+            if (eventType == FxRPlugin.FxREventType.IME)
+            {
+                FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
+                if (imeState == FxRPlugin.FxRIMEState.Focus)
+                {
+                    VRIME_Manager.Ins.ShowIME("");
+                }
+                else if (imeState == FxRPlugin.FxRIMEState.Blur)
+                {
+                    VRIME_Manager.Ins.HideIME();
+                }
+            }
+        }
     }
 
     void OnApplicationQuit()
@@ -102,9 +158,10 @@ public class FxRWindow : MonoBehaviour
     public void RequestSizeMultiple(float sizeMultiple)
     {
         Width = DefaultWidth * sizeMultiple;
-        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple), Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
+        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple),
+            Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
     }
-    
+
     public bool Resize(int widthPixels, int heightPixels)
     {
         return fxr_plugin.fxrRequestWindowSizeChange(_windowIndex, widthPixels, heightPixels);
@@ -130,17 +187,18 @@ public class FxRWindow : MonoBehaviour
     }
 
     public void WasResized(int widthPixels, int heightPixels)
-    { 
+    {
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
 
         var oldTexture = _videoTexture;
-        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
+        _videoTexture =
+            CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
-        
+
         ConfigureWindow(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height);
     }
-    
+
     // Update is called once per frame
     void Update()
     {
@@ -219,8 +277,8 @@ public class FxRWindow : MonoBehaviour
 
         // Now pass the ID to the native side.
         IntPtr nativeTexPtr = vt.GetNativeTexturePtr();
-        Debug.Log("Calling fxrSetWindowUnityTextureID(windowIndex:" + _windowIndex + ", nativeTexPtr:" +
-                  nativeTexPtr.ToString("X") + ")");
+//        Debug.Log("Calling fxrSetWindowUnityTextureID(windowIndex:" + _windowIndex + ", nativeTexPtr:" +
+//                  nativeTexPtr.ToString("X") + ")");
         fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, nativeTexPtr);
 
         return vt;
@@ -257,7 +315,7 @@ public class FxRWindow : MonoBehaviour
         MeshRenderer meshRenderer = vmgo.AddComponent<MeshRenderer>();
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
- 
+
         vmgo.GetComponent<Renderer>().material = vm;
         vmgo.AddComponent<MeshCollider>();
 
@@ -269,13 +327,15 @@ public class FxRWindow : MonoBehaviour
         float width, float height)
     {
         // Check parameters.
-        if (!vt) {
+        if (!vt)
+        {
             Debug.LogError("Error: CreateWindowMesh null Texture2D");
             return;
         }
+
         // Create the mesh
         var m = CreateVideoMesh(textureScaleU, textureScaleV, width, height);
-        
+
         // Assign the texture to the window's material
         Material vm = vmgo.GetComponent<Renderer>().material;
         vm.mainTexture = vt;
@@ -285,7 +345,8 @@ public class FxRWindow : MonoBehaviour
         filter.mesh = m;
 
         // Update the mesh collider mesh
-        MeshCollider vmc = vmgo.GetComponent<MeshCollider>();;
+        MeshCollider vmc = vmgo.GetComponent<MeshCollider>();
+        ;
         vmc.sharedMesh = filter.sharedMesh;
     }
 
@@ -313,16 +374,18 @@ public class FxRWindow : MonoBehaviour
         float u2 = flipX ? 0.0f : textureScaleU;
         float v1 = flipY ? textureScaleV : 0.0f;
         float v2 = flipY ? 0.0f : textureScaleV;
-        m.uv = new Vector2[] {
-                new Vector2(u1, v1),
-                new Vector2(u2, v1),
-                new Vector2(u2, v2),
-                new Vector2(u1, v2)
-            };
-        m.triangles = new int[] {
-                2, 1, 0,
-                3, 2, 0
-            };
+        m.uv = new Vector2[]
+        {
+            new Vector2(u1, v1),
+            new Vector2(u2, v1),
+            new Vector2(u2, v2),
+            new Vector2(u1, v2)
+        };
+        m.triangles = new int[]
+        {
+            2, 1, 0,
+            3, 2, 0
+        };
 
 
         return m;

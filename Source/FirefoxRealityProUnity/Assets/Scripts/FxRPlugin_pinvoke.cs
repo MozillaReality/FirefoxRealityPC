@@ -56,6 +56,9 @@ public static class FxRPlugin_pinvoke
     public static extern void fxrKeyEvent(int windowIndex, int keyCode);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrWaitForVREvent(int windowIndex, out int eventType, out int eventData1, out int eventData2);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]

@@ -2,6 +2,7 @@
 
 using UnityEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Valve.VR;
 using VRIME2;
@@ -94,7 +95,7 @@ public class FxRController : MonoBehaviour
     {
         if (msg.StartsWith("[error]")) Debug.LogError(msg);
         else if (msg.StartsWith("[warning]")) Debug.LogWarning(msg);
-        else Debug.Log(msg); // incldues [info] and [debug].
+        else Debug.Log(msg); // includes [info] and [debug].
     }
 
     void OnEnable()
@@ -373,12 +374,6 @@ public class FxRController : MonoBehaviour
         Debug.Log("FxRController.OnApplicationQuit()");
 
         fxr_plugin.fxrStopFx();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //Debug.Log("FxRController.Update()");
     }
 
     public FXR_LOG_LEVEL LogLevel
