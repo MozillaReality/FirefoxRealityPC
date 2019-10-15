@@ -453,6 +453,7 @@ void fxrRequestWindowUpdate(int windowIndex, float timeDelta)
 	window_iter->second->requestUpdate(timeDelta);
 }
 
+// In terms of eventType, please refer VRFxEventType in GECKO/moz_external_vr.h.
 void fxrWaitForVREvent(int windowIndex, int *eventType, int *eventData1, int *eventData2)
 {
 	auto window_iter = s_windows.find(windowIndex);

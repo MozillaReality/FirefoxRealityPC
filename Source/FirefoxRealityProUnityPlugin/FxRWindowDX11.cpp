@@ -233,6 +233,8 @@ bool FxRWindowDX11::waitForVREvent(int& eventType, int &eventData1, int &eventDa
 
     switch (pParams->fxEventType) {
     case FxEventType::IME:
+      // FxEventType::IME type only has one event from VRFxIMEState
+      // in GECKO/moz_external_vr.h.
       eventData1 = pParams->fxEventData1;
       eventData2 = pParams->fxEventData2;
       break;
