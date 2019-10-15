@@ -324,6 +324,7 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
     {
         string downloadURL = null;
 
+        // TODO: Catch 404's and request en-US
         switch (downloadType)
         {
             case DOWNLOAD_TYPE.STUB:
