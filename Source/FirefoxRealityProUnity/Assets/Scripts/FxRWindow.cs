@@ -91,75 +91,8 @@ public class FxRWindow : MonoBehaviour
 
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
-//        StartVREventLoop();
-//        VREventSynchronous();
     }
-
-    private void VREventSynchronous()
-    {
-        fxr_plugin.fxrWaitForVREvent(_windowIndex, out var eventType, out var imeStateInt,
-            out _);
-
-        if (eventType == FxRPlugin.FxREventType.IME)
-        {
-            FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
-            if (imeState == FxRPlugin.FxRIMEState.Focus)
-            {
-                VRIME_Manager.Ins.ShowIME("");
-            }
-            else if (imeState == FxRPlugin.FxRIMEState.Blur)
-            {
-                VRIME_Manager.Ins.HideIME();
-            }
-        }
-    }
-
-    async void StartVREventLoop()
-    {
-        await VREventLoopAsync();
-    }
-
-    async Task VREventLoopAsync()
-    {
-        FxRPlugin.FxRIMEState lastIMEState = (VRIME_Manager.Ins.ShowState) ? FxRPlugin.FxRIMEState.Focus : FxRPlugin.FxRIMEState.Blur;
-        while (pollForVREvents)
-        {
-            // Start a background thread to wait for event
-            await new WaitForBackgroundThread();
-            if (fxr_plugin != null)
-            {
-                FxRPlugin.FxREventType eventType = FxRPlugin.FxREventType.None;
-                int imeStateInt = -1;
-                fxr_plugin.fxrWaitForVREvent(_windowIndex, out eventType, out imeStateInt,
-                    out _);
-
-                // Return to Unity main thread
-                await new WaitForUpdate();
-
-                if (eventType == FxRPlugin.FxREventType.IME)
-                {
-                    FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
-//                    Debug.LogWarning(">>> IME State: " + imeStateInt);
-
-                    if (imeState != lastIMEState && imeState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
-                    {
-                        VRIME_Manager.Ins.ShowIME("");
-                    }
-                    else if (imeState != lastIMEState && imeState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
-                    {
-                        VRIME_Manager.Ins.HideIME();
-                    }
-
-                    lastIMEState = imeState;
-                }
-            }
-            else
-            {
-                await new WaitForUpdate();
-            }
-        }
-    }
-
+    
     void OnApplicationQuit()
     {
         Debug.Log("FxRWindow.OnApplicationQuit()");

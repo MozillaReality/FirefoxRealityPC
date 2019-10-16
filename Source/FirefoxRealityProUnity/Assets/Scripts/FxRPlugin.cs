@@ -263,14 +263,6 @@ public class FxRPlugin
         Focus = 1
     };
 
-    public void fxrWaitForVREvent(int windowIndex, out FxREventType eventType, out int eventData1, out int eventData2)
-    {
-        int eventTypeInt;
-        FxRPlugin_pinvoke.fxrWaitForVREvent(windowIndex, out eventTypeInt, out eventData1, out eventData2);
-        eventType = (FxREventType) eventTypeInt;
-    }
-
-
     public bool fxrCloseWindow(int windowIndex)
     {
         return FxRPlugin_pinvoke.fxrCloseWindow(windowIndex);

@@ -41,7 +41,6 @@ public:
 
 	// Must be called from render thread.
 	void requestUpdate(float timeDelta) override;
-	bool waitForVREvent(int& eventType, int &eventData1, int &eventData2) override;
 
 	int format() override { return m_format; }
 

@@ -43,10 +43,10 @@ private:
 	static DWORD PollForVREvent(LPVOID lpParameter);
 
 public:
+	bool shouldPollForVREvents;
 	static void initDevice(IUnityInterfaces* unityInterfaces);
 	static void finalizeDevice();
 	static DWORD WINAPI CreateVRWindow(_In_ LPVOID lpParameter);
-	static DWORD WINAPI WaitForVREvent(_In_ LPVOID lpParameter);
 
 
 	FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow,
@@ -66,7 +66,6 @@ public:
 
 	// Must be called from render thread.
 	void requestUpdate(float timeDelta) override;
-	bool waitForVREvent(int& eventType, int &eventData1, int &eventData2) override;
 
 	int format() override { return m_format; }
 
