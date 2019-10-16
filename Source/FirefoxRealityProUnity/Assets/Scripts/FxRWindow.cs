@@ -121,6 +121,7 @@ public class FxRWindow : MonoBehaviour
 
     async Task VREventLoopAsync()
     {
+        FxRPlugin.FxRIMEState lastIMEState = (VRIME_Manager.Ins.ShowState) ? FxRPlugin.FxRIMEState.Focus : FxRPlugin.FxRIMEState.Blur;
         while (pollForVREvents)
         {
             // Start a background thread to wait for event
@@ -140,14 +141,16 @@ public class FxRWindow : MonoBehaviour
                     FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
 //                    Debug.LogWarning(">>> IME State: " + imeStateInt);
 
-                    if (imeState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
+                    if (imeState != lastIMEState && imeState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
                     {
                         VRIME_Manager.Ins.ShowIME("");
                     }
-                    else if (imeState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
+                    else if (imeState != lastIMEState && imeState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
                     {
                         VRIME_Manager.Ins.HideIME();
                     }
+
+                    lastIMEState = imeState;
                 }
             }
             else
