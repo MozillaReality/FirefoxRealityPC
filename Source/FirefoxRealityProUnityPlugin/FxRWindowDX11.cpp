@@ -28,6 +28,7 @@ struct CreateVRWindowParams {
 	char* firefoxProfilePath;
 	uint32_t vrWin;
 	void* fxTexHandle;
+	PFN_VREVENTCALLBACK lpfnVREvent;
 //	HANDLE hSignal;
 };
 
@@ -68,7 +69,10 @@ void FxRWindowDX11::finalizeDevice() {
 	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
+FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
+	, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow
+	, PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent
+	, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback) :
 	FxRWindow(uid, uidExt),
 	m_pfnCreateVRWindow(pfnCreateVRWindow),
 	m_firefoxFolderPath(pfirefoxFolderPath),
@@ -76,6 +80,7 @@ FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char
 	m_pfnSendUIMessage(pfnSendUIMessage),
 	m_pfnWaitForVREvent(pfnWaitForVREvent),
 	m_pfnCloseVRWindow(pfnCloseVRWindow),
+	m_pfnVREventCallback(pfnVREventCallback),
 	m_vrWin(0),
 	m_fxTexPtr(nullptr),
 	m_size({0, 0}),
@@ -152,6 +157,20 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 			}
 
 			if (windowCreatedCallback) (*windowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
+
+			// Start polling for vr events on this window
+			// TODO: When do we need to stop this thread?
+			DWORD dwTid = 0;
+			// Start a thread to wait for vr events
+			HANDLE hThreadFxWin =
+				::CreateThread(
+					nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+					0,        // SIZE_T dwStackSize,
+					PollForVREvent,
+					this,  //__drv_aliasesMem LPVOID lpParameter,
+					0,     // DWORD dwCreationFlags,
+					&dwTid);
+			assert(hThreadFxWin != nullptr);
 		}
 	}
 	return true;
@@ -199,6 +218,26 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
 	}
 
 	ctx->Release();
+}
+
+DWORD FxRWindowDX11::PollForVREvent(_In_ LPVOID lpParameter)
+{
+	return ((FxRWindowDX11*)lpParameter)->pollForVREvent();
+}
+
+DWORD FxRWindowDX11::pollForVREvent()
+{
+	while (true)
+	{
+		if (m_pfnWaitForVREvent && m_pfnVREventCallback)
+		{
+			int eventType;
+			int eventData1;
+			int eventData2;
+			m_pfnWaitForVREvent(eventType, eventData1, eventData2);
+			m_pfnVREventCallback(m_uid, eventType, eventData1, eventData2);
+		}
+	}
 }
 
 bool FxRWindowDX11::waitForVREvent(int& eventType, int &eventData1, int &eventData2) {

@@ -130,6 +130,8 @@ typedef void (FXR_CALLBACK *PFN_FULLSCREENBEGINCALLBACK)(int pixelWidth, int pix
 
 typedef void (FXR_CALLBACK *PFN_FULLSCREENENDCALLBACK)();
 
+typedef void (FXR_CALLBACK *PFN_VREVENTCALLBACK)(int uidExt, int eventType, int eventData1, int eventData2);
+
 FXR_EXTERN void fxrTriggerFullScreenBeginEvent();
 
 /**
@@ -153,7 +155,7 @@ FXR_EXTERN void fxrSetLogLevel(const int logLevel);
  */
 FXR_EXTERN bool fxrGetFxVersion(char *buffer, int length);
 
-FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback);
+FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback);
 
 FXR_EXTERN void fxrStopFx(void);
 

@@ -23,6 +23,8 @@ public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] strin
 // Delegate type declaration for window size callback.
 public delegate void FxRPluginWindowCreatedCallback(int uid, int windowIndex, int pixelWidth, int pixelHeight, int format);
 public delegate void FxRPluginWindowResizedCallback(int uid, int pixelWidth, int pixelHeight);
+public delegate void FxRPluginVREventCallback(int uid, int eventType, int eventData1, int eventData2);
+
 
 // Delegate type declarations for full screen video callbacks
 public delegate void FxRPluginFullScreenBeginCallback(int pixelWidth, int pixelHeight, int format, int projection);
@@ -39,6 +41,8 @@ public class FxRPlugin
     private FxRPluginWindowResizedCallback windowResizedCallback = null;
     private GCHandle windowResizedCallbackGCH;
 
+    private FxRPluginVREventCallback vrEventCallback = null;
+    private GCHandle vrEventCallbackGCH;
 
     private FxRPluginFullScreenBeginCallback fullScreenBeginCallback = null;
     private GCHandle fullScreenBeginCallbackGCH;
@@ -107,17 +111,20 @@ public class FxRPlugin
         else return "";
     }
 
-    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb, FxRPluginWindowResizedCallback wrcb)
+    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb, FxRPluginWindowResizedCallback wrcb, FxRPluginVREventCallback vrecb)
     {
         windowCreatedCallback = wccb;
         windowResizedCallback = wrcb;
+        vrEventCallback = vrecb;
+        
         // Create the callback stub prior to registering the callback on the native side.
         windowCreatedCallbackGCH =
             GCHandle.Alloc(
                 windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
         windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
-
-        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback, windowResizedCallback);
+        vrEventCallbackGCH = GCHandle.Alloc(vrEventCallback);
+        
+        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback, windowResizedCallback, vrEventCallback);
     }
 
     public void fxrStopFx()
@@ -128,6 +135,7 @@ public class FxRPlugin
         // Free the callback stubs after deregistering the callbacks on the native side.
         windowCreatedCallbackGCH.Free();
         windowResizedCallbackGCH.Free();
+        vrEventCallbackGCH.Free();
     }
 
     public void fxrSetResourcesPath(string path)

@@ -91,7 +91,7 @@ public class FxRWindow : MonoBehaviour
 
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
-        StartVREventLoop();
+//        StartVREventLoop();
 //        VREventSynchronous();
     }
 

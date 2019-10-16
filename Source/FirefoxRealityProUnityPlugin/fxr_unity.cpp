@@ -66,6 +66,7 @@ static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
 static PFN_WINDOWRESIZEDCALLBACK m_windowResizedCallback = nullptr;
 static PFN_FULLSCREENBEGINCALLBACK m_fullScreenBeginCallback = nullptr;
 static PFN_FULLSCREENENDCALLBACK m_fullScreenEndCallback = nullptr;
+static PFN_VREVENTCALLBACK m_vrEventCallback = nullptr;
 static PROCESS_INFORMATION procInfoFx = { 0 };
 
 static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
@@ -227,7 +228,7 @@ void fxrSetResourcesPath(const char *path)
 	}
 }
 
-void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback)
+void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback)
 {
 	assert(m_hVRHost == nullptr);
 
@@ -277,13 +278,14 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 
 	m_windowCreatedCallback = windowCreatedCallback;
 	m_windowResizedCallback = windowResizedCallback;
-
+	m_vrEventCallback = vrEventCallback;
 }
 
 void fxrStopFx(void)
 {
 	m_windowCreatedCallback = nullptr;
 	m_windowResizedCallback = nullptr;
+	m_vrEventCallback = nullptr;
 
 	::FreeLibrary(m_hVRHost);
 	m_hVRHost = nullptr;
@@ -325,7 +327,7 @@ bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsR
 {
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
-		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnWaitForVREvent, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr);
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnWaitForVREvent, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr, m_vrEventCallback);
 	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
 		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
 	}

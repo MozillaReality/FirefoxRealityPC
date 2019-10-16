@@ -242,13 +242,27 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized);
+        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized, OnFxRVREvent);
 
         IntPtr openVRSession = UnityEngine.XR.XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
         {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
+    }
+
+    void Update()
+    {
+        if (IMEStatChanged && lastIMEState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.ShowIME("");
+        }
+        else if (IMEStatChanged && lastIMEState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.HideIME();
+        }
+
+        IMEStatChanged = false;
     }
 
     public void ToggleKeyboard()
@@ -366,6 +380,24 @@ public class FxRController : MonoBehaviour
         }
 
         window.WasResized(widthPixels, heightPixels);
+    }
+
+    FxRPlugin.FxRIMEState lastIMEState = FxRPlugin.FxRIMEState.Blur;
+    private bool IMEStatChanged;
+
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
+    void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
+    {
+        if ((FxRPlugin.FxREventType)eventType == FxRPlugin.FxREventType.IME)
+        {
+            FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) eventData1;
+
+            if (imeState != lastIMEState)
+            {
+                IMEStatChanged = true;
+                lastIMEState = imeState;
+            }
+        }
     }
 
 
