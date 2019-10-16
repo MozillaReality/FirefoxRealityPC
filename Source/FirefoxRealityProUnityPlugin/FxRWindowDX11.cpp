@@ -33,7 +33,6 @@ struct CreateVRWindowParams {
 
 struct WaitForVREventParams {
   PFN_WAITFORVREVENT lpfnWait;
-  uint32_t vrWin;
   FxRWindow::FxEventType fxEventType;
   int fxEventData1;
   int fxEventData2;
@@ -56,7 +55,7 @@ DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 DWORD FxRWindowDX11::WaitForVREvent(_In_ LPVOID lpParameter) {
   WaitForVREventParams* pParams = static_cast<WaitForVREventParams*>(lpParameter);
 
-  pParams->lpfnWait(pParams->vrWin, (int &)pParams->fxEventType, pParams->fxEventData1, pParams->fxEventData2);
+  pParams->lpfnWait((int &)pParams->fxEventType, pParams->fxEventData1, pParams->fxEventData2);
   ::ExitThread(0);
 }
 
@@ -228,8 +227,7 @@ bool FxRWindowDX11::waitForVREvent(int& eventType, int &eventData1, int &eventDa
     return false;
   }
   else {
-    m_vrWin = pParams->vrWin;
-		eventType = (int)pParams->fxEventType;
+    eventType = (int)pParams->fxEventType;
 
     switch (pParams->fxEventType) {
     case FxEventType::IME:
