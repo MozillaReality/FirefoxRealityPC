@@ -16,6 +16,7 @@ public class FxRWindow : MonoBehaviour
     private Vector2Int videoSize;
     private float textureScaleU;
     private float textureScaleV;
+    private bool pollForVREvents = true;
 
     private GameObject
         _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
@@ -75,6 +76,7 @@ public class FxRWindow : MonoBehaviour
     private void OnDisable()
     {
         VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
+        pollForVREvents = false;
     }
 
     private void HandleKeyPressed(int keycode)
@@ -89,8 +91,8 @@ public class FxRWindow : MonoBehaviour
 
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
-//        StartVREventLoop();
-        VREventSynchronous();
+        StartVREventLoop();
+//        VREventSynchronous();
     }
 
     private void VREventSynchronous()
@@ -116,30 +118,41 @@ public class FxRWindow : MonoBehaviour
     {
         await VREventLoopAsync();
     }
-    
+
     async Task VREventLoopAsync()
     {
-        while (true)
+        while (pollForVREvents)
         {
             // Start a background thread to wait for event
             await new WaitForBackgroundThread();
-            fxr_plugin.fxrWaitForVREvent(_windowIndex, out var eventType, out var imeStateInt,
-                out _);
-
-            // Return to Unity main thread
-            await new WaitForUpdate();
-
-            if (eventType == FxRPlugin.FxREventType.IME)
+            if (fxr_plugin != null)
             {
-                FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
-                if (imeState == FxRPlugin.FxRIMEState.Focus)
+                FxRPlugin.FxREventType eventType = FxRPlugin.FxREventType.None;
+                int imeStateInt = -1;
+                fxr_plugin.fxrWaitForVREvent(_windowIndex, out eventType, out imeStateInt,
+                    out _);
+
+                // Return to Unity main thread
+                await new WaitForUpdate();
+
+                if (eventType == FxRPlugin.FxREventType.IME)
                 {
-                    VRIME_Manager.Ins.ShowIME("");
+                    FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) imeStateInt;
+//                    Debug.LogWarning(">>> IME State: " + imeStateInt);
+
+                    if (imeState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
+                    {
+                        VRIME_Manager.Ins.ShowIME("");
+                    }
+                    else if (imeState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
+                    {
+                        VRIME_Manager.Ins.HideIME();
+                    }
                 }
-                else if (imeState == FxRPlugin.FxRIMEState.Blur)
-                {
-                    VRIME_Manager.Ins.HideIME();
-                }
+            }
+            else
+            {
+                await new WaitForUpdate();
             }
         }
     }
@@ -147,7 +160,6 @@ public class FxRWindow : MonoBehaviour
     void OnApplicationQuit()
     {
         Debug.Log("FxRWindow.OnApplicationQuit()");
-
         if (_windowIndex != 0)
         {
             fxr_plugin?.fxrCloseWindow(_windowIndex);
@@ -172,14 +184,11 @@ public class FxRWindow : MonoBehaviour
         Debug.Log("FxRWindow.WasCreated(windowIndex:" + windowIndex + ", widthPixels:" + widthPixels +
                   ", heightPixels:" + heightPixels + ", format:" + format + ")");
         _windowIndex = windowIndex;
-
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
-
         _textureFormat = format;
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
-
         _videoMeshGO = CreateWindowGameObject(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
@@ -190,16 +199,14 @@ public class FxRWindow : MonoBehaviour
     {
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
-
         var oldTexture = _videoTexture;
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
-
         ConfigureWindow(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height);
     }
 
-    // Update is called once per frame
+// Update is called once per frame
     void Update()
     {
         if (_windowIndex != 0)
@@ -207,22 +214,23 @@ public class FxRWindow : MonoBehaviour
             //Debug.Log("FxRWindow.Update() with _windowIndex == " + _windowIndex);
             fxr_plugin?.fxrRequestWindowUpdate(_windowIndex, Time.deltaTime);
         }
+
         else
         {
             //Debug.Log("FxRWindow.Update() with _windowIndex == 0");
         }
     }
 
-    // Pointer events from FxRLaserPointer.
+// Pointer events from FxRLaserPointer.
     public void PointerEnter()
     {
-        //Debug.Log("PointerEnter()");
+//Debug.Log("PointerEnter()");
         fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Enter, -1, -1);
     }
 
     public void PointerExit()
     {
-        //Debug.Log("PointerExit()");
+//Debug.Log("PointerExit()");
         fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Exit, -1, -1);
     }
 
@@ -230,7 +238,8 @@ public class FxRWindow : MonoBehaviour
     {
         int x = (int) (texCoord.x * videoSize.x);
         int y = (int) (texCoord.y * videoSize.y);
-        //Debug.Log("PointerOver(" + x + ", " + y + ")");
+
+//Debug.Log("PointerOver(" + x + ", " + y + ")");
         fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Over, x, y);
     }
 
@@ -238,7 +247,8 @@ public class FxRWindow : MonoBehaviour
     {
         int x = (int) (texCoord.x * videoSize.x);
         int y = (int) (texCoord.y * videoSize.y);
-        //Debug.Log("PointerPress(" + x + ", " + y + ")");
+
+//Debug.Log("PointerPress(" + x + ", " + y + ")");
         fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Press, x, y);
     }
 
@@ -246,7 +256,8 @@ public class FxRWindow : MonoBehaviour
     {
         int x = (int) (texCoord.x * videoSize.x);
         int y = (int) (texCoord.y * videoSize.y);
-        //Debug.Log("PointerRelease(" + x + ", " + y + ")");
+
+//Debug.Log("PointerRelease(" + x + ", " + y + ")");
         fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.Release, x, y);
     }
 
@@ -254,48 +265,50 @@ public class FxRWindow : MonoBehaviour
     {
         int x = (int) (delta.x);
         int y = (int) (delta.y);
-        //Debug.Log("PointerScroll(" + x + ", " + y + ")");
+
+//Debug.Log("PointerScroll(" + x + ", " + y + ")");
         fxr_plugin?.fxrWindowPointerEvent(_windowIndex, FxRPlugin.FxRPointerEventID.ScrollDiscrete, x, y);
     }
 
-    //
+//
     private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, TextureFormat format,
         out float textureScaleU, out float textureScaleV)
     {
-        // Check parameters.
+// Check parameters.
         var vt = FxRTextureUtils.CreateTexture(videoWidth, videoHeight, format);
         if (vt == null)
         {
             textureScaleU = 0;
             textureScaleV = 0;
         }
+
         else
         {
             textureScaleU = 1;
             textureScaleV = 1;
         }
 
-        // Now pass the ID to the native side.
+// Now pass the ID to the native side.
         IntPtr nativeTexPtr = vt.GetNativeTexturePtr();
+
 //        Debug.Log("Calling fxrSetWindowUnityTextureID(windowIndex:" + _windowIndex + ", nativeTexPtr:" +
 //                  nativeTexPtr.ToString("X") + ")");
         fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, nativeTexPtr);
-
         return vt;
     }
 
-    // Creates a GameObject in layer 'layer' which renders a mesh displaying the video stream.
+// Creates a GameObject in layer 'layer' which renders a mesh displaying the video stream.
     private GameObject CreateWindowGameObject(Texture2D vt, float textureScaleU, float textureScaleV, float width,
         float height, int layer)
     {
-        // Check parameters.
+// Check parameters.
         if (!vt)
         {
             Debug.LogError("Error: CreateWindowMesh null Texture2D");
             return null;
         }
 
-        // Create new GameObject to hold mesh.
+// Create new GameObject to hold mesh.
         GameObject vmgo = new GameObject("Video source");
         if (vmgo == null)
         {
@@ -305,17 +318,16 @@ public class FxRWindow : MonoBehaviour
 
         vmgo.layer = layer;
 
-        // Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
+// Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
         Shader shaderSource = Shader.Find("TextureNoLight");
         Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
         vm.hideFlags = HideFlags.HideAndDontSave;
-        //Debug.Log("Created video material");
+//Debug.Log("Created video material");
 
         MeshFilter filter = vmgo.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = vmgo.AddComponent<MeshRenderer>();
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
-
         vmgo.GetComponent<Renderer>().material = vm;
         vmgo.AddComponent<MeshCollider>();
 
@@ -326,34 +338,35 @@ public class FxRWindow : MonoBehaviour
     private void ConfigureWindow(GameObject vmgo, Texture2D vt, float textureScaleU, float textureScaleV,
         float width, float height)
     {
-        // Check parameters.
+// Check parameters.
         if (!vt)
         {
             Debug.LogError("Error: CreateWindowMesh null Texture2D");
             return;
         }
 
-        // Create the mesh
+// Create the mesh
         var m = CreateVideoMesh(textureScaleU, textureScaleV, width, height);
 
-        // Assign the texture to the window's material
+// Assign the texture to the window's material
         Material vm = vmgo.GetComponent<Renderer>().material;
         vm.mainTexture = vt;
 
-        // Assign the mesh to the mesh filter
+// Assign the mesh to the mesh filter
         MeshFilter filter = vmgo.GetComponent<MeshFilter>();
         filter.mesh = m;
 
-        // Update the mesh collider mesh
+// Update the mesh collider mesh
         MeshCollider vmc = vmgo.GetComponent<MeshCollider>();
         ;
+
         vmc.sharedMesh = filter.sharedMesh;
     }
 
     private Mesh CreateVideoMesh(float textureScaleU, float textureScaleV, float width, float height)
     {
-        // Now create a mesh appropriate for displaying the video, a mesh filter to instantiate that mesh,
-        // and a mesh renderer to render the material on the instantiated mesh.
+// Now create a mesh appropriate for displaying the video, a mesh filter to instantiate that mesh,
+// and a mesh renderer to render the material on the instantiated mesh.
         Mesh m = new Mesh();
         m.Clear();
         m.vertices = new Vector3[]
@@ -386,15 +399,12 @@ public class FxRWindow : MonoBehaviour
             2, 1, 0,
             3, 2, 0
         };
-
-
         return m;
     }
 
     private void DestroyWindow()
     {
         bool ed = Application.isEditor;
-
         if (_videoTexture != null)
         {
             if (ed) DestroyImmediate(_videoTexture);
