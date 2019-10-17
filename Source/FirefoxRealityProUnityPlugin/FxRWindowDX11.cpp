@@ -219,10 +219,11 @@ DWORD FxRWindowDX11::pollForVREvent()
 	{
 		if (m_pfnWaitForVREvent && m_pfnVREventCallback)
 		{
-			int eventType;
-			int eventData1;
-			int eventData2;
-			m_pfnWaitForVREvent(eventType, eventData1, eventData2);
+			uint32_t windowId;
+			uint32_t eventType;
+			uint32_t eventData1;
+			uint32_t eventData2;
+			m_pfnWaitForVREvent(windowId, eventType, eventData1, eventData2);
 			if (shouldPollForVREvents && eventType != 0)
 			{
 				m_pfnVREventCallback(m_uid, eventType, eventData1, eventData2);
