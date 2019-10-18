@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
 
-public class FxRFirefoxDesktopInstaller : MonoBehaviour
+public class FxRFirefoxDesktopInstallation : MonoBehaviour
 {
     [SerializeField] protected Sprite FirefoxIcon;
 
@@ -242,7 +242,20 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
 
         if (hasReleaseVersion) // || hasNightlyVersion)
         {
-            installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
+            var registryKey = installationScope == INSTALLATION_SCOPE.LOCAL_USER
+                ? Registry.CurrentUser
+                : Registry.LocalMachine;
+
+            var installPath = GetInstallationLocation(registryKey, RELEASE_AND_BETA_REGISTRY_PATH);
+
+            if (!Directory.Exists(Path.Combine(installPath, "distribution")))
+            {
+                installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
+            }
+            else
+            {
+                installationTypeRequired = INSTALLATION_TYPE_REQUIRED.NONE;
+            }
         }
         else
         {
@@ -328,12 +341,12 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
         switch (downloadType)
         {
             case DOWNLOAD_TYPE.STUB:
-                downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang=en-US";
-//                              + CultureInfo.CurrentCulture.Name;
+                downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang="
+                              + CultureInfo.CurrentCulture.Name;
                 break;
             case DOWNLOAD_TYPE.RELEASE:
-                downloadURL = "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US";
-//                              + CultureInfo.CurrentCulture.Name;
+                downloadURL = "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang="
+                              + CultureInfo.CurrentCulture.Name;
                 break;
 //            case DOWNLOAD_TYPE.NIGHTLY:
 //                downloadURL = "https://download.mozilla.org/?product=firefox-nightly-latest-l10n-ssl&os=win64&lang=" +
@@ -351,6 +364,7 @@ public class FxRFirefoxDesktopInstaller : MonoBehaviour
             percentDownloaded.Report(downloadOperation.progress);
         }
 
+        var responseCode = downloadOperation.webRequest.responseCode;
         if (downloadCancelled)
         {
             webRequest.Abort();
