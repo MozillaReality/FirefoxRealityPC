@@ -177,10 +177,10 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private long lastDownloadResponseCode;
 
     private static readonly string STUB_INSTALLER_BASE_URL =
-        "https://download.mozilla.org/?product=firefox-stub&os=win&lang=";
+        "https://download.mozilla.org/?product=partner-firefox-beta-firefoxreality-ffreality-htc-001-stub&os=win&lang=";
 
     private static readonly string UPGRADE_INSTALLER_BASE_URL =
-        "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=";
+        "https://download.mozilla.org/?product=partner-firefox-beta-firefoxreality-ffreality-htc-up-001-latest&os=win&lang=";
 
     // Check if Firefox Desktop is installed
     // Logic for installation:
@@ -347,12 +347,10 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         switch (downloadType)
         {
             case DOWNLOAD_TYPE.STUB:
-                downloadURL = STUB_INSTALLER_BASE_URL
-                              + CultureInfo.CurrentCulture.Name;
+                downloadURL = STUB_INSTALLER_BASE_URL + CultureStringTwoSegmentsOnly;
                 break;
             case DOWNLOAD_TYPE.RELEASE:
-                downloadURL = UPGRADE_INSTALLER_BASE_URL
-                              + CultureInfo.CurrentCulture.Name;
+                downloadURL = UPGRADE_INSTALLER_BASE_URL + CultureStringTwoSegmentsOnly;
                 break;
 //            case DOWNLOAD_TYPE.NIGHTLY:
 //                downloadURL = "https://download.mozilla.org/?product=firefox-nightly-latest-l10n-ssl&os=win64&lang=" +
@@ -496,4 +494,18 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private string FirefoxInstallerDownloadPath =>
         Path.Combine(Application.persistentDataPath, "Firefox Installer.exe");
+
+    private string CultureStringTwoSegmentsOnly
+    {
+        get
+        {
+            var cultureSegments = CultureInfo.CurrentCulture.Name.Split('-');
+            if (cultureSegments.Length > 1)
+            {
+                return cultureSegments[0] + "-" + cultureSegments[1];
+            }
+
+            return CultureInfo.CurrentCulture.Name;
+        }
+    }
 }
