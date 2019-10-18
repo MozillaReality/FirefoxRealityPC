@@ -163,8 +163,6 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
-	shouldPollForVREvents = false;
-	if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin, false);
 }
 
 FxRWindow::Size FxRWindowDX11::size() {
@@ -214,8 +212,7 @@ DWORD FxRWindowDX11::PollForVREvent(_In_ LPVOID lpParameter)
 
 DWORD FxRWindowDX11::pollForVREvent()
 {
-	shouldPollForVREvents = true;
-	while (shouldPollForVREvents)
+	while (true)
 	{
 		if (m_pfnWaitForVREvent && m_pfnVREventCallback)
 		{
@@ -224,13 +221,19 @@ DWORD FxRWindowDX11::pollForVREvent()
 			uint32_t eventData1;
 			uint32_t eventData2;
 			m_pfnWaitForVREvent(windowId, eventType, eventData1, eventData2);
-			if (shouldPollForVREvents && eventType != 0)
+      
+			if (eventType == 2)
+			{
+				fxrCloseAllWindows();
+				break;
+			}
+			if (eventType != 0)
 			{
 				m_pfnVREventCallback(m_uid, eventType, eventData1, eventData2);
 			}
 		}
 	}
-	::ExitThread(0);
+	return 0;
 }
 
 void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
@@ -239,6 +242,10 @@ void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
 
 	// Route this back to the Firefox window for processing
 	if (m_pfnSendUIMessage) m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
+}
+
+void FxRWindowDX11::CloseVRWindow() {
+  if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin, true);
 }
 
 void FxRWindowDX11::pointerEnter() {

@@ -93,7 +93,7 @@ public class FxRWindow : MonoBehaviour
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
     }
     
-    void OnApplicationQuit()
+    public void Close()
     {
         Debug.Log("FxRWindow.OnApplicationQuit()");
         if (_windowIndex != 0)

@@ -404,6 +404,11 @@ public class FxRController : MonoBehaviour
     private void OnApplicationQuit()
     {
         Debug.Log("FxRController.OnApplicationQuit()");
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow w in fxrwindows)
+        {
+            w.Close();
+        }
 
         fxr_plugin.fxrStopFx();
     }

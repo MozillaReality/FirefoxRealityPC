@@ -54,6 +54,7 @@ public:
 	virtual void* nativePtr() = 0;
 	virtual void requestUpdate(float timeDelta) = 0;
 	
+	virtual void CloseVRWindow() = 0;
 	virtual void pointerEnter() = 0;
 	virtual void pointerExit() = 0;
 	virtual void pointerOver(int x, int y) = 0;

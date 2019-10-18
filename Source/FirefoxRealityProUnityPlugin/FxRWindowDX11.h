@@ -43,7 +43,6 @@ private:
 	static DWORD PollForVREvent(LPVOID lpParameter);
 
 public:
-	bool shouldPollForVREvents;
 	static void initDevice(IUnityInterfaces* unityInterfaces);
 	static void finalizeDevice();
 	static DWORD WINAPI CreateVRWindow(_In_ LPVOID lpParameter);
@@ -56,6 +55,7 @@ public:
 	void operator=(const FxRWindowDX11&) = delete;
 	FxRWindowDX11(FxRWindowDX11 &&) noexcept = default;
 	FxRWindowDX11& operator=(FxRWindowDX11 &&) noexcept = default;
+	void CloseVRWindow() override;
 
 	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}

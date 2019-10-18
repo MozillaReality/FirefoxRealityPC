@@ -403,6 +403,7 @@ bool fxrCloseWindow(int windowIndex)
 	auto window_iter = s_windows.find(windowIndex);
 	if (window_iter == s_windows.end()) return false;
 	
+	window_iter->second->CloseVRWindow();	
 	s_windows.erase(window_iter);
 	return true;
 }
