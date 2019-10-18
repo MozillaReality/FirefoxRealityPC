@@ -132,6 +132,8 @@ public class FxRPlugin
         FxRPlugin_pinvoke.fxrStopFx();
         windowCreatedCallback = null;
         windowResizedCallback = null;
+        vrEventCallback = null;
+        
         // Free the callback stubs after deregistering the callbacks on the native side.
         windowCreatedCallbackGCH.Free();
         windowResizedCallbackGCH.Free();

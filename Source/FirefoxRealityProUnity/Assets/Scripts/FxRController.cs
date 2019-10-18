@@ -253,16 +253,16 @@ public class FxRController : MonoBehaviour
 
     void Update()
     {
-        if (IMEStatChanged && lastIMEState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
+        if (IMEStateChanged && lastIMEState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
         {
             VRIME_Manager.Ins.ShowIME("");
         }
-        else if (IMEStatChanged && lastIMEState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
+        else if (IMEStateChanged && lastIMEState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
         {
             VRIME_Manager.Ins.HideIME();
         }
 
-        IMEStatChanged = false;
+        IMEStateChanged = false;
     }
 
     public void ToggleKeyboard()
@@ -383,7 +383,7 @@ public class FxRController : MonoBehaviour
     }
 
     FxRPlugin.FxRIMEState lastIMEState = FxRPlugin.FxRIMEState.Blur;
-    private bool IMEStatChanged;
+    private bool IMEStateChanged;
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
     void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
@@ -394,7 +394,7 @@ public class FxRController : MonoBehaviour
 
             if (imeState != lastIMEState)
             {
-                IMEStatChanged = true;
+                IMEStateChanged = true;
                 lastIMEState = imeState;
             }
         }
