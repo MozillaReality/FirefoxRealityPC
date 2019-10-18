@@ -167,18 +167,21 @@ MonoBehaviour:
   ButtonLabel: {fileID: 422657677931599565}
   BackgroundImage: {fileID: 3328370673194245247}
   Border: {fileID: 5823965652188508200}
+  Icon: {fileID: 5961420190265029661}
   config:
     ButtonLabel: 
-    ColorConfig:
-      NormalColor: {r: 0, g: 0, b: 0, a: 0}
-      HoverColor: {r: 0, g: 0, b: 0, a: 0}
-      PressedColor: {r: 0, g: 0, b: 0, a: 0}
-      TextColor: {r: 0, g: 0, b: 0, a: 0}
-      NormalTextColor: {r: 0, g: 0, b: 0, a: 0}
-      HoverTextColor: {r: 0, g: 0, b: 0, a: 0}
-      PressedTextColor: {r: 0, g: 0, b: 0, a: 0}
+    LogicalColorConfig:
+      NormalColor: 0
+      HoverColor: 0
+      PressedColor: 0
+      NormalTextColor: 0
+      HoverTextColor: 0
+      PressedTextColor: 0
+      NormalIconColor: 0
+      HoverIconColor: 0
+      PressedIconColor: 0
       HasBorder: 0
-      BorderColor: {r: 0, g: 0, b: 0, a: 0}
+      BorderColor: 0
 --- !u!1 &8832978466850447116
 GameObject:
   m_ObjectHideFlags: 0
@@ -191,6 +194,7 @@ GameObject:
   - component: {fileID: 3064179096057508316}
   - component: {fileID: 422657677931599565}
   - component: {fileID: 7858652205567297579}
+  - component: {fileID: 3983076438867831123}
   m_Layer: 5
   m_Name: Dialog Button Text
   m_TagString: Untagged
@@ -250,9 +254,11 @@ MonoBehaviour:
   m_fontAsset: {fileID: 11400000, guid: 6fad1449514e85e4b9182f6af7ffab97, type: 2}
   m_sharedMaterial: {fileID: 1837940448970101195, guid: 6fad1449514e85e4b9182f6af7ffab97,
     type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 0}
   m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
+  m_fontMaterials:
+  - {fileID: 0}
   m_fontColor32:
     serializedVersion: 2
     rgba: 4278190080
@@ -325,7 +331,7 @@ MonoBehaviour:
     materialCount: 1
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_spriteAnimator: {fileID: 0}
+  m_spriteAnimator: {fileID: 3983076438867831123}
   m_hasFontAssetChanged: 0
   m_subTextObjects:
   - {fileID: 0}
@@ -358,6 +364,18 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3983076438867831123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8832978466850447116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6366ee97f6b541449155028b9487355a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &8888953131904844438
 GameObject:
   m_ObjectHideFlags: 0

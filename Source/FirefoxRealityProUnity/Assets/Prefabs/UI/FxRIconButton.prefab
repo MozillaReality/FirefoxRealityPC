@@ -63,7 +63,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.3372549, g: 0.8509804, b: 0.9647059, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -152,15 +152,19 @@ MonoBehaviour:
   ButtonLabel: {fileID: 826647036977667469}
   BackgroundImage: {fileID: 2348060461847058239}
   Border: {fileID: 6807087576795528040}
+  Icon: {fileID: 6637879109211668317}
   config:
     ButtonLabel: 
     LogicalColorConfig:
-      NormalColor: 8
+      NormalColor: 6
       HoverColor: 7
       PressedColor: 9
       NormalTextColor: 0
       HoverTextColor: 0
       PressedTextColor: 0
+      NormalIconColor: 8
+      HoverIconColor: 6
+      PressedIconColor: 6
       HasBorder: 0
       BorderColor: 0
 --- !u!1 &8331902980304255858
@@ -474,7 +478,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 150, y: 150}
+  m_SizeDelta: {x: 15, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &145241823860619113
 CanvasRenderer:
@@ -497,7 +501,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.3372549, g: 0.8509804, b: 0.9647059, a: 1}
   m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:

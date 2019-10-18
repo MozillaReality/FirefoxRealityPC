@@ -1,9 +1,11 @@
 ﻿#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
-using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using AOT;
+using UnityEngine;
+using UnityEngine.XR;
 using Valve.VR;
 using VRIME2;
 
@@ -80,6 +82,7 @@ public class FxRController : MonoBehaviour
     }
 
     private List<FxRLaserPointer> laserPointers;
+    private int _hackKeepWindowIndex;
 
     //
     // MonoBehavior methods.
@@ -157,10 +160,11 @@ public class FxRController : MonoBehaviour
 
     private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
     {
-        FxRVideoController.FXR_VIDEO_PROJECTION_MODE projectionMode =
-            (FxRVideoController.FXR_VIDEO_PROJECTION_MODE) projection;
-
-        if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode))
+        Debug.Log("Received Full Screen Begin from Plugin");
+        FxRVideoProjectionMode.PROJECTION_MODE projectionMode =
+            (FxRVideoProjectionMode.PROJECTION_MODE) projection;
+        
+        if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode, _hackKeepWindowIndex))
         {
             CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_FULLSCREEN_VIDEO;
         }
@@ -244,7 +248,7 @@ public class FxRController : MonoBehaviour
 
         fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized, OnFxRVREvent);
 
-        IntPtr openVRSession = UnityEngine.XR.XRDevice.GetNativePtr();
+        IntPtr openVRSession = XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
         {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
@@ -350,6 +354,7 @@ public class FxRController : MonoBehaviour
                 break;
         }
 
+        _hackKeepWindowIndex = windowIndex;
         window.WasCreated(windowIndex, widthPixels, heightPixels, format);
 
 //        StartCoroutine(TestRsize(window));

@@ -10,6 +10,10 @@ public class FxRButtonColorConfig
     public Color NormalTextColor;
     public Color HoverTextColor;
     public Color PressedTextColor;
+    public Color NormalIconColor;
+    public Color HoverIconColor;
+    public Color PressedIconColor;
+
     public bool HasBorder = false;
     public Color BorderColor;
 }
