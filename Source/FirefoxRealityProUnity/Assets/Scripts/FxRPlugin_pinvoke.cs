@@ -44,7 +44,7 @@ public static class FxRPlugin_pinvoke
     public static extern bool fxrGetFxVersion([MarshalAs(UnmanagedType.LPStr)]StringBuilder buffer, int length);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback, FxRPluginWindowResizedCallback resizedCallback);
+    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback, FxRPluginWindowResizedCallback resizedCallback, FxRPluginVREventCallback vrEventCallback);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrStopFx();
@@ -54,7 +54,7 @@ public static class FxRPlugin_pinvoke
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrKeyEvent(int windowIndex, int keyCode);
-
+    
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrWindowPointerEvent(int windowIndex, int eventID, int windowX, int windowY);
 

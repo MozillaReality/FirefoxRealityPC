@@ -44,6 +44,7 @@ public:
 
 	int format() override { return m_format; }
 
+	void CloseVRWindow() override {}
 	void pointerEnter() override;
 	void pointerExit() override;
 	void pointerOver(int x, int y) override;

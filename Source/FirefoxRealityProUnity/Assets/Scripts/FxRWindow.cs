@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using VRIME2;
 
 public class FxRWindow : FxRPointableSurface
@@ -12,6 +15,7 @@ public class FxRWindow : FxRPointableSurface
     private float Height;
     private float textureScaleU;
     private float textureScaleV;
+    private bool pollForVREvents = true;
 
     private GameObject
         _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
@@ -69,6 +73,7 @@ public class FxRWindow : FxRPointableSurface
     private void OnDisable()
     {
         VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
+        pollForVREvents = false;
     }
 
     private void HandleKeyPressed(int keycode)
@@ -84,11 +89,10 @@ public class FxRWindow : FxRPointableSurface
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
     }
-
-    void OnApplicationQuit()
+    
+    public void Close()
     {
         Debug.Log("FxRWindow.OnApplicationQuit()");
-
         if (_windowIndex != 0)
         {
             fxr_plugin?.fxrCloseWindow(_windowIndex);
@@ -101,7 +105,7 @@ public class FxRWindow : FxRPointableSurface
         Width = DefaultWidth * sizeMultiple;
         Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple), Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
     }
-    
+
     public bool Resize(int widthPixels, int heightPixels)
     {
         return fxr_plugin.fxrRequestWindowSizeChange(_windowIndex, widthPixels, heightPixels);
@@ -112,10 +116,8 @@ public class FxRWindow : FxRPointableSurface
         Debug.Log("FxRWindow.WasCreated(windowIndex:" + windowIndex + ", widthPixels:" + widthPixels +
                   ", heightPixels:" + heightPixels + ", format:" + format + ")");
         _windowIndex = windowIndex;
-
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
-
         _textureFormat = format;
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
@@ -127,10 +129,9 @@ public class FxRWindow : FxRPointableSurface
     }
 
     public void WasResized(int widthPixels, int heightPixels)
-    { 
+    {
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
-
         var oldTexture = _videoTexture;
         _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
@@ -146,6 +147,7 @@ public class FxRWindow : FxRPointableSurface
             //Debug.Log("FxRWindow.Update() with _windowIndex == " + _windowIndex);
             fxr_plugin?.fxrRequestWindowUpdate(_windowIndex, Time.deltaTime);
         }
+
         else
         {
             //Debug.Log("FxRWindow.Update() with _windowIndex == 0");
@@ -154,36 +156,36 @@ public class FxRWindow : FxRPointableSurface
 
     // Pointer events from FxRLaserPointer.
 
-    //
+//
     private Texture2D CreateWindowTexture(int videoWidth, int videoHeight, TextureFormat format,
         out float textureScaleU, out float textureScaleV)
     {
-        // Check parameters.
+// Check parameters.
         var vt = FxRTextureUtils.CreateTexture(videoWidth, videoHeight, format);
         if (vt == null)
         {
             textureScaleU = 0;
             textureScaleV = 0;
         }
+
         else
         {
             textureScaleU = 1;
             textureScaleV = 1;
         }
 
-        // Now pass the ID to the native side.
+// Now pass the ID to the native side.
         IntPtr nativeTexPtr = vt.GetNativeTexturePtr();
-        Debug.Log("Calling fxrSetWindowUnityTextureID(windowIndex:" + _windowIndex + ", nativeTexPtr:" +
-                  nativeTexPtr.ToString("X") + ")");
-        fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, nativeTexPtr);
 
+//        Debug.Log("Calling fxrSetWindowUnityTextureID(windowIndex:" + _windowIndex + ", nativeTexPtr:" +
+//                  nativeTexPtr.ToString("X") + ")");
+        fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, nativeTexPtr);
         return vt;
     }
 
     private void DestroyWindow()
     {
         bool ed = Application.isEditor;
-
         if (_videoTexture != null)
         {
             if (ed) DestroyImmediate(_videoTexture);

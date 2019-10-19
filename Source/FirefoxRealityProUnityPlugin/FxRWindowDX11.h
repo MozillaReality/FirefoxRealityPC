@@ -26,9 +26,11 @@ private:
 
 	PFN_CREATEVRWINDOW m_pfnCreateVRWindow;
 	PFN_SENDUIMSG m_pfnSendUIMessage;
+	PFN_WAITFORVREVENT m_pfnWaitForVREvent;
 	char *m_firefoxFolderPath;
 	char *m_firefoxProfilePath;
 	PFN_CLOSEVRWINDOW m_pfnCloseVRWindow;
+	PFN_VREVENTCALLBACK m_pfnVREventCallback;
 	UINT m_vrWin;
 	ID3D11Texture2D* m_fxTexPtr;
 	Size m_size;
@@ -37,18 +39,23 @@ private:
     POINT m_ptLastPointer;
 
     void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);
+	DWORD pollForVREvent();
+	static DWORD PollForVREvent(LPVOID lpParameter);
 
 public:
 	static void initDevice(IUnityInterfaces* unityInterfaces);
 	static void finalizeDevice();
 	static DWORD WINAPI CreateVRWindow(_In_ LPVOID lpParameter);
 
-	FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMSG pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow);
+
+	FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow,
+		PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback);
 	~FxRWindowDX11() ;
 	FxRWindowDX11(const FxRWindowDX11&) = delete;
 	void operator=(const FxRWindowDX11&) = delete;
 	FxRWindowDX11(FxRWindowDX11 &&) noexcept = default;
 	FxRWindowDX11& operator=(FxRWindowDX11 &&) noexcept = default;
+	void CloseVRWindow() override;
 
 	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
