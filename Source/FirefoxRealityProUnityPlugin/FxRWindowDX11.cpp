@@ -28,6 +28,7 @@ struct CreateVRWindowParams {
 	char* firefoxProfilePath;
 	uint32_t vrWin;
 	void* fxTexHandle;
+	PFN_VREVENTCALLBACK lpfnVREvent;
 //	HANDLE hSignal;
 };
 
@@ -45,7 +46,6 @@ DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 
 }
 
-
 void FxRWindowDX11::initDevice(IUnityInterfaces* unityInterfaces) {
 	IUnityGraphicsD3D11* ud3d = unityInterfaces->Get<IUnityGraphicsD3D11>();
 	s_D3D11Device = ud3d->GetDevice();
@@ -55,13 +55,18 @@ void FxRWindowDX11::finalizeDevice() {
 	s_D3D11Device = nullptr; // The object itself being owned by Unity will go away without our help, but we should clear our weak reference.
 }
 
-FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow, PFN_SENDUIMSG pfnSendUIMessage, PFN_CLOSEVRWINDOW pfnCloseVRWindow) :
+FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
+	, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow
+	, PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent
+	, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback) :
 	FxRWindow(uid, uidExt),
 	m_pfnCreateVRWindow(pfnCreateVRWindow),
 	m_firefoxFolderPath(pfirefoxFolderPath),
 	m_firefoxProfilePath(pfirefoxProfilePath),
 	m_pfnSendUIMessage(pfnSendUIMessage),
+	m_pfnWaitForVREvent(pfnWaitForVREvent),
 	m_pfnCloseVRWindow(pfnCloseVRWindow),
+	m_pfnVREventCallback(pfnVREventCallback),
 	m_vrWin(0),
 	m_fxTexPtr(nullptr),
 	m_size({0, 0}),
@@ -138,13 +143,26 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 			}
 
 			if (windowCreatedCallback) (*windowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
+
+			// Start polling for vr events on this window
+			// TODO: When do we need to stop this thread?
+			DWORD dwTid = 0;
+			// Start a thread to wait for vr events
+			HANDLE hThreadFxWin =
+				::CreateThread(
+					nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+					0,        // SIZE_T dwStackSize,
+					PollForVREvent,
+					this,  //__drv_aliasesMem LPVOID lpParameter,
+					0,     // DWORD dwCreationFlags,
+					&dwTid);
+			assert(hThreadFxWin != nullptr);
 		}
 	}
 	return true;
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
-	if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin, false);
 }
 
 FxRWindow::Size FxRWindowDX11::size() {
@@ -187,12 +205,47 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
 	ctx->Release();
 }
 
+DWORD FxRWindowDX11::PollForVREvent(_In_ LPVOID lpParameter)
+{
+	return ((FxRWindowDX11*)lpParameter)->pollForVREvent();
+}
+
+DWORD FxRWindowDX11::pollForVREvent()
+{
+	while (true)
+	{
+		if (m_pfnWaitForVREvent && m_pfnVREventCallback)
+		{
+			uint32_t windowId;
+			uint32_t eventType;
+			uint32_t eventData1;
+			uint32_t eventData2;
+			m_pfnWaitForVREvent(windowId, eventType, eventData1, eventData2);
+      
+			if (eventType == 2)
+			{
+				fxrCloseAllWindows();
+				break;
+			}
+			if (eventType != 0)
+			{
+				m_pfnVREventCallback(m_uid, eventType, eventData1, eventData2);
+			}
+		}
+	}
+	return 0;
+}
+
 void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
 	m_ptLastPointer.x = x;
 	m_ptLastPointer.y = y;
 
 	// Route this back to the Firefox window for processing
 	if (m_pfnSendUIMessage) m_pfnSendUIMessage(m_vrWin, msg, MAKELONG(0, scroll), POINTTOPOINTS(m_ptLastPointer));
+}
+
+void FxRWindowDX11::CloseVRWindow() {
+  if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin, true);
 }
 
 void FxRWindowDX11::pointerEnter() {

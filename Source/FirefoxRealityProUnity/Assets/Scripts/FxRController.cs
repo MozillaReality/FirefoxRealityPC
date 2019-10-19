@@ -1,6 +1,7 @@
 ﻿#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using AOT;
 using UnityEngine;
@@ -92,12 +93,12 @@ public class FxRController : MonoBehaviour
         Debug.Log("FxRController.Awake())");
     }
 
-    [MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
-    public static void Log(String msg)
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
+    public static void Log(System.String msg)
     {
         if (msg.StartsWith("[error]")) Debug.LogError(msg);
         else if (msg.StartsWith("[warning]")) Debug.LogWarning(msg);
-        else Debug.Log(msg); // incldues [info] and [debug].
+        else Debug.Log(msg); // includes [info] and [debug].
     }
 
     void OnEnable()
@@ -245,13 +246,27 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized);
+        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized, OnFxRVREvent);
 
         IntPtr openVRSession = XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
         {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
+    }
+
+    void Update()
+    {
+        if (IMEStateChanged && lastIMEState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.ShowIME("");
+        }
+        else if (IMEStateChanged && lastIMEState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.HideIME();
+        }
+
+        IMEStateChanged = false;
     }
 
     public void ToggleKeyboard()
@@ -301,7 +316,7 @@ public class FxRController : MonoBehaviour
         }
     }
 
-    [MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
     void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
     {
         Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" +
@@ -359,7 +374,7 @@ public class FxRController : MonoBehaviour
 //        }
 //    }
 
-    [MonoPInvokeCallback(typeof(FxRPluginWindowResizedCallback))]
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowResizedCallback))]
     void OnFxWindowResized(int uid, int widthPixels, int heightPixels)
     {
         FxRWindow window = FxRWindow.FindWindowWithUID(uid);
@@ -372,18 +387,35 @@ public class FxRController : MonoBehaviour
         window.WasResized(widthPixels, heightPixels);
     }
 
+    FxRPlugin.FxRIMEState lastIMEState = FxRPlugin.FxRIMEState.Blur;
+    private bool IMEStateChanged;
+
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
+    void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
+    {
+        if ((FxRPlugin.FxREventType)eventType == FxRPlugin.FxREventType.IME)
+        {
+            FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) eventData1;
+
+            if (imeState != lastIMEState)
+            {
+                IMEStateChanged = true;
+                lastIMEState = imeState;
+            }
+        }
+    }
+
 
     private void OnApplicationQuit()
     {
         Debug.Log("FxRController.OnApplicationQuit()");
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+        foreach (FxRWindow w in fxrwindows)
+        {
+            w.Close();
+        }
 
         fxr_plugin.fxrStopFx();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //Debug.Log("FxRController.Update()");
     }
 
     public FXR_LOG_LEVEL LogLevel

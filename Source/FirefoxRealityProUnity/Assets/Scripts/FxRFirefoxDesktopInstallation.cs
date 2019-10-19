@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
 
-public class FxRFirefoxDesktopInstaller : MonoBehaviour
+public class FxRFirefoxDesktopInstallation : MonoBehaviour
 {
     [SerializeField] protected Sprite FirefoxIcon;
 
