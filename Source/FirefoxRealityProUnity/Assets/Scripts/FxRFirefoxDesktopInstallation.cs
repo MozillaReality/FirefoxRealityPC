@@ -121,52 +121,52 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             FxRConfiguration
                 .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
         dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now", () =>
-        {
-            var downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
-            downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
-                new FxRButton.ButtonConfig("Cancel",
-                    () => { downloadCancelled = true; }, FxRConfiguration
-                        .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+            {
+                var downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
+                downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
+                    new FxRButton.ButtonConfig("Cancel",
+                        () => { downloadCancelled = true; }, FxRConfiguration
+                            .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 
-            // TODO: Put a progress bar in dialog once we allow for full desktop installation
-            var progress =
-                new Progress<float>(zeroToOne =>
-                {
-                    if (downloadProgressDialog == null) return;
-                    if (Mathf.Approximately(zeroToOne, 1f))
+                // TODO: Put a progress bar in dialog once we allow for full desktop installation
+                var progress =
+                    new Progress<float>(zeroToOne =>
                     {
-                        downloadProgressDialog.Close();
-                        var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
-                        removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
-                            "Please remove your headset to continue the Desktop Firefox install process",
-                            FirefoxIcon,
-                            new FxRButton.ButtonConfig("OK", null, FxRConfiguration
-                                .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                        if (downloadProgressDialog == null) return;
+                        if (Mathf.Approximately(zeroToOne, 1f))
+                        {
+                            downloadProgressDialog.Close();
+                            var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
+                            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
+                                "Please remove your headset to continue the Desktop Firefox install process",
+                                FirefoxIcon,
+                                new FxRButton.ButtonConfig("OK", null, FxRConfiguration
+                                    .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                        }
+                        else
+                        {
+                            downloadProgressDialog.ShowProgress(zeroToOne);
+                        }
+
+                        Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
+                    });
+                DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
+                {
+                    if (wasCancelled)
+                    {
+                        Debug.Log("Firefox Desktop download cancelled");
+                    }
+                    else if (wasSuccessful)
+                    {
+                        Debug.Log("Firefox Desktop installation successfully launched");
                     }
                     else
                     {
-                        downloadProgressDialog.ShowProgress(zeroToOne);
+                        Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
                     }
-
-                    Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
-                });
-            DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
-            {
-                if (wasCancelled)
-                {
-                    Debug.Log("Firefox Desktop download cancelled");
-                }
-                else if (wasSuccessful)
-                {
-                    Debug.Log("Firefox Desktop installation successfully launched");
-                }
-                else
-                {
-                    Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
-                }
-            }, downloadType, installationScope);
-        }, FxRConfiguration
-            .Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
+                }, downloadType, installationScope);
+            },
+            FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
 
         FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
     }
@@ -174,6 +174,13 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private static readonly string RELEASE_AND_BETA_REGISTRY_PATH = @"SOFTWARE\Mozilla\Mozilla Firefox";
     private static readonly string NIGHTLY_REGISTRY_PATH = @"SOFTWARE\Mozilla\Nightly";
     private bool downloadCancelled;
+    private long lastDownloadResponseCode;
+
+    private static readonly string STUB_INSTALLER_BASE_URL =
+        "https://download.mozilla.org/?product=partner-firefox-beta-firefoxreality-ffreality-htc-001-stub&os=win&lang=";
+
+    private static readonly string UPGRADE_INSTALLER_BASE_URL =
+        "https://download.mozilla.org/?product=partner-firefox-beta-firefoxreality-ffreality-htc-up-001-latest&os=win&lang=";
 
     // Check if Firefox Desktop is installed
     // Logic for installation:
@@ -242,7 +249,20 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
         if (hasReleaseVersion) // || hasNightlyVersion)
         {
-            installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
+            var registryKey = installationScope == INSTALLATION_SCOPE.LOCAL_USER
+                ? Registry.CurrentUser
+                : Registry.LocalMachine;
+
+            var installPath = GetInstallationLocation(registryKey, RELEASE_AND_BETA_REGISTRY_PATH);
+
+            if (!Directory.Exists(Path.Combine(installPath, "distribution")))
+            {
+                installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
+            }
+            else
+            {
+                installationTypeRequired = INSTALLATION_TYPE_REQUIRED.NONE;
+            }
         }
         else
         {
@@ -324,16 +344,13 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     {
         string downloadURL = null;
 
-        // TODO: Catch 404's and request en-US
         switch (downloadType)
         {
             case DOWNLOAD_TYPE.STUB:
-                downloadURL = "https://download.mozilla.org/?product=firefox-stub&os=win&lang=en-US";
-//                              + CultureInfo.CurrentCulture.Name;
+                downloadURL = STUB_INSTALLER_BASE_URL + CultureStringTwoSegmentsOnly;
                 break;
             case DOWNLOAD_TYPE.RELEASE:
-                downloadURL = "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US";
-//                              + CultureInfo.CurrentCulture.Name;
+                downloadURL = UPGRADE_INSTALLER_BASE_URL + CultureStringTwoSegmentsOnly;
                 break;
 //            case DOWNLOAD_TYPE.NIGHTLY:
 //                downloadURL = "https://download.mozilla.org/?product=firefox-nightly-latest-l10n-ssl&os=win64&lang=" +
@@ -341,6 +358,32 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 //                break;
         }
 
+        yield return AttemptDownload(percentDownloaded, successCallback, downloadURL);
+
+        if (!downloadCancelled && lastDownloadResponseCode == 404)
+        {
+            switch (downloadType)
+            {
+                case DOWNLOAD_TYPE.STUB:
+                    downloadURL = STUB_INSTALLER_BASE_URL + "en-US";
+                    break;
+                case DOWNLOAD_TYPE.RELEASE:
+                    downloadURL = UPGRADE_INSTALLER_BASE_URL + "en-US";
+                    break;
+            }
+
+            yield return AttemptDownload(percentDownloaded, successCallback, downloadURL);
+            // This should never happen for en-US version, but just in case...
+            if (lastDownloadResponseCode == 404)
+            {
+                successCallback?.Invoke(false, "Received 404 when attempting to download", false);
+            }
+        }
+    }
+
+    private IEnumerator AttemptDownload(IProgress<float> percentDownloaded, Action<bool, string, bool> successCallback,
+        string downloadURL)
+    {
         var webRequest = new UnityWebRequest(downloadURL);
         webRequest.downloadHandler = new DownloadHandlerFile(FirefoxInstallerDownloadPath, false);
         downloadCancelled = false;
@@ -351,6 +394,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             percentDownloaded.Report(downloadOperation.progress);
         }
 
+        lastDownloadResponseCode = downloadOperation.webRequest.responseCode;
         if (downloadCancelled)
         {
             webRequest.Abort();
@@ -358,7 +402,10 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         }
         else
         {
-            successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error), webRequest.error, false);
+            if (lastDownloadResponseCode != 404)
+            {
+                successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error), webRequest.error, false);
+            }
         }
     }
 
@@ -447,4 +494,18 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private string FirefoxInstallerDownloadPath =>
         Path.Combine(Application.persistentDataPath, "Firefox Installer.exe");
+
+    private string CultureStringTwoSegmentsOnly
+    {
+        get
+        {
+            var cultureSegments = CultureInfo.CurrentCulture.Name.Split('-');
+            if (cultureSegments.Length > 1)
+            {
+                return cultureSegments[0] + "-" + cultureSegments[1];
+            }
+
+            return CultureInfo.CurrentCulture.Name;
+        }
+    }
 }
