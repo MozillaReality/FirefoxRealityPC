@@ -140,7 +140,7 @@ namespace VRIME2
             if(aTmpPhy == null) {
                 aTmpPhy = this.GetComponentInChildren<Collider>();
             }
-            aTmpPhy.isTrigger = true;
+//            aTmpPhy.isTrigger = true;
 
             buttonEvent = aTmpPhy.gameObject.GetComponent<VRIME_ButtonEvent>();
             if(buttonEvent == null)
