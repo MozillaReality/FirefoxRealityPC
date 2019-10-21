@@ -1,1 +1,4 @@
+firefox/*
+!firefox/vrhost.dll
+!firefox/vrhost.pdb
 !firefox/README.txt*
