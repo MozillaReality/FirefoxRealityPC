@@ -56,8 +56,6 @@ public class FxRBuild
             string streamingAssetsDestination =
                 Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "firefox");
             DirectoryCopy(nightlyBuildPath, streamingAssetsDestination, true);
-            BuildSuccessfull = true;
-            Debug.Log("Build successful.");
 
             if (!string.IsNullOrEmpty(profilePath))
             {
@@ -65,6 +63,8 @@ public class FxRBuild
                     Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "fxr-profile");
                 DirectoryCopy(profilePath, profileDestination, true);
             }
+            BuildSuccessfull = true;
+            Debug.Log("Build successful.");
         }
         else
         {
