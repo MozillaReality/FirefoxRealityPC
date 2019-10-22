@@ -130,37 +130,38 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
         dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now", () =>
             {
-                FxRDialogBox downloadProgressDialog = null;
-//                    FxRDialogController.Instance.CreateDialog();
-//                downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
-//                    new FxRButton.ButtonConfig("Cancel",
+                FxRDialogBox downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
+                downloadProgressDialog.Show("Downloading and installing Firefox for your computer.", "", FirefoxIcon);
+//                    , new FxRButton.ButtonConfig("Cancel",
 //                        () => { downloadCancelled = true; }, FxRConfiguration
 //                            .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
-
-                // TODO: Put a progress bar in dialog once we allow for full desktop installation
                 var progress =
                     new Progress<float>(zeroToOne =>
                     {
                         if (downloadProgressDialog == null) return;
-                        if (Mathf.Approximately(zeroToOne, 1f))
-                        {
-                            downloadProgressDialog.Close();
-                            var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
-                            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
-                                "Please remove your headset to continue the Desktop Firefox install process",
-                                FirefoxIcon,
-                                new FxRButton.ButtonConfig("OK", null, FxRConfiguration
-                                    .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
-                        }
-                        else
+                        if (!Mathf.Approximately(zeroToOne, 1f))
                         {
                             downloadProgressDialog.ShowProgress(zeroToOne);
                         }
+//                        else
+//                        {
+//                            downloadProgressDialog.Close();
+//                            var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
+//                            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
+//                                "Please remove your headset to continue the Desktop Firefox install process",
+//                                FirefoxIcon,
+//                                new FxRButton.ButtonConfig("OK", null, FxRConfiguration
+//                                    .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+//                        }
 
                         Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
                     });
                 DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
                 {
+                    if (downloadProgressDialog != null)
+                    {
+                        downloadProgressDialog.Close();
+                    }
                     if (wasCancelled)
                     {
                         Debug.Log("Firefox Desktop download cancelled");
