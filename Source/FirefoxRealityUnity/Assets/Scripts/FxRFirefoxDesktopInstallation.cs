@@ -11,6 +11,10 @@ using Debug = UnityEngine.Debug;
 
 public class FxRFirefoxDesktopInstallation : MonoBehaviour
 {
+    public delegate void InstallationProcessComplete();
+
+    public static InstallationProcessComplete OnInstallationProcessComplete;
+
     [SerializeField] protected Sprite FirefoxIcon;
 
     private const bool FORCE_DESKTOP_BROWSER_CHECK = true;
@@ -52,8 +56,6 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     void Start()
     {
-        // TODO: Keep track of whether we have already asked to install
-
         if (!FORCE_DESKTOP_BROWSER_CHECK)
         {
             int browserChecks = PlayerPrefs.GetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, 0);
@@ -69,6 +71,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             }
             else if (browserChecks >= NUMBER_OF_TIMES_TO_CHECK_BROWSER)
             {
+                OnInstallationProcessComplete?.Invoke();
                 return;
             }
 
@@ -100,6 +103,10 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 InitiateDesktopFirefoxInstall(installTypeRequired.Value, downloadTypeRequired.Value,
                     installationScope.Value);
             }
+            else
+            {
+                OnInstallationProcessComplete?.Invoke();
+            }
         }));
     }
 
@@ -109,24 +116,26 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         // TODO: Update copy
         // TODO: i18n and l10n
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "It appears you don't have Firefox Desktop installed."
-            : "There is an update to Firefox Desktop available.";
+            ? "Try Firefox for your computer too?"
+            : "An update is available for Firefox on your computer.";
         var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "Would you like to install Firefox Desktop?"
-            : "Would you like to update Firefox Desktop?";
+            ? "Select Install Now and remove your headset to get Firefox for Desktop."
+            : "Select Update Now and remove your headset.";
         var dialogButtons = new FxRButton.ButtonConfig[2];
         var updateOrInstall =
             (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
-        dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstall + " Later", null,
+        dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstall + " Later",
+            () => { OnInstallationProcessComplete?.Invoke(); },
             FxRConfiguration
                 .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
         dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now", () =>
             {
-                var downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
-                downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
-                    new FxRButton.ButtonConfig("Cancel",
-                        () => { downloadCancelled = true; }, FxRConfiguration
-                            .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                FxRDialogBox downloadProgressDialog = null;
+//                    FxRDialogController.Instance.CreateDialog();
+//                downloadProgressDialog.Show("Downloading Firefox Desktop...", "", FirefoxIcon,
+//                    new FxRButton.ButtonConfig("Cancel",
+//                        () => { downloadCancelled = true; }, FxRConfiguration
+//                            .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 
                 // TODO: Put a progress bar in dialog once we allow for full desktop installation
                 var progress =
@@ -155,15 +164,18 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                     if (wasCancelled)
                     {
                         Debug.Log("Firefox Desktop download cancelled");
+                        OnInstallationProcessComplete?.Invoke();
+                        return;
                     }
-                    else if (wasSuccessful)
-                    {
-                        Debug.Log("Firefox Desktop installation successfully launched");
-                    }
-                    else
-                    {
-                        Debug.Log("Firefox Desktop was not successfully installed. Error: " + error);
-                    }
+
+                    var installationResultDialog = FxRDialogController.Instance.CreateDialog();
+                    string installationResultTitle = wasSuccessful
+                        ? "Firefox on your computer is up to date!"
+                        : "There was an issue installing Firefox on your computer.";
+                    installationResultDialog.Show(installationResultTitle, "", FirefoxIcon,
+                        new FxRButton.ButtonConfig("OK",
+                            () => { OnInstallationProcessComplete?.Invoke(); }, FxRConfiguration
+                                .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
                 }, downloadType, installationScope);
             },
             FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
@@ -445,9 +457,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                         installProcess.StartInfo.Arguments = "/InstallDirectoryPath=" + installPath;
                     }
 
-                    installProcess.Start();
-                    // TODO: Do we want to have this process run in a co-routine so we can wait for it to exit? i.e. Do we care about the exit status?
-                    successCallback?.Invoke(true, "", false);
+                    StartCoroutine(LaunchInstallationProcess(installProcess, successCallback));
                 }
                 catch (Exception e)
                 {
@@ -464,6 +474,17 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 successCallback?.Invoke(false, error, false);
             }
         }, downloadType));
+    }
+
+    private IEnumerator LaunchInstallationProcess(Process installProcess, Action<bool, string, bool> successCallback)
+    {
+        installProcess.Start();
+        while (!installProcess.HasExited)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+
+        successCallback?.Invoke(installProcess.ExitCode == 0, "", false);
     }
 
     private static string GetInstalledVersion(RegistryKey scope, string path)

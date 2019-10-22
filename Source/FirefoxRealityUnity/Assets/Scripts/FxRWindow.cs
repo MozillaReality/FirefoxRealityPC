@@ -70,6 +70,21 @@ public class FxRWindow : FxRPointableSurface
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
     }
 
+    public bool Visible
+    {
+        get => visible;
+        set
+        {
+            visible = value;
+            if (_videoMeshGO != null)
+            {
+                _videoMeshGO.SetActive(visible);
+            }
+            
+        }
+    }
+    private bool visible;
+
     private void OnDisable()
     {
         VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
@@ -126,6 +141,7 @@ public class FxRWindow : FxRPointableSurface
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
         _videoMeshGO.transform.localRotation = Quaternion.identity;
+        _videoMeshGO.SetActive(Visible);
     }
 
     public void WasResized(int widthPixels, int heightPixels)

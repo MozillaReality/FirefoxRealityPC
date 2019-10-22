@@ -30,6 +30,7 @@ public class FxRController : MonoBehaviour
 
     public enum FXR_BROWSING_MODE
     {
+        FXR_BROWSER_MODE_DESKTOP_INSTALL,
         FXR_BROWSER_MODE_WEB_BROWSING,
         FXR_BROWSER_MODE_FULLSCREEN_VIDEO,
         FXR_BROWSER_MODE_WEBXR
@@ -38,7 +39,7 @@ public class FxRController : MonoBehaviour
     public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
 
     public static BrowsingModeChanged OnBrowsingModeChanged;
-    
+
     public static FXR_BROWSING_MODE CurrentBrowsingMode
     {
         get => currentBrowsingMode;
@@ -47,18 +48,24 @@ public class FxRController : MonoBehaviour
             if (currentBrowsingMode != value)
             {
                 OnBrowsingModeChanged?.Invoke(value);
-                if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
-                    && VRIME_Manager.Ins.ShowState)
-                {
-                    VRIME_Manager.Ins.HideIME();
-                }
             }
 
             currentBrowsingMode = value;
+            if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
+                && VRIME_Manager.Ins.ShowState)
+            {
+                VRIME_Manager.Ins.HideIME();
+            }
+
+            FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+            foreach (FxRWindow w in fxrwindows)
+            {
+                w.Visible = currentBrowsingMode == FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+            }
         }
     }
 
-    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_DESKTOP_INSTALL;
 
     public FxRPlugin Plugin => fxr_plugin;
 
@@ -156,6 +163,13 @@ public class FxRController : MonoBehaviour
         VideoController.fxr_plugin = fxr_plugin;
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
+
+        FxRFirefoxDesktopInstallation.OnInstallationProcessComplete += HandleInstallationProcessComplete;
+    }
+
+    private void HandleInstallationProcessComplete()
+    {
+        CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
     }
 
     private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
@@ -163,7 +177,7 @@ public class FxRController : MonoBehaviour
         Debug.Log("Received Full Screen Begin from Plugin");
         FxRVideoProjectionMode.PROJECTION_MODE projectionMode =
             (FxRVideoProjectionMode.PROJECTION_MODE) projection;
-        
+
         if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode, _hackKeepWindowIndex))
         {
             CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_FULLSCREEN_VIDEO;
@@ -393,7 +407,7 @@ public class FxRController : MonoBehaviour
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
     void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
     {
-        if ((FxRPlugin.FxREventType)eventType == FxRPlugin.FxREventType.IME)
+        if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.IME)
         {
             FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) eventData1;
 
