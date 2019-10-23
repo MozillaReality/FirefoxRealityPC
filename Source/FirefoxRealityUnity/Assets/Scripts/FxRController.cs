@@ -257,11 +257,11 @@ public class FxRController : MonoBehaviour
 
     void Update()
     {
-        if (IMEStateChanged && lastIMEState == FxRPlugin.FxRIMEState.Focus && !VRIME_Manager.Ins.ShowState)
+        if (IMEStateChanged && lastIMEState == FxRPlugin.FxREventState.Focus && !VRIME_Manager.Ins.ShowState)
         {
             VRIME_Manager.Ins.ShowIME("");
         }
-        else if (IMEStateChanged && lastIMEState == FxRPlugin.FxRIMEState.Blur && VRIME_Manager.Ins.ShowState)
+        else if (IMEStateChanged && lastIMEState == FxRPlugin.FxREventState.Blur && VRIME_Manager.Ins.ShowState)
         {
             VRIME_Manager.Ins.HideIME();
         }
@@ -387,7 +387,7 @@ public class FxRController : MonoBehaviour
         window.WasResized(widthPixels, heightPixels);
     }
 
-    FxRPlugin.FxRIMEState lastIMEState = FxRPlugin.FxRIMEState.Blur;
+    FxRPlugin.FxREventState lastIMEState = FxRPlugin.FxREventState.Blur;
     private bool IMEStateChanged;
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
@@ -395,7 +395,7 @@ public class FxRController : MonoBehaviour
     {
         if ((FxRPlugin.FxREventType)eventType == FxRPlugin.FxREventType.IME)
         {
-            FxRPlugin.FxRIMEState imeState = (FxRPlugin.FxRIMEState) eventData1;
+            FxRPlugin.FxREventState imeState = (FxRPlugin.FxREventState) eventData1;
 
             if (imeState != lastIMEState)
             {
