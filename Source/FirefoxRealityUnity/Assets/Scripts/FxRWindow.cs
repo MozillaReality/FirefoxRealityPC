@@ -65,6 +65,7 @@ public class FxRWindow : FxRPointableSurface
         return window;
     }
 
+
     private void OnEnable()
     {
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
@@ -80,10 +81,15 @@ public class FxRWindow : FxRPointableSurface
             {
                 _videoMeshGO.SetActive(visible);
             }
-            
         }
     }
+
     private bool visible;
+
+    public int WindowIndex
+    {
+        get => _windowIndex;
+    }
 
     private void OnDisable()
     {
@@ -93,7 +99,7 @@ public class FxRWindow : FxRPointableSurface
 
     private void HandleKeyPressed(int keycode)
     {
-        // TODO: All windows with respond to all keyboard presses. Since we only ever have one at the moment...
+        // TODO: All windows will respond to all keyboard presses. Since we only ever have one at the moment...
         fxr_plugin.fxrKeyEvent(_windowIndex, keycode);
     }
 
@@ -104,7 +110,7 @@ public class FxRWindow : FxRPointableSurface
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
     }
-    
+
     public void Close()
     {
         Debug.Log("FxRWindow.OnApplicationQuit()");
@@ -118,7 +124,8 @@ public class FxRWindow : FxRPointableSurface
     public void RequestSizeMultiple(float sizeMultiple)
     {
         Width = DefaultWidth * sizeMultiple;
-        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple), Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
+        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple),
+            Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
     }
 
     public bool Resize(int widthPixels, int heightPixels)
@@ -137,7 +144,8 @@ public class FxRWindow : FxRPointableSurface
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
 
-        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0, flipX, flipY);
+        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
+            0, flipX, flipY);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
         _videoMeshGO.transform.localRotation = Quaternion.identity;
@@ -149,12 +157,14 @@ public class FxRWindow : FxRPointableSurface
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
         var oldTexture = _videoTexture;
-        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
+        _videoTexture =
+            CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
 
-        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height, flipX, flipY);
+        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width,
+            Height, flipX, flipY);
     }
-    
+
     // Update is called once per frame
     void Update()
     {

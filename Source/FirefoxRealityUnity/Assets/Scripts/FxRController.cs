@@ -108,6 +108,17 @@ public class FxRController : MonoBehaviour
         else Debug.Log(msg); // includes [info] and [debug].
     }
 
+    public void SendKeyEvent(int keycode)
+    {
+        // TODO: Introduce concept of "focused" window, once we allow more than one, so these events can be sent to the window that has focus 
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+
+        if (fxrwindows.Length > 0)
+        {
+            fxr_plugin.fxrKeyEvent(fxrwindows[0].WindowIndex, keycode);
+        }
+    }
+
     void OnEnable()
     {
         Debug.Log("FxRController.OnEnable()");

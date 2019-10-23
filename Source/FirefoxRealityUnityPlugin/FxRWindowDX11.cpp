@@ -284,6 +284,13 @@ void FxRWindowDX11::keyPress(int charCode) {
 		case VK_TAB:
 		case VK_RETURN:
 		case VK_ESCAPE:
+		case VK_SPACE:
+		case VK_LEFT:
+		case VK_RIGHT:
+		case VK_DOWN:
+		case VK_UP:
+		case VK_HOME:
+		case VK_END:
 			m_pfnSendUIMessage(m_vrWin, WM_KEYDOWN, charCode, 0);
 			m_pfnSendUIMessage(m_vrWin, WM_KEYUP,   charCode, 0);
 			break;
