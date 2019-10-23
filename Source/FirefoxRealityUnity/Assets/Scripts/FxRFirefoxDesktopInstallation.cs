@@ -19,7 +19,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private const bool FORCE_DESKTOP_BROWSER_CHECK = true;
 
-    private const int MAJOR_RELEASE_REQUIRED_FALLBACK = 69;
+    private const int MAJOR_RELEASE_REQUIRED_FALLBACK = 71;
     private const string MINOR_RELEASE_REQUIRED_FALLBACK = "0";
 
     private const string NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY = "NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY";
@@ -71,7 +71,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             }
             else if (browserChecks >= NUMBER_OF_TIMES_TO_CHECK_BROWSER)
             {
-                OnInstallationProcessComplete?.Invoke();
+                NotifyInstallationComplete();
                 return;
             }
 
@@ -105,10 +105,12 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             }
             else
             {
-                OnInstallationProcessComplete?.Invoke();
+                NotifyInstallationComplete();
             }
         }));
     }
+
+    private int retryCount = 0;
 
     private void InitiateDesktopFirefoxInstall(INSTALLATION_TYPE_REQUIRED installationTypeRequired,
         DOWNLOAD_TYPE downloadType, INSTALLATION_SCOPE installationScope)
@@ -116,33 +118,46 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         // TODO: Update copy
         // TODO: i18n and l10n
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "Try Firefox for your computer too?"
-            : "An update is available for Firefox on your computer.";
+            ? "Try the Firefox Browser for your computer too?"
+            : "There’s an update available for Firefox Browser for Desktop.";
         var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "Select Install Now and remove your headset to get Firefox for Desktop."
-            : "Select Update Now and remove your headset.";
+            ? "Get the browser that respects your privacy automatically."
+            : "";
         var dialogButtons = new FxRButton.ButtonConfig[2];
         var updateOrInstall =
             (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
         dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstall + " Later",
-            () => { OnInstallationProcessComplete?.Invoke(); },
-            FxRConfiguration
-                .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
-        dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now", () =>
-            {
-                FxRDialogBox downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
-                downloadProgressDialog.Show("Downloading and installing Firefox for your computer.", "", FirefoxIcon);
+            () => { NotifyInstallationComplete(); },
+            FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
+        dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now",
+            () => { ContinueDesktopFirefoxInstall(installationTypeRequired, downloadType, installationScope); },
+            FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
+
+        FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
+    }
+
+    private void ContinueDesktopFirefoxInstall(INSTALLATION_TYPE_REQUIRED installationTypeRequired,
+        DOWNLOAD_TYPE downloadType, INSTALLATION_SCOPE installationScope)
+    {
+        FxRDialogBox downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
+        var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+            ? "Check your computer to finish installing Firefox"
+            : "Check your computer to finish updating Firefox";
+
+        downloadProgressDialog.Show(dialogTitle, "", FirefoxIcon
+            , new FxRButton.ButtonConfig("OK"
+                , () => { NotifyInstallationComplete(); }
+                , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 //                    , new FxRButton.ButtonConfig("Cancel",
-//                        () => { downloadCancelled = true; }, FxRConfiguration
-//                            .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
-                var progress =
-                    new Progress<float>(zeroToOne =>
-                    {
-                        if (downloadProgressDialog == null) return;
-                        if (!Mathf.Approximately(zeroToOne, 1f))
-                        {
-                            downloadProgressDialog.ShowProgress(zeroToOne);
-                        }
+//                        () => { downloadCancelled = true; }, FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+        var progress =
+            new Progress<float>(zeroToOne =>
+            {
+                if (downloadProgressDialog == null) return;
+//                        if (!Mathf.Approximately(zeroToOne, 1f))
+//                        {
+//                            downloadProgressDialog.ShowProgress(zeroToOne);
+//                        }
 //                        else
 //                        {
 //                            downloadProgressDialog.Close();
@@ -150,38 +165,60 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 //                            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
 //                                "Please remove your headset to continue the Desktop Firefox install process",
 //                                FirefoxIcon,
-//                                new FxRButton.ButtonConfig("OK", null, FxRConfiguration
-//                                    .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+//                                new FxRButton.ButtonConfig("OK", null, FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 //                        }
+                Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
+            });
+        DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
+        {
+            if (wasCancelled)
+            {
+                Debug.Log("Firefox Desktop download cancelled");
+                NotifyInstallationComplete();
+                return;
+            }
 
-                        Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
-                    });
-                DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
+            if (wasSuccessful)
+            {
+                if (downloadProgressDialog != null)
                 {
-                    if (downloadProgressDialog != null)
-                    {
-                        downloadProgressDialog.Close();
-                    }
-                    if (wasCancelled)
-                    {
-                        Debug.Log("Firefox Desktop download cancelled");
-                        OnInstallationProcessComplete?.Invoke();
-                        return;
-                    }
+                    downloadProgressDialog.UpdateText("Firefox is up to date!", "");
+                }
+            }
+            else
+            {
+                if (downloadProgressDialog != null)
+                {
+                    downloadProgressDialog.Close();
+                }
 
-                    var installationResultDialog = FxRDialogController.Instance.CreateDialog();
-                    string installationResultTitle = wasSuccessful
-                        ? "Firefox on your computer is up to date!"
-                        : "There was an issue installing Firefox on your computer.";
-                    installationResultDialog.Show(installationResultTitle, "", FirefoxIcon,
-                        new FxRButton.ButtonConfig("OK",
-                            () => { OnInstallationProcessComplete?.Invoke(); }, FxRConfiguration
-                                .Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
-                }, downloadType, installationScope);
-            },
-            FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
-
-        FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
+                var installationErrorDialog = FxRDialogController.Instance.CreateDialog();
+                string installationErrorTitle =
+                    installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                        ? "There was an issue installing Firefox on your computer."
+                        : "There was an issue updating Firefox on your computer.";
+                var okButton = new FxRButton.ButtonConfig("OK",
+                    () => { NotifyInstallationComplete(); },
+                    FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
+                if (retryCount > 0)
+                {
+                    installationErrorDialog.Show(installationErrorTitle, error, FirefoxIcon, okButton);
+                }
+                else
+                {
+                    var retryButton = new FxRButton.ButtonConfig("Retry",
+                        () =>
+                        {
+                            retryCount++;
+                            ContinueDesktopFirefoxInstall(installationTypeRequired, downloadType,
+                                installationScope);
+                        },
+                        FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
+                    installationErrorDialog.Show(installationErrorTitle, error, FirefoxIcon, retryButton,
+                        okButton);
+                }
+            }
+        }, downloadType, installationScope);
     }
 
     private static readonly string RELEASE_AND_BETA_REGISTRY_PATH = @"SOFTWARE\Mozilla\Mozilla Firefox";
@@ -389,7 +426,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             // This should never happen for en-US version, but just in case...
             if (lastDownloadResponseCode == 404)
             {
-                successCallback?.Invoke(false, "Received 404 when attempting to download", false);
+                Debug.LogError("Received a 404 attempting to download.");
+                successCallback?.Invoke(false, "Download failed.", false);
             }
         }
     }
@@ -417,7 +455,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         {
             if (lastDownloadResponseCode != 404)
             {
-                successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error), webRequest.error, false);
+                successCallback?.Invoke(string.IsNullOrEmpty(webRequest.error),
+                    !string.IsNullOrEmpty(webRequest.error) ? "Download failed." : "", false);
             }
         }
     }
@@ -463,7 +502,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 catch (Exception e)
                 {
                     Debug.LogException(e, this);
-                    successCallback?.Invoke(false, e.Message, false);
+                    successCallback?.Invoke(false, "Installation failed.", false);
                 }
             }
             else if (wasCancelled)
@@ -485,7 +524,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
 
-        successCallback?.Invoke(installProcess.ExitCode == 0, "", false);
+        successCallback?.Invoke(installProcess.ExitCode == 0,
+            installProcess.ExitCode != 0 ? "Installation failed." : "", false);
     }
 
     private static string GetInstalledVersion(RegistryKey scope, string path)
@@ -529,5 +569,17 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
             return CultureInfo.CurrentCulture.Name;
         }
+    }
+
+    private bool installationCompleteNotificationSent;
+
+    private void NotifyInstallationComplete()
+    {
+        if (!installationCompleteNotificationSent)
+        {
+            OnInstallationProcessComplete?.Invoke();
+        }
+
+        installationCompleteNotificationSent = true;
     }
 }
