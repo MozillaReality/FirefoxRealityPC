@@ -1,0 +1,812 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src chrome:; img-src chrome:" />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>Licenses</title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css">
+    <link rel="stylesheet" href="chrome://global/skin/aboutLicense.css" type="text/css"/>
+  </head>
+
+  <body id="lic-info">
+  <div class="license-header">
+    <div>
+      <h1><a id="top"></a>Licenses</h1>
+    </div>
+  </div>
+  <div>
+    <p>Most of the source code of this product is available under the
+       <a href="about:license#mpl">Mozilla Public License 2.0</a> (MPL).
+       The MPL has a
+       <a href="https://www.mozilla.org/MPL/2.0/FAQ/">FAQ</a> to help
+       you understand it. The remainder of the software which is not
+       under the MPL is available under one of a variety of other
+       free and open source licenses. Those that require reproduction
+       of the license text in the distribution are given below.
+       (Note: your copy of this product may not contain code covered by one
+       or more of the licenses listed here, depending on the exact product
+       and version you choose.)
+    </p>
+
+    <ul>
+      <li><a href="#mpl">Mozilla Public License 2.0</a>
+      <br><br>
+      </li>
+      <li><a href="#steamvr-unity">SteamVR Unity Plugin License</a></li>
+      <li><a href="#vrime2-unity">VRIME2 for Unity License</a></li>
+      <li><a href="#openvr">OpenVR License</a></li>
+      <li><a href="#textmeshpro">Textmesh Pro License</a></li>
+    </ul>
+
+<br>
+
+    <ul>
+      <li><a href="#other-notices">Other Required Notices</a>
+      <li><a href="#optional-notices">Optional Notices</a>
+      <li><a href="#proprietary-notices">Proprietary Operating System Components</a>
+    </ul>
+
+    </div>
+
+    <hr>
+
+  <h1 id="mpl">Mozilla Public License 2.0</h1>
+
+  <h2 id="definitions">1. Definitions</h2>
+
+  <dl>
+    <dt>1.1. "Contributor"</dt>
+
+    <dd>
+      <p>means each individual or legal entity that creates, contributes to
+      the creation of, or owns Covered Software.</p>
+    </dd>
+
+    <dt>1.2. "Contributor Version"</dt>
+
+    <dd>
+      <p>means the combination of the Contributions of others (if any) used
+      by a Contributor and that particular Contributor's Contribution.</p>
+    </dd>
+
+    <dt>1.3. "Contribution"</dt>
+
+    <dd>
+      <p>means Covered Software of a particular Contributor.</p>
+    </dd>
+
+    <dt>1.4. "Covered Software"</dt>
+
+    <dd>
+      <p>means Source Code Form to which the initial Contributor has attached
+      the notice in Exhibit A, the Executable Form of such Source Code Form,
+      and Modifications of such Source Code Form, in each case including
+      portions thereof.</p>
+    </dd>
+
+    <dt>1.5. "Incompatible With Secondary Licenses"</dt>
+
+    <dd>
+      <p>means</p>
+
+      <ol type="a">
+        <li>
+          <p>that the initial Contributor has attached the notice described
+          in Exhibit B to the Covered Software; or</p>
+        </li>
+
+        <li>
+          <p>that the Covered Software was made available under the terms of
+          version 1.1 or earlier of the License, but not also under the terms
+          of a Secondary License.</p>
+        </li>
+      </ol>
+    </dd>
+
+    <dt>1.6. "Executable Form"</dt>
+
+    <dd>
+      <p>means any form of the work other than Source Code Form.</p>
+    </dd>
+
+    <dt>1.7. "Larger Work"</dt>
+
+    <dd>
+      <p>means a work that combines Covered Software with other material, in
+      a separate file or files, that is not Covered Software.</p>
+    </dd>
+
+    <dt>1.8. "License"</dt>
+
+    <dd>
+      <p>means this document.</p>
+    </dd>
+
+    <dt>1.9. "Licensable"</dt>
+
+    <dd>
+      <p>means having the right to grant, to the maximum extent possible,
+      whether at the time of the initial grant or subsequently, any and all
+      of the rights conveyed by this License.</p>
+    </dd>
+
+    <dt>1.10. "Modifications"</dt>
+
+    <dd>
+      <p>means any of the following:</p>
+
+      <ol type="a">
+        <li>
+          <p>any file in Source Code Form that results from an addition to,
+          deletion from, or modification of the contents of Covered Software;
+          or</p>
+        </li>
+
+        <li>
+          <p>any new file in Source Code Form that contains any Covered
+          Software.</p>
+        </li>
+      </ol>
+    </dd>
+
+    <dt>1.11. "Patent Claims" of a Contributor</dt>
+
+    <dd>
+      <p>means any patent claim(s), including without limitation, method,
+      process, and apparatus claims, in any patent Licensable by such
+      Contributor that would be infringed, but for the grant of the License,
+      by the making, using, selling, offering for sale, having made, import,
+      or transfer of either its Contributions or its Contributor Version.</p>
+    </dd>
+
+    <dt>1.12. "Secondary License"</dt>
+
+    <dd>
+      <p>means either the GNU General Public License, Version 2.0, the GNU
+      Lesser General Public License, Version 2.1, the GNU Affero General
+      Public License, Version 3.0, or any later versions of those
+      licenses.</p>
+    </dd>
+
+    <dt>1.13. "Source Code Form"</dt>
+
+    <dd>
+      <p>means the form of the work preferred for making modifications.</p>
+    </dd>
+
+    <dt>1.14. "You" (or "Your")</dt>
+
+    <dd>
+      <p>means an individual or a legal entity exercising rights under this
+      License. For legal entities, "You" includes any entity that controls,
+      is controlled by, or is under common control with You. For purposes of
+      this definition, "control" means (a) the power, direct or indirect, to
+      cause the direction or management of such entity, whether by contract
+      or otherwise, or (b) ownership of more than fifty percent (50%) of the
+      outstanding shares or beneficial ownership of such entity.</p>
+    </dd>
+  </dl>
+
+  <h2 id="license-grants-and-conditions">2. License Grants and
+  Conditions</h2>
+
+  <h3 id="grants">2.1. Grants</h3>
+
+  <p>Each Contributor hereby grants You a world-wide, royalty-free,
+  non-exclusive license:</p>
+
+  <ol type="a">
+    <li>
+      <p>under intellectual property rights (other than patent or trademark)
+      Licensable by such Contributor to use, reproduce, make available,
+      modify, display, perform, distribute, and otherwise exploit its
+      Contributions, either on an unmodified basis, with Modifications, or as
+      part of a Larger Work; and</p>
+    </li>
+
+    <li>
+      <p>under Patent Claims of such Contributor to make, use, sell, offer
+      for sale, have made, import, and otherwise transfer either its
+      Contributions or its Contributor Version.</p>
+    </li>
+  </ol>
+
+  <h3 id="effective-date">2.2. Effective Date</h3>
+
+  <p>The licenses granted in Section 2.1 with respect to any Contribution
+  become effective for each Contribution on the date the Contributor first
+  distributes such Contribution.</p>
+
+  <h3 id="limitations-on-grant-scope">2.3. Limitations on Grant Scope</h3>
+
+  <p>The licenses granted in this Section 2 are the only rights granted under
+  this License. No additional rights or licenses will be implied from the
+  distribution or licensing of Covered Software under this License.
+  Notwithstanding Section 2.1(b) above, no patent license is granted by a
+  Contributor:</p>
+
+  <ol type="a">
+    <li>
+      <p>for any code that a Contributor has removed from Covered Software;
+      or</p>
+    </li>
+
+    <li>
+      <p>for infringements caused by: (i) Your and any other third party's
+      modifications of Covered Software, or (ii) the combination of its
+      Contributions with other software (except as part of its Contributor
+      Version); or</p>
+    </li>
+
+    <li>
+      <p>under Patent Claims infringed by Covered Software in the absence of
+      its Contributions.</p>
+    </li>
+  </ol>
+
+  <p>This License does not grant any rights in the trademarks, service marks,
+  or logos of any Contributor (except as may be necessary to comply with the
+  notice requirements in Section 3.4).</p>
+
+  <h3 id="subsequent-licenses">2.4. Subsequent Licenses</h3>
+
+  <p>No Contributor makes additional grants as a result of Your choice to
+  distribute the Covered Software under a subsequent version of this License
+  (see Section 10.2) or under the terms of a Secondary License (if permitted
+  under the terms of Section 3.3).</p>
+
+  <h3 id="representation">2.5. Representation</h3>
+
+  <p>Each Contributor represents that the Contributor believes its
+  Contributions are its original creation(s) or it has sufficient rights to
+  grant the rights to its Contributions conveyed by this License.</p>
+
+  <h3 id="fair-use">2.6. Fair Use</h3>
+
+  <p>This License is not intended to limit any rights You have under
+  applicable copyright doctrines of fair use, fair dealing, or other
+  equivalents.</p>
+
+  <h3 id="conditions">2.7. Conditions</h3>
+
+  <p>Sections 3.1, 3.2, 3.3, and 3.4 are conditions of the licenses granted
+  in Section 2.1.</p>
+
+  <h2 id="responsibilities">3. Responsibilities</h2>
+
+  <h3 id="distribution-of-source-form">3.1. Distribution of Source Form</h3>
+
+  <p>All distribution of Covered Software in Source Code Form, including any
+  Modifications that You create or to which You contribute, must be under the
+  terms of this License. You must inform recipients that the Source Code Form
+  of the Covered Software is governed by the terms of this License, and how
+  they can obtain a copy of this License. You may not attempt to alter or
+  restrict the recipients' rights in the Source Code Form.</p>
+
+  <h3 id="distribution-of-executable-form">3.2. Distribution of Executable
+  Form</h3>
+
+  <p>If You distribute Covered Software in Executable Form then:</p>
+
+  <ol type="a">
+    <li>
+      <p>such Covered Software must also be made available in Source Code
+      Form, as described in Section 3.1, and You must inform recipients of
+      the Executable Form how they can obtain a copy of such Source Code Form
+      by reasonable means in a timely manner, at a charge no more than the
+      cost of distribution to the recipient; and</p>
+    </li>
+
+    <li>
+      <p>You may distribute such Executable Form under the terms of this
+      License, or sublicense it under different terms, provided that the
+      license for the Executable Form does not attempt to limit or alter the
+      recipients' rights in the Source Code Form under this License.</p>
+    </li>
+  </ol>
+
+  <h3 id="distribution-of-a-larger-work">3.3. Distribution of a Larger
+  Work</h3>
+
+  <p>You may create and distribute a Larger Work under terms of Your choice,
+  provided that You also comply with the requirements of this License for the
+  Covered Software. If the Larger Work is a combination of Covered Software
+  with a work governed by one or more Secondary Licenses, and the Covered
+  Software is not Incompatible With Secondary Licenses, this License permits
+  You to additionally distribute such Covered Software under the terms of
+  such Secondary License(s), so that the recipient of the Larger Work may, at
+  their option, further distribute the Covered Software under the terms of
+  either this License or such Secondary License(s).</p>
+
+  <h3 id="notices">3.4. Notices</h3>
+
+  <p>You may not remove or alter the substance of any license notices
+  (including copyright notices, patent notices, disclaimers of warranty, or
+  limitations of liability) contained within the Source Code Form of the
+  Covered Software, except that You may alter any license notices to the
+  extent required to remedy known factual inaccuracies.</p>
+
+  <h3 id="application-of-additional-terms">3.5. Application of Additional
+  Terms</h3>
+
+  <p>You may choose to offer, and to charge a fee for, warranty, support,
+  indemnity or liability obligations to one or more recipients of Covered
+  Software. However, You may do so only on Your own behalf, and not on behalf
+  of any Contributor. You must make it absolutely clear that any such
+  warranty, support, indemnity, or liability obligation is offered by You
+  alone, and You hereby agree to indemnify every Contributor for any
+  liability incurred by such Contributor as a result of warranty, support,
+  indemnity or liability terms You offer. You may include additional
+  disclaimers of warranty and limitations of liability specific to any
+  jurisdiction.</p>
+
+  <h2 id="inability-to-comply-due-to-statute-or-regulation">4. Inability to
+  Comply Due to Statute or Regulation</h2>
+
+  <p>If it is impossible for You to comply with any of the terms of this
+  License with respect to some or all of the Covered Software due to statute,
+  judicial order, or regulation then You must: (a) comply with the terms of
+  this License to the maximum extent possible; and (b) describe the
+  limitations and the code they affect. Such description must be placed in a
+  text file included with all distributions of the Covered Software under
+  this License. Except to the extent prohibited by statute or regulation,
+  such description must be sufficiently detailed for a recipient of ordinary
+  skill to be able to understand it.</p>
+
+  <h2 id="termination">5. Termination</h2>
+
+  <h3>5.1.</h3>
+
+  <p>The rights granted under this License will terminate automatically
+  if You fail to comply with any of its terms. However, if You become
+  compliant, then the rights granted under this License from a particular
+  Contributor are reinstated (a) provisionally, unless and until such
+  Contributor explicitly and finally terminates Your grants, and (b) on an
+  ongoing basis, if such Contributor fails to notify You of the
+  non-compliance by some reasonable means prior to 60 days after You have
+  come back into compliance. Moreover, Your grants from a particular
+  Contributor are reinstated on an ongoing basis if such Contributor notifies
+  You of the non-compliance by some reasonable means, this is the first time
+  You have received notice of non-compliance with this License from such
+  Contributor, and You become compliant prior to 30 days after Your receipt
+  of the notice.</p>
+
+  <h3>5.2.</h3>
+
+  <p>If You initiate litigation against any entity by asserting a patent
+  infringement claim (excluding declaratory judgment actions, counter-claims,
+  and cross-claims) alleging that a Contributor Version directly or
+  indirectly infringes any patent, then the rights granted to You by any and
+  all Contributors for the Covered Software under Section 2.1 of this License
+  shall terminate.</p>
+
+  <h3>5.3.</h3>
+
+  <p>In the event of termination under Sections 5.1 or 5.2 above, all
+  end user license agreements (excluding distributors and resellers) which
+  have been validly granted by You or Your distributors under this License
+  prior to termination shall survive termination.</p>
+
+  <h2 id="disclaimer-of-warranty">6. Disclaimer of Warranty</h2>
+
+  <p><em>Covered Software is provided under this License on an "as is" basis,
+  without warranty of any kind, either expressed, implied, or statutory,
+  including, without limitation, warranties that the Covered Software is free
+  of defects, merchantable, fit for a particular purpose or non-infringing.
+  The entire risk as to the quality and performance of the Covered Software
+  is with You. Should any Covered Software prove defective in any respect,
+  You (not any Contributor) assume the cost of any necessary servicing,
+  repair, or correction. This disclaimer of warranty constitutes an essential
+  part of this License. No use of any Covered Software is authorized under
+  this License except under this disclaimer.</em></p>
+
+  <h2 id="limitation-of-liability">7. Limitation of Liability</h2>
+
+  <p><em>Under no circumstances and under no legal theory, whether tort
+  (including negligence), contract, or otherwise, shall any Contributor, or
+  anyone who distributes Covered Software as permitted above, be liable to
+  You for any direct, indirect, special, incidental, or consequential damages
+  of any character including, without limitation, damages for lost profits,
+  loss of goodwill, work stoppage, computer failure or malfunction, or any
+  and all other commercial damages or losses, even if such party shall have
+  been informed of the possibility of such damages. This limitation of
+  liability shall not apply to liability for death or personal injury
+  resulting from such party's negligence to the extent applicable law
+  prohibits such limitation. Some jurisdictions do not allow the exclusion or
+  limitation of incidental or consequential damages, so this exclusion and
+  limitation may not apply to You.</em></p>
+
+  <h2 id="litigation">8. Litigation</h2>
+
+  <p>Any litigation relating to this License may be brought only in the
+  courts of a jurisdiction where the defendant maintains its principal place
+  of business and such litigation shall be governed by laws of that
+  jurisdiction, without reference to its conflict-of-law provisions. Nothing
+  in this Section shall prevent a party's ability to bring cross-claims or
+  counter-claims.</p>
+
+  <h2 id="miscellaneous">9. Miscellaneous</h2>
+
+  <p>This License represents the complete agreement concerning the subject
+  matter hereof. If any provision of this License is held to be
+  unenforceable, such provision shall be reformed only to the extent
+  necessary to make it enforceable. Any law or regulation which provides that
+  the language of a contract shall be construed against the drafter shall not
+  be used to construe this License against a Contributor.</p>
+
+  <h2 id="versions-of-the-license">10. Versions of the License</h2>
+
+  <h3 id="new-versions">10.1. New Versions</h3>
+
+  <p>Mozilla Foundation is the license steward. Except as provided in Section
+  10.3, no one other than the license steward has the right to modify or
+  publish new versions of this License. Each version will be given a
+  distinguishing version number.</p>
+
+  <h3 id="effect-of-new-versions">10.2. Effect of New Versions</h3>
+
+  <p>You may distribute the Covered Software under the terms of the version
+  of the License under which You originally received the Covered Software, or
+  under the terms of any subsequent version published by the license
+  steward.</p>
+
+  <h3 id="modified-versions">10.3. Modified Versions</h3>
+
+  <p>If you create software not governed by this License, and you want to
+  create a new license for such software, you may create and use a modified
+  version of this License if you rename the license and remove any references
+  to the name of the license steward (except to note that such modified
+  license differs from this License).</p>
+
+  <h3 id=
+  "distributing-source-code-form-that-is-incompatible-with-secondary-licenses">
+  10.4. Distributing Source Code Form that is Incompatible With Secondary
+  Licenses</h3>
+
+  <p>If You choose to distribute Source Code Form that is Incompatible With
+  Secondary Licenses under the terms of this version of the License, the
+  notice described in Exhibit B of this License must be attached.</p>
+
+  <h2 id="exhibit-a---source-code-form-license-notice">Exhibit A - Source
+  Code Form License Notice</h2>
+
+  <blockquote>
+    <p>This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.</p>
+  </blockquote>
+
+  <p>If it is not possible or desirable to put the notice in a particular
+  file, then You may include the notice in a location (such as a LICENSE file
+  in a relevant directory) where a recipient would be likely to look for such
+  a notice.</p>
+
+  <p>You may add additional accurate notices of copyright ownership.</p>
+
+  <h2 id="exhibit-b---incompatible-with-secondary-licenses-notice">Exhibit B
+  - "Incompatible With Secondary Licenses" Notice</h2>
+
+  <blockquote>
+    <p>This Source Code Form is "Incompatible With Secondary Licenses", as
+    defined by the Mozilla Public License, v. 2.0.</p>
+  </blockquote>
+
+
+    <hr>
+
+
+<hr>
+
+    <h1><a id="steamvr-unity"></a>SteamVR Unity Plugin License</h1>
+
+    <p>This license applies to the files in the directories 
+    <code>Source/FirefoxRealityUnity/Assets/SteamVR</code> and 
+    <code>Source/FirefoxRealityUnity/Assets/SteamVR_Input</code>.</p>
+
+<pre>
+Copyright (c) Valve Corporation
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation andor
+other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre>
+
+
+    <hr>
+
+    <h1><a id="vrime2-unity"></a>VRIME2 for Unity License</h1>
+
+    <p>This license applies to files in the directory
+    <code>Source/FirefoxRealityUnity/Assets/VRIME2</code>.</p>
+
+<pre>
+Copyright 2016-2019, HTC Corporation. All rights reserved.
+
+The works ("Work") herein refer to the software developed or owned by 
+HTC Corporation ("HTC") under the terms of the license. The information 
+contained in the Work is the exclusive property of HTC. HTC grants the 
+legal user the right to use the Work within the scope of the legitimate 
+development of software. No further right is granted under this license, 
+including but not limited to, distribution, reproduction and 
+modification. Any other usage of the Works shall be subject to the 
+written consent of HTC.
+
+The use of the Work is permitted provided that the following conditions 
+are met:
+    * The Work is used in a source code form must retain the above 
+      copyright notice, this list of conditions and the following
+      disclaimer.
+    * The Work is used in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in
+      the documentation and/or other materials provided with the
+      distributions.
+    * Neither HTC nor the names of its contributors may be used to
+      endorse or promote products derived from this software without
+      specific prior written permission.
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR 
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE WORK OR THE USE OR OTHER 
+DEALINGS IN THE WORK.
+</pre>
+
+
+    <hr>
+
+    <h1><a id="openvr"></a>OpenVR License</h1>
+
+    <p>This license applies to certain files in the directory
+    <code>Source/FirefoxRealityUnityPlugin/depends/windows/include</code>.</p>
+<pre>
+Copyright (c) 2015, Valve Corporation
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre>
+
+    <hr>
+
+    <h1><a id="textmeshpro"></a>Textmesh Pro License</h1>
+
+    <p>This license applies to certain files in the directory
+    <code>Source/FirefoxRealityUnity/Assets/TextMesh Pro</code>.</p>
+<pre>
+TextMesh Pro copyright © 2014-2019 Unity Technologies ApS
+
+Licensed under the Unity Companion License for Unity-dependent projects--see
+Unity Companion License.
+
+Unless expressly provided otherwise, the Software under this license is made
+available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. Please review the license for details on these and other terms and
+conditions.
+
+Unity Companion License ("License")
+
+v1.2
+
+Unity Technologies ApS (“Unity”) grants to you a worldwide, non-exclusive,
+no-charge, and royalty-free copyright license to reproduce, prepare derivative
+works of, publicly display, publicly perform, and distribute the software that
+accompanies this License (“Software”), subject to the following terms and
+conditions:
+
+1. Unity Companion Use Only. Exercise of the license granted herein is limited
+to exercise for the creation, use, and/or distribution of applications,
+software, or other content pursuant to a valid Unity content authoring and
+rendering engine software license (“Engine License”). That means while not
+limited to exercise in the software licensed under the Engine License, exercise
+may not be for any purpose other than the creation, use, and/or distribution of
+Engine License-dependent applications, software, or other content. No other
+exercise of the license granted herein is permitted, and in no event may the
+Software be used for competitive analysis or to develop a competing product or
+service.
+
+2. No Modification of Engine License. Neither this License nor any exercise of
+the license granted herein modifies the Engine License in any way.
+
+3. Ownership; Derivative Works.
+
+3.1 You own your content. In this License, “derivative works” means derivatives
+of the Software itself--works derived only from the Software by you under this
+License (for example, modifying the code of the Software itself to improve its
+efficacy); “derivative works” of the Software do not include, for example,
+games, apps, or content that you create with the Software. You keep all right,
+title, and interest to your own content.
+
+3.2 Unity owns its content. While you keep all right, title, and interest to
+your own content per the above, as between Unity and you, Unity will own all
+right, title, and interest to all intellectual property rights (including
+patent, trademark, and copyright) in the Software and derivative works of the
+Software, and you hereby assign and agree to assign all such rights in those
+derivative works to Unity. Should assignment be invalid for any reason, you
+grant to Unity an irrevocable, perpetual, worldwide, non-exclusive, no-charge,
+and royalty-free license (with the right to grant sublicenses) under those
+intellectual property rights to those derivative works. You also agree to waive
+or refrain from asserting any author’s right, moral rights, or like rights to
+the extent necessary to permit exploitation as contemplated under this License.
+
+3.3 Your right to use derivative works. You will always have the right to use
+derivative works of the Software you create, consonant with this License.
+
+4. Trademarks. You are not granted any right or license under this License to
+use any trademarks, service marks, trade names, products names, or branding of
+Unity or its affiliates (“Trademarks”). Descriptive uses of Trademarks are
+permitted; see, for example, Unity’s Branding Usage Guidelines at
+https://unity3d.com/public-relations/brand.
+
+5. Notices & Third-Party Rights. This License, including the copyright notice
+associated with the Software, must be provided in all substantial portions of
+the Software and derivative works thereof (or, if that is impracticable, in any
+other location where such notices are customarily placed). Further, if the
+Software is accompanied by a Unity “third-party notices” or similar file, you
+acknowledge and agree that software identified in that file is governed by those
+separate license terms.
+
+6. DISCLAIMER, LIMITATION OF LIABILITY. THE SOFTWARE AND ANY DERIVATIVE WORKS
+THEREOF IS PROVIDED ON AN "AS IS" BASIS, AND IS PROVIDED WITHOUT WARRANTY OF ANY
+KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING ANY WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND/OR NONINFRINGEMENT. IN NO EVENT SHALL ANY
+COPYRIGHT HOLDER OR AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES (WHETHER DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL, INCLUDING
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE, DATA, OR PROFITS, AND
+BUSINESS INTERRUPTION), OR OTHER LIABILITY WHATSOEVER, WHETHER IN AN ACTION OF
+CONTRACT, TORT, OR OTHERWISE, ARISING FROM OR OUT OF, OR IN CONNECTION WITH, THE
+SOFTWARE OR ANY DERIVATIVE WORKS THEREOF OR THE USE OF OR OTHER DEALINGS IN
+SAME, EVEN WHERE ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+7. USE IS ACCEPTANCE and License Versions. Your access to and use of the
+Software constitutes your acceptance of this License and its terms and
+conditions. This License may be modified or updated; upon any such modification
+or update, you will comply with the terms of the updated License for any use of
+any of the Software under the updated License.
+
+8. Use in Compliance with Law and Termination. Your exercise of the license
+granted herein will at all times be in compliance with applicable law and will
+not infringe any proprietary rights (including intellectual property rights);
+this License will terminate immediately (i) on any breach by you of this
+License; and (ii) if you commence any form of patent litigation, including a
+cross-claim or counterclaim, against anyone wherein you allege that the Software
+constitutes direct or secondary/indirect patent infringement.
+
+9. Severability. If any provision of this License is held to be unenforceable or
+invalid, that provision will be enforced to the maximum extent possible and the
+other provisions will remain in full force and effect.
+
+10. Governing Law and Venue. This License is governed by and construed in
+accordance with the laws of Denmark, except for its conflict of laws rules; the
+United Nations Convention on Contracts for the International Sale of Goods will
+not apply. If you reside (or your principal place of business is) within the
+United States, you and Unity agree to submit to the personal and exclusive
+jurisdiction of and venue in the state and federal courts located in San
+Francisco County, California concerning any dispute arising out of this License
+(“Dispute”). If you reside (or your principal place of business is) outside the
+United States, you and Unity agree to submit to the personal and exclusive
+jurisdiction of and venue in the courts located in Copenhagen, Denmark
+concerning any Dispute.
+</pre>
+
+    <hr>
+
+    <h1><a id="other-notices"></a>Other Required Notices</h1>
+
+    <!-- <ul>
+      <li></li>
+    </ul> -->
+
+
+    <hr>
+
+    <h1><a id="optional-notices"></a>Optional Notices</h1>
+
+    <!-- <p>Some permissive software licenses request but do not require an
+    acknowledgement of the use of their software. We are very grateful
+    to the following people and projects for their contributions to
+    this product:</p>
+
+    <ul>
+      <li></li>
+    </ul> -->
+
+
+
+    <hr>
+
+    <h1><a id="proprietary-notices"></a>Proprietary Operating System Components</h1>
+
+    <p>Under some circumstances, under our
+    <a href="https://www.mozilla.org/foundation/licensing/binary-components/">binary components policy</a>,
+    Mozilla may decide to include additional
+    operating system vendor code with the installer of our products designed
+    for that vendor's proprietary platform, to make our products work well on
+    that specific operating system. The following license statements
+    apply to such inclusions.</p>
+
+    <h2><a id="directx"></a>Microsoft Windows: Terms for 'Microsoft Distributable Code'</h2>
+
+    <p>These terms apply to the following files;
+    they are referred to below as "Distributable Code":
+      <ul>
+        <li><code>msvc*.dll</code> (C and C++ runtime libraries)</li>
+      </ul>
+    </p>
+
+<pre>
+Copyright (c) Microsoft Corporation.
+
+The Distributable Code may be used and distributed only if you comply with the
+following terms:
+
+(i)   You may use, copy, and distribute the Distributable Code only as part of
+      this product;
+(ii)  You may not use the Distributable Code on a platform other than Windows;
+(iii) You may not alter any copyright, trademark or patent notice in the
+      Distributable Code;
+(iv)  You may not modify or distribute the source code of any Distributable
+      Code so that any part of the source code becomes subject to the MPL or
+      any other copyleft license;
+(v)   You must comply with any technical limitations in the Distributable Code
+      that only allow you to use it in certain ways; and
+(vi)  You must comply with all domestic and international export laws and
+      regulations that apply to the Distributable Code.
+</pre>
+
+
+      <hr>
+
+      <p><a href="about:license#top">Return to top</a>.</p>
+    </div>
+  </body>
+</html>
