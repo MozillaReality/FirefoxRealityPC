@@ -17,6 +17,9 @@
 #include "IUnityGraphicsD3D11.h"
 #include "fxr_log.h"
 
+// This is copied from {%Gecko_SRC%}/moz_external_vr.h
+#include "moz_external_vr.h"
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -222,12 +225,12 @@ DWORD FxRWindowDX11::pollForVREvent()
 			uint32_t eventData2;
 			m_pfnWaitForVREvent(windowId, eventType, eventData1, eventData2);
       
-			if (eventType == 2)
+			if (eventType == (uint32_t)mozilla::gfx::VRFxEventType::SHUTDOWN)
 			{
 				fxrCloseAllWindows();
 				break;
 			}
-			if (eventType != 0)
+			if (eventType != (uint32_t)mozilla::gfx::VRFxEventType::NONE)
 			{
 				m_pfnVREventCallback(m_uid, eventType, eventData1, eventData2);
 			}

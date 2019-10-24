@@ -24,6 +24,18 @@ public class FxRWindow : FxRPointableSurface
 
     private TextureFormat _textureFormat;
 
+    public Vector2Int PixelSize
+    {
+        get => videoSize;
+        private set { videoSize = value; }
+    }
+
+    public TextureFormat TextureFormat
+    {
+        get => _textureFormat;
+        private set { _textureFormat = value; }
+    }
+
     public static FxRWindow FindWindowWithUID(int uid)
     {
         Debug.Log("FxRWindow.FindWindowWithUID(uid:" + uid + ")");
