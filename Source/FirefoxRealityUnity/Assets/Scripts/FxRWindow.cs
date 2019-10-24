@@ -24,6 +24,18 @@ public class FxRWindow : FxRPointableSurface
 
     private TextureFormat _textureFormat;
 
+    public Vector2Int PixelSize
+    {
+        get => videoSize;
+        private set { videoSize = value; }
+    }
+
+    public TextureFormat TextureFormat
+    {
+        get => _textureFormat;
+        private set { _textureFormat = value; }
+    }
+
     public static FxRWindow FindWindowWithUID(int uid)
     {
         Debug.Log("FxRWindow.FindWindowWithUID(uid:" + uid + ")");
@@ -89,7 +101,7 @@ public class FxRWindow : FxRPointableSurface
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
     }
-    
+
     public void Close()
     {
         Debug.Log("FxRWindow.OnApplicationQuit()");
@@ -103,7 +115,8 @@ public class FxRWindow : FxRPointableSurface
     public void RequestSizeMultiple(float sizeMultiple)
     {
         Width = DefaultWidth * sizeMultiple;
-        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple), Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
+        Resize(Mathf.FloorToInt(DefaultSizeToRequest.x * sizeMultiple),
+            Mathf.FloorToInt(DefaultSizeToRequest.y * sizeMultiple));
     }
 
     public bool Resize(int widthPixels, int heightPixels)
@@ -122,7 +135,8 @@ public class FxRWindow : FxRPointableSurface
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
 
-        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height, 0, flipX, flipY);
+        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
+            0, flipX, flipY);
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
         _videoMeshGO.transform.localRotation = Quaternion.identity;
@@ -133,12 +147,14 @@ public class FxRWindow : FxRPointableSurface
         Height = (Width / widthPixels) * heightPixels;
         videoSize = new Vector2Int(widthPixels, heightPixels);
         var oldTexture = _videoTexture;
-        _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
+        _videoTexture =
+            CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
 
-        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width, Height, flipX, flipY);
+        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width,
+            Height, flipX, flipY);
     }
-    
+
     // Update is called once per frame
     void Update()
     {

@@ -243,17 +243,24 @@ public class FxRPlugin
         FxRPlugin_pinvoke.fxrWindowPointerEvent(windowIndex, (int) eventID, windowX, windowY);
     }
 
+    // It needs to follow the defining of VRFxEventType at {GECKO_SRC}/moz_external_vr.h
     public enum FxREventType
     {
         None = 0,
         IME = 1,
-        Total = 2
+        Shutdown = 2,
+        Fullscreen = 3,
+        Total = 4
     };
 
-    public enum FxRIMEState
+    // It needs to follow the defining of VRFxEventState at {GECKO_SRC}/moz_external_vr.h
+    public enum FxREventState
     {
         Blur = 0,
-        Focus = 1
+        Focus = 1,
+        Fullscreen_Enter = 2,
+        Fullscreen_Exit = 3,
+        Total = 4
     };
 
     public bool fxrCloseWindow(int windowIndex)
