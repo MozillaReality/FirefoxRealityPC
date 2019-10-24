@@ -1,9 +1,7 @@
 ﻿#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using AOT;
 using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
@@ -38,7 +36,7 @@ public class FxRController : MonoBehaviour
     public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
 
     public static BrowsingModeChanged OnBrowsingModeChanged;
-    
+
     public static FXR_BROWSING_MODE CurrentBrowsingMode
     {
         get => currentBrowsingMode;
@@ -160,10 +158,14 @@ public class FxRController : MonoBehaviour
 
     private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
     {
+        HandleFullScreenBegin(pixelwidth, pixelheight, format, (FxRVideoProjectionMode.PROJECTION_MODE) projection);
+    }
+
+    private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format,
+        FxRVideoProjectionMode.PROJECTION_MODE projectionMode)
+    {
         Debug.Log("Received Full Screen Begin from Plugin");
-        FxRVideoProjectionMode.PROJECTION_MODE projectionMode =
-            (FxRVideoProjectionMode.PROJECTION_MODE) projection;
-        
+
         if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode, _hackKeepWindowIndex))
         {
             CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_FULLSCREEN_VIDEO;
@@ -190,7 +192,6 @@ public class FxRController : MonoBehaviour
             window.RecreateVideoTexture();
         }
     }
-
 
     void OnDisable()
     {
@@ -267,6 +268,53 @@ public class FxRController : MonoBehaviour
         }
 
         IMEStateChanged = false;
+        
+        if (FullScreenStateChanged)
+        {
+            if (lastFullScreenState == FxRPlugin.FxREventState.Fullscreen_Enter)
+            {
+                FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+                if (fxrwindows.Length > 0)
+                {
+                    // TODO: Eventually, the pixel size, format, and video projection should come from browser. For now, we'll grab it from the window
+                    var window = fxrwindows[0];
+                    
+                    int formatNative;
+                    switch (window.TextureFormat)
+                    {
+                        case TextureFormat.RGBA32:
+                            formatNative = 1;
+                            break;
+                        case TextureFormat.BGRA32:
+                            formatNative = 2;
+                            break;
+                        case TextureFormat.ARGB32:
+                            formatNative = 3;
+                            break;
+                        case TextureFormat.RGB24:
+                            formatNative = 5;;
+                            break;
+                        case TextureFormat.RGBA4444:
+                            formatNative = 7;
+                            break;
+                        case TextureFormat.RGB565:
+                            formatNative = 9;
+                            break;
+                        default:
+                            formatNative = 0;
+                            break;
+                    }
+
+                    HandleFullScreenBegin(window.PixelSize.x, window.PixelSize.y, formatNative,
+                        FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D);
+                }
+            }
+            else if (lastFullScreenState == FxRPlugin.FxREventState.Fullscreen_Exit)
+            {
+                HandleFullScreenEnd();
+            }
+        }
+        FullScreenStateChanged = false;
     }
 
     public void ToggleKeyboard()
@@ -389,19 +437,27 @@ public class FxRController : MonoBehaviour
 
     FxRPlugin.FxREventState lastIMEState = FxRPlugin.FxREventState.Blur;
     private bool IMEStateChanged;
+    private bool FullScreenStateChanged;
+    FxRPlugin.FxREventState lastFullScreenState = FxRPlugin.FxREventState.Fullscreen_Exit;
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
     void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
     {
-        if ((FxRPlugin.FxREventType)eventType == FxRPlugin.FxREventType.IME)
+        var eventState = (FxRPlugin.FxREventState) eventData1;
+        if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.IME)
         {
-            FxRPlugin.FxREventState imeState = (FxRPlugin.FxREventState) eventData1;
+            FxRPlugin.FxREventState imeState = eventState;
 
             if (imeState != lastIMEState)
             {
                 IMEStateChanged = true;
                 lastIMEState = imeState;
             }
+        }
+        else if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.Fullscreen)
+        {
+            FullScreenStateChanged = true;
+            lastFullScreenState = eventState;
         }
     }
 
