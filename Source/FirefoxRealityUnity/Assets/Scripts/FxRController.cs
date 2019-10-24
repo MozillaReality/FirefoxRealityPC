@@ -468,14 +468,13 @@ public class FxRController : MonoBehaviour
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
     void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
     {
+        FxRPlugin.FxREventState eventState = (FxRPlugin.FxREventState) eventData1;
         if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.IME)
         {
-            FxRPlugin.FxREventState imeState = eventState;
-
-            if (imeState != lastIMEState)
+            if (eventState != lastIMEState)
             {
                 IMEStateChanged = true;
-                lastIMEState = imeState;
+                lastIMEState = eventState;
             }
         }
         else if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.Fullscreen)
