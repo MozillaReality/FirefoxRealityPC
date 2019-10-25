@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
+using Valve.VR.InteractionSystem;
 using VRIME2;
 
 public class FxRController : MonoBehaviour
@@ -25,6 +26,8 @@ public class FxRController : MonoBehaviour
     [SerializeField] private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
 
     [SerializeField] private FxRVideoController VideoController;
+
+    [SerializeField] private Transform EnvironmentOrigin;
 
     public enum FXR_BROWSING_MODE
     {
@@ -117,8 +120,14 @@ public class FxRController : MonoBehaviour
         }
     }
 
+    private Vector3 initialBodyDirection;
+    private bool bodyDirectionInitialzed;
+    private int bodyDirectionChecks;
+    
     void OnEnable()
     {
+        initialBodyDirection = Player.instance.bodyDirectionGuess;
+
         Debug.Log("FxRController.OnEnable()");
 
         fxr_plugin = new FxRPlugin();
@@ -284,6 +293,18 @@ public class FxRController : MonoBehaviour
 
     void Update()
     {
+        if (!bodyDirectionInitialzed 
+            && !initialBodyDirection.Equals(Player.instance.bodyDirectionGuess))
+        {
+            bodyDirectionChecks++;
+            if (bodyDirectionChecks > 3)
+            {
+                EnvironmentOrigin.forward = Player.instance.bodyDirectionGuess;
+                EnvironmentOrigin.transform.position = Player.instance.feetPositionGuess;
+                bodyDirectionInitialzed = true;
+            }
+        }
+
         if (IMEStateChanged && lastIMEState == FxRPlugin.FxREventState.Focus && !VRIME_Manager.Ins.ShowState)
         {
             VRIME_Manager.Ins.ShowIME("");
@@ -294,7 +315,7 @@ public class FxRController : MonoBehaviour
         }
 
         IMEStateChanged = false;
-        
+
         if (FullScreenStateChanged)
         {
             if (lastFullScreenState == FxRPlugin.FxREventState.Fullscreen_Enter)
@@ -304,7 +325,7 @@ public class FxRController : MonoBehaviour
                 {
                     // TODO: Eventually, the pixel size, format, and video projection should come from browser. For now, we'll grab it from the window
                     var window = fxrwindows[0];
-                    
+
                     int formatNative;
                     switch (window.TextureFormat)
                     {
@@ -318,7 +339,8 @@ public class FxRController : MonoBehaviour
                             formatNative = 3;
                             break;
                         case TextureFormat.RGB24:
-                            formatNative = 5;;
+                            formatNative = 5;
+                            ;
                             break;
                         case TextureFormat.RGBA4444:
                             formatNative = 7;
@@ -340,6 +362,7 @@ public class FxRController : MonoBehaviour
                 HandleFullScreenEnd();
             }
         }
+
         FullScreenStateChanged = false;
     }
 

@@ -14,7 +14,7 @@ public class FxRVideoController : FxRPointableSurface
     [SerializeField] protected FxRStereoVideoRig Stereo180VideoRigPrefab;
     [SerializeField] protected GameObject HemispherePrefab;
 
-    [SerializeField] protected int LeftEyLayer;
+    [SerializeField] protected int LeftEyeLayer;
     [SerializeField] protected int RightEyeLayer;
 
     private Texture2D _videoTexture = null; // Texture object with the video image.
@@ -112,7 +112,7 @@ public class FxRVideoController : FxRPointableSurface
 
         _videoProjection = new GameObject("3DProjection");
         var leftEye = FxRTextureUtils.Create2DVideoSurface(_videoTexture, 1, 1, width, height, 0, false, true);
-        leftEye.layer = LeftEyLayer;
+        leftEye.layer = LeftEyeLayer;
         var leftEyeMaterial = leftEye.GetComponent<Renderer>().material;
         leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(.5f, 1f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
@@ -143,11 +143,11 @@ public class FxRVideoController : FxRPointableSurface
     {
         FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, Vector3.zero, Quaternion.identity, transform);
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
-//        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, 1f));
+        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(2f, .5f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
         ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
-//        rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, 1f));
+        rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(2f, .5f));
         rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
 
         _videoProjection = stereoVideoRig.gameObject;
@@ -158,11 +158,11 @@ public class FxRVideoController : FxRPointableSurface
     {
         FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, Vector3.zero, Quaternion.identity, transform);
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
-//        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, 1f));
+//        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(.5f, 1f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
         ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
-//        rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, 1f));
+//        rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(.5f, 1f));
         rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0.5f, 0f));
 
         _videoProjection = stereoVideoRig.gameObject;
@@ -175,11 +175,11 @@ public class FxRVideoController : FxRPointableSurface
         
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
         leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
-        leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
+        leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
 
         ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
         rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
-        rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
+        rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
         _videoProjection = stereoVideoRig.gameObject;
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
@@ -256,8 +256,7 @@ public class FxRVideoController : FxRPointableSurface
         
         _videoProjection.transform.SetParent(transform);
         _videoProjection.transform.localPosition = Vector3.zero;
-        // TODO: Should rotate so it is oriented to direction user is facing when video starts?
-        _videoProjection.transform.localRotation = Quaternion.identity;
+        _videoProjection.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
 
         VideoControlsVisible = true;
