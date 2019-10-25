@@ -227,10 +227,10 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private long lastDownloadResponseCode;
 
     private static readonly string STUB_INSTALLER_BASE_URL =
-        "https://download.mozilla.org/?product=partner-firefox-beta-firefoxreality-ffreality-htc-001-stub&os=win&lang=";
+        "https://download.mozilla.org/?product=partner-firefox-release-firefoxreality-ffreality-htc-001-stub&os=win64&lang=";
 
     private static readonly string UPGRADE_INSTALLER_BASE_URL =
-        "https://download.mozilla.org/?product=partner-firefox-beta-firefoxreality-ffreality-htc-up-001-latest&os=win&lang=";
+        "https://download.mozilla.org/?product=partner-firefox-release-firefoxreality-ffreality-htc-up-001-latest&os=win64&lang=";
 
     // Check if Firefox Desktop is installed
     // Logic for installation:
@@ -364,7 +364,15 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private static void ParseBrowserVersion(string versionString, out int releaseMajor, out string releaseMinor)
     {
         string[] majorMinor = versionString.Split(new char[] {'.'});
-        releaseMajor = int.Parse(majorMinor[0]);
+        try
+        {
+            releaseMajor = int.Parse(majorMinor[0]);
+        }
+        catch (FormatException e)
+        {
+            // Shouldn't happen, but in the event it does, we'll catch the exception and assume we need an update...
+            releaseMajor = 0;
+        }
         releaseMinor = string.Join(".", majorMinor.Skip(1).Take(majorMinor.Length - 1).ToArray());
     }
 
