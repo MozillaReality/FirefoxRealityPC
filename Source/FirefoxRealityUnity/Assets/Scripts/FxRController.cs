@@ -203,7 +203,8 @@ public class FxRController : MonoBehaviour
 
     public void UserExitFullScreenVideo()
     {
-        // TODO: Notify plugin we are closing video
+        // Notify plugin we are closing video by sending escape key
+        SendKeyEvent(27);
         HandleFullScreenEnd();
     }
 
