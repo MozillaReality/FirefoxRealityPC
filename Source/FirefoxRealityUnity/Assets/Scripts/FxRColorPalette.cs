@@ -25,7 +25,8 @@ public class FxRColorPalette : MonoBehaviour
         COLOR_15,
         COLOR_16,
         COLOR_17,
-        COLOR_18
+        COLOR_18,
+        COLOR_19
     }
 
     [Serializable]
@@ -86,7 +87,7 @@ public class FxRColorPalette : MonoBehaviour
         return colorConfig;
     }
 
-    private Color ColorForName(COLOR_NAME colorName)
+    public Color ColorForName(COLOR_NAME colorName)
     {
         foreach (var namedColor in NamedColors)
         {
