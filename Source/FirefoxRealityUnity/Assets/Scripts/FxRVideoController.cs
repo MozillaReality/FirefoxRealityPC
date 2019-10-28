@@ -198,6 +198,7 @@ public class FxRVideoController : FxRPointableSurface
             transform.rotation,
             transform);
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
+        _videoProjection.transform.localRotation = Quaternion.Euler(0f, -180f, 0f);
         ConfigureProjectionSurface(_videoProjection, out var meshMaterial);
 
         meshMaterial.SetTextureScale("_MainTex", new Vector2(2f, 1f));
