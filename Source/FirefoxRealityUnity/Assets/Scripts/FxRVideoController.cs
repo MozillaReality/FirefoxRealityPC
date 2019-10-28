@@ -132,7 +132,7 @@ public class FxRVideoController : FxRPointableSurface
         rightEye.transform.localScale = Vector3.one;
         rightEye.transform.localPosition = Vector3.zero;
         rightEye.transform.localRotation = Quaternion.identity;
-        
+
         _videoProjection.transform.SetParent(FullScreenVideoParent);
         _videoProjection.transform.localPosition = Vector3.zero;
         // TODO: Should rotate so it is oriented to direction user is facing when video starts?
@@ -141,7 +141,8 @@ public class FxRVideoController : FxRPointableSurface
 
     private void ProjectVideo180StereoTopBottom()
     {
-        FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, Vector3.zero, Quaternion.identity, transform);
+        FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, transform.position,
+            transform.rotation, transform);
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
         leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(2f, .5f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
@@ -156,7 +157,8 @@ public class FxRVideoController : FxRPointableSurface
 
     private void ProjectVideo180StereoLeftRight()
     {
-        FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, Vector3.zero, Quaternion.identity, transform);
+        FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, transform.position,
+            transform.rotation, transform);
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
 //        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(.5f, 1f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
@@ -171,8 +173,8 @@ public class FxRVideoController : FxRPointableSurface
 
     private void ProjectVideo360Stereo()
     {
-        var stereoVideoRig = Instantiate(Stereo360VideoRigPrefab, Vector3.zero, Quaternion.identity, transform);
-        
+        var stereoVideoRig = Instantiate(Stereo360VideoRigPrefab, transform.position, transform.rotation, transform);
+
         ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
         leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
@@ -187,9 +189,8 @@ public class FxRVideoController : FxRPointableSurface
 
     private void ProjectVideo180()
     {
-        _videoProjection = Instantiate(HemispherePrefab, Vector3.zero, 
-            // Rotate 180degrees to face the user
-            Quaternion.Euler(0f, 180f, 0f),
+        _videoProjection = Instantiate(HemispherePrefab, transform.position,
+            transform.rotation,
             transform);
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
         ConfigureProjectionSurface(_videoProjection, out var meshMaterial);
@@ -253,7 +254,7 @@ public class FxRVideoController : FxRPointableSurface
         _videoProjection = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
         ConfigureProjectionSurface(_videoProjection, out _);
-        
+
         _videoProjection.transform.SetParent(transform);
         _videoProjection.transform.localPosition = Vector3.zero;
         _videoProjection.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
