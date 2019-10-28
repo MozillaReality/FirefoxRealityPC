@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
+using Valve.VR.InteractionSystem;
 using VRIME2;
 
 public class FxRController : MonoBehaviour
@@ -26,8 +27,11 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private FxRVideoController VideoController;
 
+    [SerializeField] private Transform EnvironmentOrigin;
+
     public enum FXR_BROWSING_MODE
     {
+        FXR_BROWSER_MODE_DESKTOP_INSTALL,
         FXR_BROWSER_MODE_WEB_BROWSING,
         FXR_BROWSER_MODE_FULLSCREEN_VIDEO,
         FXR_BROWSER_MODE_WEBXR
@@ -45,18 +49,24 @@ public class FxRController : MonoBehaviour
             if (currentBrowsingMode != value)
             {
                 OnBrowsingModeChanged?.Invoke(value);
-                if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
-                    && VRIME_Manager.Ins.ShowState)
-                {
-                    VRIME_Manager.Ins.HideIME();
-                }
             }
 
             currentBrowsingMode = value;
+            if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
+                && VRIME_Manager.Ins.ShowState)
+            {
+                VRIME_Manager.Ins.HideIME();
+            }
+
+            FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+            foreach (FxRWindow w in fxrwindows)
+            {
+                w.Visible = currentBrowsingMode == FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+            }
         }
     }
 
-    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_DESKTOP_INSTALL;
 
     public FxRPlugin Plugin => fxr_plugin;
 
@@ -99,8 +109,25 @@ public class FxRController : MonoBehaviour
         else Debug.Log(msg); // includes [info] and [debug].
     }
 
+    public void SendKeyEvent(int keycode)
+    {
+        // TODO: Introduce concept of "focused" window, once we allow more than one, so these events can be sent to the window that has focus 
+        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
+
+        if (fxrwindows.Length > 0)
+        {
+            fxr_plugin.fxrKeyEvent(fxrwindows[0].WindowIndex, keycode);
+        }
+    }
+
+    private Vector3 initialBodyDirection;
+    private bool bodyDirectionInitialzed;
+    private int bodyDirectionChecks;
+    
     void OnEnable()
     {
+        initialBodyDirection = Player.instance.bodyDirectionGuess;
+
         Debug.Log("FxRController.OnEnable()");
 
         fxr_plugin = new FxRPlugin();
@@ -154,6 +181,13 @@ public class FxRController : MonoBehaviour
         VideoController.fxr_plugin = fxr_plugin;
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
+
+        FxRFirefoxDesktopInstallation.OnInstallationProcessComplete += HandleInstallationProcessComplete;
+    }
+
+    private void HandleInstallationProcessComplete()
+    {
+        CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
     }
 
     private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
@@ -178,7 +212,8 @@ public class FxRController : MonoBehaviour
 
     public void UserExitFullScreenVideo()
     {
-        // TODO: Notify plugin we are closing video
+        // Notify plugin we are closing video by sending escape key
+        SendKeyEvent(27);
         HandleFullScreenEnd();
     }
 
@@ -258,6 +293,18 @@ public class FxRController : MonoBehaviour
 
     void Update()
     {
+        if (!bodyDirectionInitialzed 
+            && !initialBodyDirection.Equals(Player.instance.bodyDirectionGuess))
+        {
+            bodyDirectionChecks++;
+            if (bodyDirectionChecks > 3)
+            {
+                EnvironmentOrigin.forward = Player.instance.bodyDirectionGuess;
+                EnvironmentOrigin.transform.position = Player.instance.feetPositionGuess;
+                bodyDirectionInitialzed = true;
+            }
+        }
+
         if (IMEStateChanged && lastIMEState == FxRPlugin.FxREventState.Focus && !VRIME_Manager.Ins.ShowState)
         {
             VRIME_Manager.Ins.ShowIME("");
@@ -268,7 +315,7 @@ public class FxRController : MonoBehaviour
         }
 
         IMEStateChanged = false;
-        
+
         if (FullScreenStateChanged)
         {
             if (lastFullScreenState == FxRPlugin.FxREventState.Fullscreen_Enter)
@@ -278,7 +325,7 @@ public class FxRController : MonoBehaviour
                 {
                     // TODO: Eventually, the pixel size, format, and video projection should come from browser. For now, we'll grab it from the window
                     var window = fxrwindows[0];
-                    
+
                     int formatNative;
                     switch (window.TextureFormat)
                     {
@@ -292,7 +339,7 @@ public class FxRController : MonoBehaviour
                             formatNative = 3;
                             break;
                         case TextureFormat.RGB24:
-                            formatNative = 5;;
+                            formatNative = 5;
                             break;
                         case TextureFormat.RGBA4444:
                             formatNative = 7;
@@ -314,6 +361,7 @@ public class FxRController : MonoBehaviour
                 HandleFullScreenEnd();
             }
         }
+
         FullScreenStateChanged = false;
     }
 
@@ -443,15 +491,13 @@ public class FxRController : MonoBehaviour
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
     void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
     {
-        var eventState = (FxRPlugin.FxREventState) eventData1;
+        FxRPlugin.FxREventState eventState = (FxRPlugin.FxREventState) eventData1;
         if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.IME)
         {
-            FxRPlugin.FxREventState imeState = eventState;
-
-            if (imeState != lastIMEState)
+            if (eventState != lastIMEState)
             {
                 IMEStateChanged = true;
-                lastIMEState = imeState;
+                lastIMEState = eventState;
             }
         }
         else if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.Fullscreen)

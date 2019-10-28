@@ -52,4 +52,10 @@ public class FxRDialogBox : MonoBehaviour
         // TODO: Animation to have dialog go away?
         Destroy(gameObject);
     }
+
+    public void UpdateText(string title, string message)
+    {
+        TitleText.text = title;
+        BodyText.text = message;
+    }
 }

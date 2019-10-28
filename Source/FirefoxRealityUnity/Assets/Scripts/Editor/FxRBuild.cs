@@ -27,6 +27,10 @@ public class FxRBuild
             return;
         }
 
+        string profilePath =
+            EditorUtility.OpenFolderPanel("Choose profile directory to include (or cancel to not include one)", "",
+                "fxr-profile");
+
         string saveFolder = EditorUtility.SaveFolderPanel("Choose folder to save built executable", "", "");
         if (string.IsNullOrEmpty(saveFolder)) return;
 //        string[] levels = new string[] {"Assets/Scene1.unity", "Assets/Scene2.unity"};
@@ -42,14 +46,23 @@ public class FxRBuild
         // Build player
         BuildOutputExePath = Path.Combine(saveFolder, "FirefoxReality.exe");
         Debug.Log("Path to output exe: " + BuildOutputExePath);
-        var buildReport = BuildPipeline.BuildPlayer(scenes.ToArray(), BuildOutputExePath, BuildTarget.StandaloneWindows64,
+        var buildReport = BuildPipeline.BuildPlayer(scenes.ToArray(), BuildOutputExePath,
+            BuildTarget.StandaloneWindows64,
             BuildOptions.None);
 
         if (buildReport.summary.result == BuildResult.Succeeded)
         {
             // Copy nightly build to streaming assets directory
-            string streamingAssetsDestination = Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "firefox");
+            string streamingAssetsDestination =
+                Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "firefox");
             DirectoryCopy(nightlyBuildPath, streamingAssetsDestination, true);
+
+            if (!string.IsNullOrEmpty(profilePath))
+            {
+                string profileDestination =
+                    Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "fxr-profile");
+                DirectoryCopy(profilePath, profileDestination, true);
+            }
             BuildSuccessfull = true;
             Debug.Log("Build successful.");
         }

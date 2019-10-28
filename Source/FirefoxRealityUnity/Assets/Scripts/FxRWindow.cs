@@ -77,9 +77,30 @@ public class FxRWindow : FxRPointableSurface
         return window;
     }
 
+
     private void OnEnable()
     {
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
+    }
+
+    public bool Visible
+    {
+        get => visible;
+        set
+        {
+            visible = value;
+            if (_videoMeshGO != null)
+            {
+                _videoMeshGO.SetActive(visible);
+            }
+        }
+    }
+
+    private bool visible;
+
+    public int WindowIndex
+    {
+        get => _windowIndex;
     }
 
     private void OnDisable()
@@ -90,7 +111,7 @@ public class FxRWindow : FxRPointableSurface
 
     private void HandleKeyPressed(int keycode)
     {
-        // TODO: All windows with respond to all keyboard presses. Since we only ever have one at the moment...
+        // TODO: All windows will respond to all keyboard presses. Since we only ever have one at the moment...
         fxr_plugin.fxrKeyEvent(_windowIndex, keycode);
     }
 
@@ -140,6 +161,7 @@ public class FxRWindow : FxRPointableSurface
         _videoMeshGO.transform.parent = this.gameObject.transform;
         _videoMeshGO.transform.localPosition = Vector3.zero;
         _videoMeshGO.transform.localRotation = Quaternion.identity;
+        _videoMeshGO.SetActive(Visible);
     }
 
     public void WasResized(int widthPixels, int heightPixels)

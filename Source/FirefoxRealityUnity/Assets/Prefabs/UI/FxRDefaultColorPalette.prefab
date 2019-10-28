@@ -82,21 +82,5 @@ MonoBehaviour:
     Color: {r: 0.9490196, g: 0.95686275, b: 0.972549, a: 1}
   - Name: 18
     Color: {r: 0.9490196, g: 0.42745098, b: 0.42745098, a: 1}
-  NormalBrowsingPrimaryDialogButtonColors:
-    NormalColor: 8
-    HoverColor: 7
-    PressedColor: 9
-    NormalTextColor: 13
-    HoverTextColor: 13
-    PressedTextColor: 6
-    HasBorder: 0
-    BorderColor: 0
-  NormalBrowsingSecondaryDialogButtonColors:
-    NormalColor: 6
-    HoverColor: 7
-    PressedColor: 9
-    NormalTextColor: 13
-    HoverTextColor: 13
-    PressedTextColor: 6
-    HasBorder: 1
-    BorderColor: 8
+  - Name: 19
+    Color: {r: 1, g: 1, b: 1, a: 1}
