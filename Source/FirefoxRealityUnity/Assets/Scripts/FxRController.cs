@@ -340,7 +340,6 @@ public class FxRController : MonoBehaviour
                             break;
                         case TextureFormat.RGB24:
                             formatNative = 5;
-                            ;
                             break;
                         case TextureFormat.RGBA4444:
                             formatNative = 7;
