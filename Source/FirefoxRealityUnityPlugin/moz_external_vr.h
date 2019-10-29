@@ -447,6 +447,7 @@ enum class VRFxEventType : uint8_t {
 };
 
 enum class VRFxEventState : uint8_t {
+  NONE = 0,
   BLUR,
   FOCUS,
   FULLSCREEN_ENTER,
