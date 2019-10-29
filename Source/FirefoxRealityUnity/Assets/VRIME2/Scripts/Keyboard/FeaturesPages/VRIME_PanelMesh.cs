@@ -162,7 +162,7 @@ namespace VRIME2
 		{
 			VRIME_KeyboardButton aLanButton = GetFunctionButton(eButtonType.Voice);
 			// poshaughnessey - we don't support voice in current version
-//			if(aLanButton == null)
+			if(aLanButton == null)
 				return;
 			
 			if(VRIME_VoiceOversee.Ins != null)

@@ -208,6 +208,8 @@ namespace VRIME2
                 case eButtonType.LetterWCL:
                     VRIME_InputFieldOversee.Ins.WCLButtonSetWords(this);
                     VRIME_BISender.Ins.CallActionClick(eActionClickEntrance.WCL_select);
+                    OnKeyPressed?.Invoke(8); // Backspace
+                    SendInsertWord(pinyinWord.Value);
                     break;
                 case eButtonType.Space:
                     SendSpaceWord();
