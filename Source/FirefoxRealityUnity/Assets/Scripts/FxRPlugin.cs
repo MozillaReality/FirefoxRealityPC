@@ -255,11 +255,12 @@ public class FxRPlugin
     // It needs to follow the defining of VRFxEventState at {GECKO_SRC}/moz_external_vr.h
     public enum FxREventState
     {
-        Blur = 0,
-        Focus = 1,
-        Fullscreen_Enter = 2,
-        Fullscreen_Exit = 3,
-        Total = 4
+        None = 0,
+        Blur = 1,
+        Focus = 2,
+        Fullscreen_Enter = 3,
+        Fullscreen_Exit = 4,
+        Total = 5
     };
 
     public bool fxrCloseWindow(int windowIndex)
