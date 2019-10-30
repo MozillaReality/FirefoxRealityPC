@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using System;
+ using System;
 using UnityEngine;
 
 public class FxRVideoProjectionMode : MonoBehaviour
@@ -20,6 +20,5 @@ public class FxRVideoProjectionMode : MonoBehaviour
         VIDEO_PROJECTION_180LR = 4, // 180 left to right
         VIDEO_PROJECTION_180TB = 5, // 180 top to bottom
         VIDEO_PROJECTION_3D = 6 // 3D side by side
-
     }
 }
