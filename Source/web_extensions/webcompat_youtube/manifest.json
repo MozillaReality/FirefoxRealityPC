@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "Firefox Reality YouTube.com WebCompat Enhancements",
-  "version": "1.0",
+  "name": "FxR YouTube WebCompat",
+  "version": "1.0.1",
   "applications": {
     "gecko": {
       "id": "firefoxrealitypc-webcompat_youtube@mozilla.org"
