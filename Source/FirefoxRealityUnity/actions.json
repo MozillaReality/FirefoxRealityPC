@@ -144,7 +144,7 @@
     },
     {
       "controller_type": "vive_cosmos_controller",
-      "binding_url": "application_generated_unity_firefoxrealityprounity_exe_binding_vive_cosmos_controller.json"
+      "binding_url": "binding_vive_cosmos_controller.json"
     }
   ],
   "localization": [

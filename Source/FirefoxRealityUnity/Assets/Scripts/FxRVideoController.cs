@@ -1,3 +1,8 @@
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+// If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) 2019, Mozilla.
+
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -193,6 +198,7 @@ public class FxRVideoController : FxRPointableSurface
             transform.rotation,
             transform);
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
+        _videoProjection.transform.localRotation = Quaternion.Euler(0f, -180f, 0f);
         ConfigureProjectionSurface(_videoProjection, out var meshMaterial);
 
         meshMaterial.SetTextureScale("_MainTex", new Vector2(2f, 1f));

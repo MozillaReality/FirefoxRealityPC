@@ -1,11 +1,10 @@
 ﻿//
 // FxRLaserPointer.cs
 //
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// You can obtain one at http://mozilla.org/MPL/2.0/.
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+// If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2019, Mozilla Inc.
+// Copyright (c) 2019, Mozilla.
 //
 // Author(s): Philip Lamb
 //
@@ -60,10 +59,10 @@ public class FxRLaserPointer : MonoBehaviour
     public float clickThicknesss = 0.0024f;
     public Texture2D hitTargetTexture;
     public float hitTargetRadius = 0.01f;
-    
+
     private static List<FxRLaserPointer> AllLaserPointers = new List<FxRLaserPointer>();
     private static FxRLaserPointer ActiveLaserPointer = null;
-    
+
     private GameObject hitTarget;
     private GameObject holder;
     private GameObject pointer;
@@ -75,17 +74,13 @@ public class FxRLaserPointer : MonoBehaviour
 
     Transform previousContact = null;
 
-    private void OnEnable()
-    {
-        if (ActiveLaserPointer != null)
-        {
-            LaserShowing = ActiveLaserPointer == this;
-        }
-    }
-
     private void OnDisable()
     {
         LaserShowing = false;
+        if (ActiveLaserPointer == this)
+        {
+            ActiveLaserPointer = null;
+        }
     }
 
     private bool LaserShowing
@@ -107,8 +102,9 @@ public class FxRLaserPointer : MonoBehaviour
             }
         }
     }
+
     private bool laserShowing = true;
-    
+
     private void Start()
     {
         if (pose == null)
@@ -202,11 +198,6 @@ public class FxRLaserPointer : MonoBehaviour
 
         // Make sure only one laser pointer is showing at once
         AllLaserPointers.Add(this);
-        if (ActiveLaserPointer == null)
-        {
-            ActiveLaserPointer = this;
-        }
-        LaserShowing = ActiveLaserPointer == this;
     }
 
     public virtual void OnPointerIn(PointerEventArgs e)
@@ -228,11 +219,11 @@ public class FxRLaserPointer : MonoBehaviour
         {
             clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
         }
-        
+
         if (PointerClick != null)
             PointerClick(this, e);
     }
-    
+
     private void OnPointerDown(PointerEventArgs e)
     {
         IPointerDownHandler[] downHandlers = e.target.GetComponents<IPointerDownHandler>();
@@ -241,13 +232,13 @@ public class FxRLaserPointer : MonoBehaviour
             downHandler?.OnPointerDown(new PointerEventData(EventSystem.current));
         }
     }
-    
+
     private void OnPointerUp(PointerEventArgs e)
     {
         IPointerUpHandler[] upHandlers = e.target.GetComponents<IPointerUpHandler>();
         foreach (var upHandler in upHandlers)
         {
-            upHandler?.OnPointerUp(new PointerEventData(EventSystem.current));    
+            upHandler?.OnPointerUp(new PointerEventData(EventSystem.current));
         }
     }
 
@@ -266,13 +257,25 @@ public class FxRLaserPointer : MonoBehaviour
 
     private void Update()
     {
+        if (!pose.isValid)
+        {
+            if (ActiveLaserPointer == this)
+            {
+                ActiveLaserPointer = null;
+            }
+            return;
+        }
         if (!isActive)
         {
             isActive = true;
             this.transform.GetChild(0).gameObject.SetActive(true);
         }
 
-        LaserShowing = ActiveLaserPointer == this;
+        if (ActiveLaserPointer == null)
+        {
+            ActiveLaserPointer = this;
+        }
+        LaserShowing = (ActiveLaserPointer == this);
         if (ActiveLaserPointer != this)
         {
             if (interactWithUI.GetStateUp(pose.inputSource))
@@ -283,6 +286,7 @@ public class FxRLaserPointer : MonoBehaviour
 
             return;
         }
+
         float dist = 100f;
 
         Ray raycast = new Ray(transform.position, transform.forward);
@@ -317,7 +321,8 @@ public class FxRLaserPointer : MonoBehaviour
         }
         else
         {
-            FxRPointableSurface fxrWindow = hit.transform.gameObject.GetComponentInParent(typeof(FxRPointableSurface)) as FxRPointableSurface;
+            FxRPointableSurface fxrWindow =
+                hit.transform.gameObject.GetComponentInParent(typeof(FxRPointableSurface)) as FxRPointableSurface;
 
             if (previousContact != hit.transform)
             {
@@ -364,6 +369,7 @@ public class FxRLaserPointer : MonoBehaviour
                 {
                     fxrWindow.PointerPress(hit.textureCoord);
                 }
+
                 PointerEventArgs argsClick = new PointerEventArgs();
                 argsClick.fromInputSource = pose.inputSource;
                 argsClick.distance = hit.distance;
