@@ -2,12 +2,21 @@
   "manifest_version": 2,
   "name": "Firefox Reality YouTube.com WebCompat Enhancements",
   "version": "1.0",
-    "applications": {
+  "applications": {
     "gecko": {
       "id": "firefoxrealitypc-webcompat_youtube@mozilla.org"
     }
-  }
+  },
   "description": "Fixes web-site compatibility quirks for YouTube.com when using Firefox Reality.",
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "*://*.youtube.com/*",
+    "*://*.youtube-nocookie.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
   "content_scripts": [
     {
       "matches": [

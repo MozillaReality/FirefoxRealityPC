@@ -1,6 +1,6 @@
 const FXR_PATCH_NAME = 'vimeo360';
 let LOGTAG = `[firefoxreality:webcompat:vimeo] [patch:${FXR_PATCH_NAME}]`;
-// const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Linux; Android 7.1.1; Pacific Build) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.7.1.23.151668513 SamsungBrowser/4.0 Chrome/66.0.3359.203 Mobile VR Safari/537.36';
+const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12) AppleWebKit/602.1.21 (KHTML, like Gecko) Version/9.2 Safari/602.1.21';
 const VIMEO_CURRENT_PAGE = {
   hasVideo: /\/\d+/.test(window.location.pathname),
   isVideoDetailPage: false,
@@ -31,8 +31,6 @@ if (VIMEO_CURRENT_PAGE.isVideoDetailPage) {
   LOGTAG += ` [other]`;
 }
 LOGTAG += ` [${window.location.href}]`;
-
-// Object.defineProperty(navigator, 'userAgent', {get: () => CUSTOM_USER_AGENT});
 
 // TODO: Improve "Enter VR" click target by not requiring explicit clicks on the "Fullscren" icon.
 // Hijack `playerArea` / playerContainer`, `embedPlayer`, etc. to call `requestFullscreen(…)`.
@@ -65,6 +63,10 @@ document.documentElement.setAttribute('data-fxr-debug', prefs.debug === '1');
 log('Loaded WebCompat content script');
 
 try {
+  Object.defineProperty(navigator, 'userAgent', {
+    get: () => CUSTOM_USER_AGENT
+  });
+
   let is360 = false;
 
   logDebug(`Navigation type "${window.performance.navigation.type}"`);

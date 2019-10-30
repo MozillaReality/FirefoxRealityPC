@@ -9,8 +9,6 @@ const YT_PATHS = {
 };
 
 try {
-  // Note: À la Oculus Browser, we intentionally use this particular `User-Agent` string
-  // for YouTube to force the most optimal, high-resolution layout available for playback in a mobile VR browser.
   Object.defineProperty(navigator, 'userAgent', {
     get: () => CUSTOM_USER_AGENT
   });

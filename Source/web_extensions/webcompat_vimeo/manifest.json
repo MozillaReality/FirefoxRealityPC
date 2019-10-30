@@ -6,8 +6,17 @@
     "gecko": {
       "id": "firefoxrealitypc-webcompat_vimeo@mozilla.org"
     }
-  }
+  },
   "description": "Fixes web-site compatibility quirks for Vimeo.com when using Firefox Reality.",
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "https://vimeo.com/*",
+    "https://player.vimeo.com/video/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
   "content_scripts": [
     {
       "matches": [
