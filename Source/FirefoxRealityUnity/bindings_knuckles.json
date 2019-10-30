@@ -1,7 +1,7 @@
 {
    "action_manifest_version" : 0,
    "alias_info" : {},
-   "app_key" : "application.generated.unity.firefoxrealityprounity.exe",
+   "app_key" : "org.mozilla.firefoxreality",
    "bindings" : {
       "/actions/buggy" : {
          "sources" : [
@@ -282,7 +282,7 @@
    "category" : "steamvr_input",
    "controller_type" : "knuckles",
    "description" : "",
-   "name" : "My FirefoxRealityProUnity [Testing] configuration for Index Controller",
+   "name" : "FirefoxReality configuration for Index Controller",
    "options" : {},
    "simulated_actions" : []
 }

@@ -1,7 +1,7 @@
 {
    "action_manifest_version" : 0,
    "alias_info" : {},
-   "app_key" : "application.generated.unity.firefoxrealityprounity.exe",
+   "app_key" : "org.mozilla.firefoxreality",
    "bindings" : {
       "/actions/buggy" : {
          "sources" : [
@@ -271,7 +271,7 @@
    "category" : "steamvr_input",
    "controller_type" : "holographic_controller",
    "description" : "",
-   "name" : "My FirefoxReality [Testing] configuration for Windows Mixed Reality Controller",
+   "name" : "FirefoxReality configuration for Windows Mixed Reality Controller",
    "options" : {},
    "simulated_actions" : []
 }

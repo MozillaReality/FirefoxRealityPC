@@ -1,7 +1,7 @@
 {
    "action_manifest_version" : 0,
    "alias_info" : {},
-   "app_key" : "org.mozilla.firefoxrealitypc",
+   "app_key" : "org.mozilla.firefoxreality",
    "bindings" : {
       "/actions/default" : {
          "chords" : [],
