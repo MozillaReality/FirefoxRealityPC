@@ -20,7 +20,7 @@ MonoBehaviour:
   inputUpdateMode: 2
   poseUpdateMode: 8
   activateFirstActionSetOnStart: 1
-  editorAppKey: org.mozilla.firefoxrealitypc
+  editorAppKey: org.mozilla.firefoxreality
   autoEnableVR: 1
   legacyMixedRealityCamera: 1
   mixedRealityCameraPose:
