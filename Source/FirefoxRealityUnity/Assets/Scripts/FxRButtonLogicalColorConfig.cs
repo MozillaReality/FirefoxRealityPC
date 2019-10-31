@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using System;
+using System;
 
 [Serializable]
 public class FxRButtonLogicalColorConfig
@@ -19,4 +19,23 @@ public class FxRButtonLogicalColorConfig
     public FxRColorPalette.COLOR_NAME PressedIconColor;
     public bool HasBorder;
     public FxRColorPalette.COLOR_NAME BorderColor;
+
+    public FxRButtonLogicalColorConfig(FxRButtonLogicalColorConfig copy)
+    {
+        NormalColor = copy.NormalColor;
+        HoverColor = copy.HoverColor;
+        PressedColor = copy.PressedColor;
+        NormalTextColor = copy.NormalTextColor;
+        HoverTextColor = copy.HoverTextColor;
+        PressedTextColor = copy.PressedTextColor;
+        NormalIconColor = copy.NormalIconColor;
+        HoverIconColor = copy.HoverIconColor;
+        PressedIconColor = copy.PressedIconColor;
+        HasBorder = copy.HasBorder;
+        BorderColor = copy.BorderColor;
+    }
+
+    public FxRButtonLogicalColorConfig()
+    {
+    }
 }
