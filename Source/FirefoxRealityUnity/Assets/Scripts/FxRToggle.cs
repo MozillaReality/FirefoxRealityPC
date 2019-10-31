@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -32,37 +32,37 @@ public class FxRToggle : FxRSelectable
         }
     }
 
-    public ToggleConfig ConfigAsToggleConfig => (ToggleConfig) Config;
-    
+    public ToggleConfig ConfigAsToggleConfig
+    {
+        get
+        {
+            if (Config != null && (Config as ToggleConfig) == null)
+            {
+                Config = new ToggleConfig(Config);
+                LogicalToggleOffColorConfig = new FxRButtonLogicalColorConfig(Config.LogicialColors);
+                ConfigureStyle(ToggleButton.isOn);
+            }
+
+            return Config as ToggleConfig;
+        }
+    }
+
     public override SelectableConfig Config
     {
         set
         {
             base.Config = value;
-            if (ConfigAsToggleConfig.ToggleValueChangedListener != null)
-            {
-                ToggleButton.onValueChanged.RemoveAllListeners();
-                ToggleButton.onValueChanged.AddListener(ConfigAsToggleConfig.ToggleValueChangedListener);
-            }
-
+            var initToggleConfig = ConfigAsToggleConfig;
         }
     }
 
     protected Toggle ToggleButton => (Toggle) Selectable;
     private FxRButtonLogicalColorConfig LogicalToggleOffColorConfig;
-    
+
     protected override void OnEnable()
     {
-        ToggleButton.onValueChanged.AddListener(HandleToggleValueChanged);
-
-        if (Config != null)
-        {
-            Config = new ToggleConfig(Config);
-            LogicalToggleOffColorConfig = Config.LogicialColors;
-            ConfigureStyle(ToggleButton.isOn);
-        }
-
         base.OnEnable();
+        ToggleButton.onValueChanged.AddListener(HandleToggleValueChanged);
     }
 
     void OnDisable()
