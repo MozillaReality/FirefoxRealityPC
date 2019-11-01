@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -63,11 +63,11 @@ public class FxRVideoController : FxRPointableSurface
     public void SwitchProjectionMode(FxRVideoProjectionMode projectionMode)
     {
         SwitchProjectionMode(projectionMode.Projection);
-        ProjectionSelectionMenu.SetActive(false);
     }
 
     public void SwitchProjectionMode(FxRVideoProjectionMode.PROJECTION_MODE projectionMode)
     {
+        ProjectionSelectionMenuVisible = false;
         // TODO: If already in mode being requested, just return
         if (_videoProjection != null)
         {

@@ -1,7 +1,7 @@
 {
    "action_manifest_version" : 0,
    "alias_info" : {},
-   "app_key" : "application.generated.unity.firefoxrealityprounity.exe",
+   "app_key" : "org.mozilla.firefoxreality",
    "bindings" : {
       "/actions/buggy" : {
          "sources" : [
@@ -291,7 +291,7 @@
    "category" : "steamvr_input",
    "controller_type" : "oculus_touch",
    "description" : "",
-   "name" : "My FirefoxRealityProUnity [Testing] configuration for Oculus Touch",
+   "name" : "FirefoxReality configuration for Oculus Touch",
    "options" : {},
    "simulated_actions" : []
 }
