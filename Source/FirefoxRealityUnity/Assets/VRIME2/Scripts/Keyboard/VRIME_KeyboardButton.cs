@@ -209,7 +209,10 @@ namespace VRIME2
                     VRIME_InputFieldOversee.Ins.WCLButtonSetWords(this);
                     VRIME_BISender.Ins.CallActionClick(eActionClickEntrance.WCL_select);
                     OnKeyPressed?.Invoke(8); // Backspace
-                    SendInsertWord(pinyinWord.Value);
+                    for (int i = 0; i < pinyinWord.Value.Length; i++)
+                    {
+                        OnKeyPressed?.Invoke((int)pinyinWord.Value[i]);
+                    }
                     break;
                 case eButtonType.Space:
                     SendSpaceWord();
