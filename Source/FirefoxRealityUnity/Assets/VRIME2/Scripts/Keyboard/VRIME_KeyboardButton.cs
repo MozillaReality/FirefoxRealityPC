@@ -14,7 +14,10 @@ namespace VRIME2
     {
         public delegate void KeyPressed(int keyCode);
 
+        public delegate void CloseKeyPressed();
+
         public static KeyPressed OnKeyPressed;
+        public static CloseKeyPressed OnCloseKeyPressed;
         
         #region public Field
         // Button Base Info
@@ -208,11 +211,6 @@ namespace VRIME2
                 case eButtonType.LetterWCL:
                     VRIME_InputFieldOversee.Ins.WCLButtonSetWords(this);
                     VRIME_BISender.Ins.CallActionClick(eActionClickEntrance.WCL_select);
-                    OnKeyPressed?.Invoke(8); // Backspace
-                    for (int i = 0; i < pinyinWord.Value.Length; i++)
-                    {
-                        OnKeyPressed?.Invoke((int)pinyinWord.Value[i]);
-                    }
                     break;
                 case eButtonType.Space:
                     SendSpaceWord();
@@ -245,7 +243,6 @@ namespace VRIME2
                     VRIME_Manager.Ins.ResetTrackingPos();
                     break;
                 case eButtonType.Submit:
-                    OnKeyPressed?.Invoke(0x0D); // Return
                     VRIME_Manager.Ins.SubmitText();
                     break;
                 case eButtonType.Delete:
@@ -260,6 +257,7 @@ namespace VRIME2
                 case eButtonType.Close:
                     VRIME_Manager.Ins.HideIME();
                     VRIME_BISender.Ins.CallActionClick(eActionClickEntrance.keyboard_close);
+                    OnCloseKeyPressed?.Invoke();
                     break;
             }
         }
