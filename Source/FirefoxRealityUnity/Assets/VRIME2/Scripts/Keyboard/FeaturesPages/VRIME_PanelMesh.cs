@@ -131,8 +131,7 @@ namespace VRIME2
 		public void ChangeLanguageButtonTip(eLanguage iIconWordLanguage)
 		{
 			VRIME_KeyboardButton aLanButton = GetFunctionButton(eButtonType.Language);
-			// poshaughnessey - we don't support different languages in current version
-//			if(aLanButton == null)
+			if(aLanButton == null)
 				return;
 			
 			SetChangeLanButton(aLanButton);

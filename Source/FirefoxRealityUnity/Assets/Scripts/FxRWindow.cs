@@ -3,16 +3,20 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TMPro;
+using UnityEngine.UI;
 using VRIME2;
 
 public class FxRWindow : FxRPointableSurface
 {
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
+
+    [SerializeField] private InputField VRIMEKeyboardInputField;
     public bool flipX = false;
     public bool flipY = false;
     private static float DefaultWidth = 3.0f;
@@ -82,10 +86,78 @@ public class FxRWindow : FxRPointableSurface
         return window;
     }
 
+    private string lastVRIMEString = "";
+
 
     private void OnEnable()
     {
+        VRIME_KeyboardButton.OnCloseKeyPressed += HandleCloseKeyPressed;
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
+        VRIMEKeyboardInputField.onValueChanged.AddListener(HandleVRIMEInputFieldChanged);
+        VRIME_Manager.Ins.onSubmit.AddListener(HandleVRIMESubmit);
+    }
+
+    private void HandleVRIMESubmit(string submittedText)
+    {
+        HandleVRIMEInputFieldChanged(submittedText);
+        HandleKeyPressed(0x0D); // textReturn
+        lastVRIMEString = "";
+    }
+
+    private void HandleVRIMEInputFieldChanged(string currentText)
+    {
+        if (!lastVRIMEString.Equals(currentText))
+        {
+            if (string.IsNullOrEmpty(currentText))
+            {
+                // Delete any existing text - e.g. if user hits the "X" in the input field to clear
+                Backspace(lastVRIMEString.Length);
+            }
+            else
+            {
+                // Remove end of string if new text is shorter
+                if (lastVRIMEString.Length > currentText.Length)
+                {
+                    int backspaceCount = lastVRIMEString.Length - currentText.Length;
+                    Backspace(backspaceCount);
+
+                    // Truncate last string, for use in upcoming copmarison loop
+                    lastVRIMEString = lastVRIMEString.Substring(0, lastVRIMEString.Length - backspaceCount);
+                }
+
+                for (int i = 0; i < currentText.Length; i++)
+                {
+                    if (i >= lastVRIMEString.Length)
+                    {
+                        // Append character
+                        fxr_plugin.fxrKeyEvent(_windowIndex, currentText[i]);
+                    }
+                    else if (lastVRIMEString[i] != currentText[i])
+                    {
+                        // Truncate unmatched character and everything after it
+                        int backspaceCount = lastVRIMEString.Length - i;
+                        Backspace(backspaceCount);
+
+                        // Lop off tail of lastVRIMEString, for next time through the loop
+                        lastVRIMEString = lastVRIMEString.Substring(0, lastVRIMEString.Length - backspaceCount);
+                        
+                        // Append the character
+                        fxr_plugin.fxrKeyEvent(_windowIndex, currentText[i]);
+                    }
+                }
+            }
+        }
+
+        lastVRIMEString = currentText;
+    }
+
+    private void Backspace(int repeatCount)
+    {
+        for (int i = 0; i < repeatCount; i++)
+        {
+            // Backspace
+            fxr_plugin.fxrKeyEvent(_windowIndex, 8);
+        }
     }
 
     public bool Visible
@@ -111,13 +183,28 @@ public class FxRWindow : FxRPointableSurface
     private void OnDisable()
     {
         VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
+        VRIME_KeyboardButton.OnCloseKeyPressed -= HandleCloseKeyPressed;
         pollForVREvents = false;
+        VRIMEKeyboardInputField.onValueChanged.RemoveListener(HandleVRIMEInputFieldChanged);
+    }
+
+    private void HandleCloseKeyPressed()
+    {
+        lastVRIMEString = "";
     }
 
     private void HandleKeyPressed(int keycode)
     {
         // TODO: All windows will respond to all keyboard presses. Since we only ever have one at the moment...
-        fxr_plugin.fxrKeyEvent(_windowIndex, keycode);
+        
+        // Handle returns and backspaces only...
+        if (keycode == 0x0D // Return
+            // Explicitly pass backspaces along, if the input text is empty...
+            || (keycode == 8 && string.IsNullOrEmpty(lastVRIMEString))
+        )
+        {
+            fxr_plugin.fxrKeyEvent(_windowIndex, keycode);
+        }
     }
 
     void Start()
