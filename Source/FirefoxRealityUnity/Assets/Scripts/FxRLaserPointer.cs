@@ -220,13 +220,10 @@ public class FxRLaserPointer : MonoBehaviour
 
     public virtual void OnPointerClick(PointerEventArgs e)
     {
-        if (e.target != null)
+        IPointerClickHandler[] clickHandlers = e.target.GetComponents<IPointerClickHandler>();
+        foreach (var clickHandler in clickHandlers)
         {
-            IPointerClickHandler[] clickHandlers = e.target.GetComponents<IPointerClickHandler>();
-            foreach (var clickHandler in clickHandlers)
-            {
-                clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
-            }
+            clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
         }
 
         if (PointerClick != null)
@@ -272,6 +269,7 @@ public class FxRLaserPointer : MonoBehaviour
             {
                 ActiveLaserPointer = null;
             }
+
             return;
         }
 
@@ -303,11 +301,13 @@ public class FxRLaserPointer : MonoBehaviour
         Ray raycast = new Ray(transform.position, transform.forward);
         RaycastHit hit;
         bool bHit = Physics.Raycast(raycast, out hit);
-        
+
+        // Target not found for hit testing, so clear state
         if (!bHit)
         {
             previousContact = null;
             hitTarget.SetActive(false);
+            // Trigger an air click when user lets go of trigger without hitting anything
             if (interactWithUI.GetStateUp(pose.inputSource))
             {
                 OnPointerAirClick?.Invoke();
@@ -338,7 +338,7 @@ public class FxRLaserPointer : MonoBehaviour
                     args.target = previousContact;
                     OnPointerOut(args);
                 }
-                
+
                 // Handle FxRWindow messages directly.
                 // TODO: convert to a more generic event system.
                 if (fxrWindow != null)
