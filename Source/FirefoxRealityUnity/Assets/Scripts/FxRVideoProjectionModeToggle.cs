@@ -29,11 +29,19 @@ public class FxRVideoProjectionModeToggle : MonoBehaviour
     void OnEnable()
     {
         Toggle.ConfigAsToggleConfig.ToggleValueChangedListener += HandleToggleValueChanged;
+        FxRVideoController.OnVideoProjectionModeSwitched += HandleVideoProjectionModeSwitched;
+        HandleVideoProjectionModeSwitched(VideoController.VideoProjectionMode);
+    }
+
+    private void HandleVideoProjectionModeSwitched(FxRVideoProjectionMode.PROJECTION_MODE newMode)
+    {
+        Toggle.SetIsOnWithoutNotify(newMode == ProjectionMode);
     }
 
     void OnDisable()
     {
         Toggle.ConfigAsToggleConfig.ToggleValueChangedListener -= HandleToggleValueChanged;
+        FxRVideoController.OnVideoProjectionModeSwitched -= HandleVideoProjectionModeSwitched;
     }
 
     private void HandleToggleValueChanged(bool isOn)

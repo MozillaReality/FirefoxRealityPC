@@ -56,6 +56,17 @@ public class FxRToggle : FxRSelectable
         }
     }
 
+    public void SetIsOnWithoutNotify(bool isOn)
+    {
+        if (ToggleButton.isOn != isOn)
+        {
+            ToggleButton.SetIsOnWithoutNotify(isOn);
+            ConfigureStyle(isOn);
+            // Reset the config, to re-initialize
+            Config = Config;
+        }
+    }
+    
     protected Toggle ToggleButton => (Toggle) Selectable;
     private FxRButtonLogicalColorConfig LogicalToggleOffColorConfig;
 

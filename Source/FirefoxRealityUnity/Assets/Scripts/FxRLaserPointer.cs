@@ -68,6 +68,12 @@ public class FxRLaserPointer : MonoBehaviour
     private GameObject pointer;
     bool isActive = false;
     public bool addRigidBody = false;
+
+    // Subscribe to this event to know when the user pulled the trigger when not pointing at anything
+    public delegate void PointerAirClick();
+
+    public static PointerAirClick OnPointerAirClick;
+
     public event PointerEventHandler PointerIn;
     public event PointerEventHandler PointerOut;
     public event PointerEventHandler PointerClick;
@@ -214,10 +220,13 @@ public class FxRLaserPointer : MonoBehaviour
 
     public virtual void OnPointerClick(PointerEventArgs e)
     {
-        IPointerClickHandler[] clickHandlers = e.target.GetComponents<IPointerClickHandler>();
-        foreach (var clickHandler in clickHandlers)
+        if (e.target != null)
         {
-            clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
+            IPointerClickHandler[] clickHandlers = e.target.GetComponents<IPointerClickHandler>();
+            foreach (var clickHandler in clickHandlers)
+            {
+                clickHandler?.OnPointerClick(new PointerEventData(EventSystem.current));
+            }
         }
 
         if (PointerClick != null)
@@ -265,6 +274,7 @@ public class FxRLaserPointer : MonoBehaviour
             }
             return;
         }
+
         if (!isActive)
         {
             isActive = true;
@@ -275,6 +285,7 @@ public class FxRLaserPointer : MonoBehaviour
         {
             ActiveLaserPointer = this;
         }
+
         LaserShowing = (ActiveLaserPointer == this);
         if (ActiveLaserPointer != this)
         {
@@ -292,32 +303,15 @@ public class FxRLaserPointer : MonoBehaviour
         Ray raycast = new Ray(transform.position, transform.forward);
         RaycastHit hit;
         bool bHit = Physics.Raycast(raycast, out hit);
-
-        if (previousContact && previousContact != hit.transform)
-        {
-            // Handle FxRWindow messages directly.
-            // TODO: convert to a more generic event system.
-            FxRWindow fxrWindow = previousContact.gameObject.GetComponentInParent(typeof(FxRWindow)) as FxRWindow;
-            if (fxrWindow != null)
-            {
-                fxrWindow.PointerExit();
-            }
-
-            // Default event system.
-            PointerEventArgs args = new PointerEventArgs();
-            args.fromInputSource = pose.inputSource;
-            args.distance = 0f;
-            args.flags = 0;
-            args.target = previousContact;
-            OnPointerOut(args);
-
-            previousContact = null;
-        }
-
+        
         if (!bHit)
         {
             previousContact = null;
             hitTarget.SetActive(false);
+            if (interactWithUI.GetStateUp(pose.inputSource))
+            {
+                OnPointerAirClick?.Invoke();
+            }
         }
         else
         {
@@ -326,6 +320,25 @@ public class FxRLaserPointer : MonoBehaviour
 
             if (previousContact != hit.transform)
             {
+                if (previousContact)
+                {
+                    // Handle FxRWindow messages directly.
+                    // TODO: convert to a more generic event system.
+                    FxRWindow previousWindow = previousContact.gameObject.GetComponentInParent(typeof(FxRWindow)) as FxRWindow;
+                    if (previousWindow != null)
+                    {
+                        previousWindow.PointerExit();
+                    }
+
+                    // Default event system.
+                    PointerEventArgs args = new PointerEventArgs();
+                    args.fromInputSource = pose.inputSource;
+                    args.distance = 0f;
+                    args.flags = 0;
+                    args.target = previousContact;
+                    OnPointerOut(args);
+                }
+                
                 // Handle FxRWindow messages directly.
                 // TODO: convert to a more generic event system.
                 if (fxrWindow != null)
