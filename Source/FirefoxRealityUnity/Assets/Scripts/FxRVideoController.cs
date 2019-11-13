@@ -7,9 +7,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Valve.VR;
 
 public class FxRVideoController : FxRPointableSurface
 {
+    public delegate void VideoProjectionModeSwitched(FxRVideoProjectionMode.PROJECTION_MODE newMode);
+
+    public static VideoProjectionModeSwitched OnVideoProjectionModeSwitched;
+
     [SerializeField] protected GameObject VideoControls;
     [SerializeField] protected GameObject ProjectionSelectionMenu;
     [SerializeField] protected GameObject FullScreenVideoMenu;
@@ -56,6 +61,22 @@ public class FxRVideoController : FxRPointableSurface
     }
 
     private bool _projectionSelectionMenuVisible = true;
+    private bool pointerClickInitialized;
+
+    public FxRVideoProjectionMode.PROJECTION_MODE VideoProjectionMode
+    {
+        get => _videoProjectionMode;
+        private set
+        {
+            if (value != _videoProjectionMode)
+            {
+                OnVideoProjectionModeSwitched?.Invoke(value);
+            }
+
+            _videoProjectionMode = value;
+        }
+    }
+    private FxRVideoProjectionMode.PROJECTION_MODE _videoProjectionMode = FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D;
     private const float DEFAULT_FULLSCREEN_VIDEO_WIDTH = 4.0f;
 
     public void ToggleProjectionSelectionMenuVisible()
@@ -81,9 +102,18 @@ public class FxRVideoController : FxRPointableSurface
 //            }
             DetachVideoTexture();
             Destroy(_videoProjection);
+            _videoProjection = null;
         }
 
-        switch (projectionMode)
+        if (VideoProjectionMode == FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D
+            && projectionMode != FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D)
+        {
+            VideoControlsVisible = true;
+        }
+        VideoProjectionMode = projectionMode;
+        FullScreenVideoMenu.SetActive(VideoProjectionMode == FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D);
+
+        switch (VideoProjectionMode)
         {
             case FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D:
                 ProjectVideo2D();
@@ -239,6 +269,7 @@ public class FxRVideoController : FxRPointableSurface
 
         _videoTexture = CreateVideoTexture(pixelwidth, pixelheight, format);
         SwitchProjectionMode(projectionMode);
+        VideoControlsVisible = (projectionMode != FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D);
 
         return true;
     }
@@ -268,8 +299,6 @@ public class FxRVideoController : FxRPointableSurface
         _videoProjection.transform.localPosition = Vector3.zero;
         _videoProjection.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
-
-        VideoControlsVisible = true;
     }
 
     private void ConfigureProjectionSurface(GameObject projectionSurface, out Material meshMaterial, string shaderName)
@@ -341,10 +370,26 @@ public class FxRVideoController : FxRPointableSurface
         VideoControlsVisible = false;
         FullScreenVideoMenu.SetActive(false);
         ProjectionSelectionMenuVisible = false;
+        VideoProjectionMode = FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D;
 
         FxRController.OnBrowsingModeChanged += HandleBrowsingModeChanged;
+        FxRLaserPointer.OnPointerAirClick += HandlePointerAirClick;
     }
 
+    private void OnDisable()
+    {
+        FxRController.OnBrowsingModeChanged -= HandleBrowsingModeChanged;
+        FxRLaserPointer.OnPointerAirClick -= HandlePointerAirClick;
+    }
+
+    private void HandlePointerAirClick()
+    {
+        if (VideoProjectionMode != FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D)
+        {
+            VideoControlsVisible = !VideoControlsVisible;
+        }
+    }
+    
     private void HandleBrowsingModeChanged(FxRController.FXR_BROWSING_MODE browsingMode)
     {
         if (browsingMode == FxRController.FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING)
