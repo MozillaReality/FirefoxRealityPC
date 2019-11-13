@@ -27,6 +27,9 @@ public class FxRVideoController : FxRPointableSurface
     [SerializeField] protected int LeftEyeLayer;
     [SerializeField] protected int RightEyeLayer;
 
+    private const string UNLIT_INSIDE_OUT_SHADER = "Unlit/InsideOut";
+    private const string UNLIT_EQUIRETANGULAR_SHADER = "Unlit/Equirectangular";
+    
     private Texture2D _videoTexture = null; // Texture object with the video image.
 
     private GameObject _videoProjection;
@@ -178,11 +181,11 @@ public class FxRVideoController : FxRPointableSurface
     {
         FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, transform.position,
             transform.rotation, transform);
-        ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
+        ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial, UNLIT_INSIDE_OUT_SHADER);
         leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(2f, .5f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
-        ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
+        ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial, UNLIT_INSIDE_OUT_SHADER);
         rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(2f, .5f));
         rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
 
@@ -194,11 +197,11 @@ public class FxRVideoController : FxRPointableSurface
     {
         FxRStereoVideoRig stereoVideoRig = Instantiate<FxRStereoVideoRig>(Stereo180VideoRigPrefab, transform.position,
             transform.rotation, transform);
-        ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
+        ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial, UNLIT_INSIDE_OUT_SHADER);
 //        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(.5f, 1f));
         leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
-        ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
+        ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial, UNLIT_INSIDE_OUT_SHADER);
 //        rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(.5f, 1f));
         rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0.5f, 0f));
 
@@ -210,13 +213,13 @@ public class FxRVideoController : FxRPointableSurface
     {
         var stereoVideoRig = Instantiate(Stereo360VideoRigPrefab, transform.position, transform.rotation, transform);
 
-        ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial);
-        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
-        leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
-
-        ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial);
+        ConfigureProjectionSurface(stereoVideoRig.RightEyeProjectionSurface, out var rightEyeMaterial, UNLIT_EQUIRETANGULAR_SHADER);
         rightEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
-        rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
+        rightEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, .5f));
+
+        ConfigureProjectionSurface(stereoVideoRig.LeftEyeProjectionSurface, out var leftEyeMaterial, UNLIT_EQUIRETANGULAR_SHADER);
+        leftEyeMaterial.SetTextureScale("_MainTex", new Vector2(1f, .5f));
+        leftEyeMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
 
         _videoProjection = stereoVideoRig.gameObject;
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
@@ -229,7 +232,7 @@ public class FxRVideoController : FxRPointableSurface
             transform);
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
         _videoProjection.transform.localRotation = Quaternion.Euler(0f, -180f, 0f);
-        ConfigureProjectionSurface(_videoProjection, out var meshMaterial);
+        ConfigureProjectionSurface(_videoProjection, out var meshMaterial, UNLIT_INSIDE_OUT_SHADER);
 
         meshMaterial.SetTextureScale("_MainTex", new Vector2(2f, 1f));
         meshMaterial.SetTextureOffset("_MainTex", new Vector2(0f, 0f));
@@ -290,7 +293,7 @@ public class FxRVideoController : FxRPointableSurface
     {
         _videoProjection = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
-        ConfigureProjectionSurface(_videoProjection, out _);
+        ConfigureProjectionSurface(_videoProjection, out Material meshMaterial, UNLIT_EQUIRETANGULAR_SHADER);
 
         _videoProjection.transform.SetParent(transform);
         _videoProjection.transform.localPosition = Vector3.zero;
@@ -298,7 +301,7 @@ public class FxRVideoController : FxRPointableSurface
         _videoProjection.transform.localScale = new Vector3(100f, 100f, 100f);
     }
 
-    private void ConfigureProjectionSurface(GameObject projectionSurface, out Material meshMaterial)
+    private void ConfigureProjectionSurface(GameObject projectionSurface, out Material meshMaterial, string shaderName)
     {
         // Flip the mesh uv's so it renders right-side-up
         var mesh = projectionSurface.GetComponent<MeshFilter>().mesh;
@@ -311,7 +314,7 @@ public class FxRVideoController : FxRPointableSurface
 
         mesh.uv = flippedUVs.ToArray();
         // Set up the material
-        Shader shaderSource = Shader.Find("Unlit/InsideOut");
+        Shader shaderSource = Shader.Find(shaderName);
         meshMaterial = new Material(shaderSource);
         meshMaterial.hideFlags = HideFlags.HideAndDontSave;
         meshMaterial.mainTexture = _videoTexture;
