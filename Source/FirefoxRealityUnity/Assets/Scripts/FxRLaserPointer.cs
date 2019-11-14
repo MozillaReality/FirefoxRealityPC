@@ -43,6 +43,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
 using Valve.VR;
 
 public class FxRLaserPointer : MonoBehaviour
@@ -163,7 +164,7 @@ public class FxRLaserPointer : MonoBehaviour
         MeshFilter filter = hitTarget.AddComponent<MeshFilter>();
         filter.mesh = m;
         MeshRenderer meshRenderer = hitTarget.AddComponent<MeshRenderer>();
-        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
         hitTarget.GetComponent<Renderer>().material = mat;
         hitTarget.SetActive(false);

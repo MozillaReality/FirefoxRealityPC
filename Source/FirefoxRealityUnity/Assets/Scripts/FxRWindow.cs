@@ -5,11 +5,8 @@
 
 using UnityEngine;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TMPro;
 using UnityEngine.UI;
+using Valve.VR;
 using VRIME2;
 
 public class FxRWindow : FxRPointableSurface
@@ -248,12 +245,14 @@ public class FxRWindow : FxRPointableSurface
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
 
-        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
-            0, flipX, flipY);
-        _videoMeshGO.transform.parent = this.gameObject.transform;
-        _videoMeshGO.transform.localPosition = Vector3.zero;
-        _videoMeshGO.transform.localRotation = Quaternion.identity;
-        _videoMeshGO.SetActive(Visible);
+        SteamVR_Overlay.instance.texture = _videoTexture;
+        SteamVR_Overlay.instance.gameObject.SetActive(true);
+//        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
+//            0, flipX, flipY);
+//        _videoMeshGO.transform.parent = this.gameObject.transform;
+//        _videoMeshGO.transform.localPosition = Vector3.zero;
+//        _videoMeshGO.transform.localRotation = Quaternion.identity;
+//        _videoMeshGO.SetActive(Visible);
     }
 
     public void WasResized(int widthPixels, int heightPixels)
