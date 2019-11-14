@@ -34,6 +34,12 @@ namespace Valve.VR
 
         private ulong handle = OpenVR.k_ulOverlayHandleInvalid;
 
+        public void MakeInteractive(bool shouldBeInteractive)
+        {
+            OpenVR.Overlay?.SetOverlayFlag(handle, VROverlayFlags.MakeOverlaysInteractiveIfVisible, shouldBeInteractive);
+            OpenVR.Overlay?.SetOverlayFlag(handle, VROverlayFlags.SendVRDiscreteScrollEvents, shouldBeInteractive);
+        }
+        
         void OnEnable()
         {
             var overlay = OpenVR.Overlay;
@@ -45,6 +51,10 @@ namespace Valve.VR
                     Debug.Log("<b>[SteamVR]</b> " + overlay.GetOverlayErrorNameFromEnum(error));
                     enabled = false;
                     return;
+                }
+                else
+                {
+                    MakeInteractive(true);
                 }
             }
 

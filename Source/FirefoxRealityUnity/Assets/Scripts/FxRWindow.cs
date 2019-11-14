@@ -92,6 +92,13 @@ public class FxRWindow : FxRPointableSurface
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
         VRIMEKeyboardInputField.onValueChanged.AddListener(HandleVRIMEInputFieldChanged);
         VRIME_Manager.Ins.onSubmit.AddListener(HandleVRIMESubmit);
+        VRIME_Manager.Ins.onCallIME.AddListener(HandleIMEShow);
+
+    }
+
+    private void HandleIMEShow(bool isShowing)
+    {
+        SteamVR_Overlay.instance.MakeInteractive(!isShowing);
     }
 
     private void HandleVRIMESubmit(string submittedText)
@@ -137,7 +144,7 @@ public class FxRWindow : FxRPointableSurface
 
                         // Lop off tail of lastVRIMEString, for next time through the loop
                         lastVRIMEString = lastVRIMEString.Substring(0, lastVRIMEString.Length - backspaceCount);
-                        
+
                         // Append the character
                         fxr_plugin.fxrKeyEvent(_windowIndex, currentText[i]);
                     }
@@ -193,7 +200,7 @@ public class FxRWindow : FxRPointableSurface
     private void HandleKeyPressed(int keycode)
     {
         // TODO: All windows will respond to all keyboard presses. Since we only ever have one at the moment...
-        
+
         // Handle returns and backspaces only...
         if (keycode == 0x0D // Return
             // Explicitly pass backspaces along, if the input text is empty...
@@ -247,6 +254,7 @@ public class FxRWindow : FxRPointableSurface
 
         SteamVR_Overlay.instance.texture = _videoTexture;
         SteamVR_Overlay.instance.gameObject.SetActive(true);
+
 //        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
 //            0, flipX, flipY);
 //        _videoMeshGO.transform.parent = this.gameObject.transform;
@@ -275,6 +283,35 @@ public class FxRWindow : FxRPointableSurface
         {
             //Debug.Log("FxRWindow.Update() with _windowIndex == " + _windowIndex);
             fxr_plugin?.fxrRequestWindowUpdate(_windowIndex, Time.deltaTime);
+
+            VREvent_t overlayEvent = new VREvent_t();
+            if (SteamVR_Overlay.instance.PollNextEvent(ref overlayEvent))
+            {
+                switch (overlayEvent.eventType)
+                {
+                    case (int) EVREventType.VREvent_MouseMove:
+                        PointerOver(new Vector2(overlayEvent.data.mouse.x / SteamVR_Overlay.instance.mouseScale.x, overlayEvent.data.mouse.y / SteamVR_Overlay.instance.mouseScale.y));
+                        break;
+                    case (int) EVREventType.VREvent_MouseButtonDown:
+                        PointerPress(new Vector2(overlayEvent.data.mouse.x / SteamVR_Overlay.instance.mouseScale.x, overlayEvent.data.mouse.y / SteamVR_Overlay.instance.mouseScale.y));
+                        break;
+                    case (int) EVREventType.VREvent_MouseButtonUp:
+                        PointerRelease(new Vector2(overlayEvent.data.mouse.x / SteamVR_Overlay.instance.mouseScale.x, overlayEvent.data.mouse.y / SteamVR_Overlay.instance.mouseScale.y));
+                        break;
+                    case (int) EVREventType.VREvent_FocusEnter:
+                        PointerEnter();
+                        break;
+                    case (int) EVREventType.VREvent_FocusLeave:
+                        PointerExit();
+                        break;
+                    case (int) EVREventType.VREvent_ScrollDiscrete:
+                        PointerScrollDiscrete(new Vector2(overlayEvent.data.scroll.xdelta, overlayEvent.data.scroll.ydelta));
+                        break;
+                    default:
+                        Debug.LogWarning(">>> event: " + overlayEvent.eventType);
+                        break;
+                }
+            }
         }
 
         else
