@@ -13,6 +13,7 @@ public class FxRWindow : FxRPointableSurface
 {
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
 
+    [SerializeField] private SteamVR_Overlay Overlay;
     [SerializeField] private InputField VRIMEKeyboardInputField;
     public bool flipX = false;
     public bool flipY = false;
@@ -23,8 +24,7 @@ public class FxRWindow : FxRPointableSurface
     private float textureScaleV;
     private bool pollForVREvents = true;
 
-    private GameObject
-        _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
+//    private GameObject _videoMeshGO = null; // The GameObject which holds the MeshFilter and MeshRenderer for the video. 
 
     private Texture2D _videoTexture = null; // Texture object with the video image.
 
@@ -61,7 +61,10 @@ public class FxRWindow : FxRPointableSurface
     {
         // TODO: Stopgap until video textures are supported in plugin
         fxr_plugin?.fxrSetWindowUnityTextureID(_windowIndex, IntPtr.Zero);
-        _videoMeshGO.GetComponent<Renderer>().material.mainTexture = null;
+
+        Overlay.texture = null;
+        Visible = false;
+//        _videoMeshGO.GetComponent<Renderer>().material.mainTexture = null;
         Destroy(_videoTexture);
         _videoTexture = null;
 
@@ -73,7 +76,9 @@ public class FxRWindow : FxRPointableSurface
     {
         _videoTexture = CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU,
             out textureScaleV);
-        _videoMeshGO.GetComponent<Renderer>().material.mainTexture = _videoTexture;
+        Overlay.texture = _videoTexture;
+        Visible = true;
+//        _videoMeshGO.GetComponent<Renderer>().material.mainTexture = _videoTexture;
     }
 
     public static FxRWindow CreateNewInParent(GameObject parent)
@@ -93,12 +98,11 @@ public class FxRWindow : FxRPointableSurface
         VRIMEKeyboardInputField.onValueChanged.AddListener(HandleVRIMEInputFieldChanged);
         VRIME_Manager.Ins.onSubmit.AddListener(HandleVRIMESubmit);
         VRIME_Manager.Ins.onCallIME.AddListener(HandleIMEShow);
-
     }
 
     private void HandleIMEShow(bool isShowing)
     {
-        SteamVR_Overlay.instance.MakeInteractive(!isShowing);
+        Overlay.MakeInteractive(!isShowing);
     }
 
     private void HandleVRIMESubmit(string submittedText)
@@ -170,10 +174,11 @@ public class FxRWindow : FxRPointableSurface
         set
         {
             visible = value;
-            if (_videoMeshGO != null)
-            {
-                _videoMeshGO.SetActive(visible);
-            }
+            Overlay.enabled = visible;
+//            if (_videoMeshGO != null)
+//            {
+//                _videoMeshGO.SetActive(visible);
+//            }
         }
     }
 
@@ -252,15 +257,10 @@ public class FxRWindow : FxRPointableSurface
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
 
-        SteamVR_Overlay.instance.texture = _videoTexture;
-        SteamVR_Overlay.instance.gameObject.SetActive(true);
-
-//        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
-//            0, flipX, flipY);
-//        _videoMeshGO.transform.parent = this.gameObject.transform;
-//        _videoMeshGO.transform.localPosition = Vector3.zero;
-//        _videoMeshGO.transform.localRotation = Quaternion.identity;
-//        _videoMeshGO.SetActive(Visible);
+        Overlay.texture = _videoTexture;
+        Overlay.scale = Width;
+        Overlay.mouseScale = new Vector2(1f, -Height / Width);
+        Overlay.enabled = true;
     }
 
     public void WasResized(int widthPixels, int heightPixels)
@@ -271,32 +271,38 @@ public class FxRWindow : FxRPointableSurface
         _videoTexture =
             CreateWindowTexture(videoSize.x, videoSize.y, _textureFormat, out textureScaleU, out textureScaleV);
         Destroy(oldTexture);
+        Overlay.texture = _videoTexture;
+        Overlay.scale = Width;
+        Overlay.mouseScale = new Vector2(1f, -Height / Width);
 
-        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width,
-            Height, flipX, flipY);
+//        FxRTextureUtils.Configure2DVideoSurface(_videoMeshGO, _videoTexture, textureScaleU, textureScaleV, Width,
+//            Height, flipX, flipY);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (_windowIndex != 0)
+        if (_windowIndex != 0 && Visible)
         {
             //Debug.Log("FxRWindow.Update() with _windowIndex == " + _windowIndex);
             fxr_plugin?.fxrRequestWindowUpdate(_windowIndex, Time.deltaTime);
 
             VREvent_t overlayEvent = new VREvent_t();
-            if (SteamVR_Overlay.instance.PollNextEvent(ref overlayEvent))
+            if (Overlay.PollNextEvent(ref overlayEvent))
             {
                 switch (overlayEvent.eventType)
                 {
                     case (int) EVREventType.VREvent_MouseMove:
-                        PointerOver(new Vector2(overlayEvent.data.mouse.x / SteamVR_Overlay.instance.mouseScale.x, overlayEvent.data.mouse.y / SteamVR_Overlay.instance.mouseScale.y));
+                        PointerOver(new Vector2(overlayEvent.data.mouse.x / Overlay.mouseScale.x,
+                            overlayEvent.data.mouse.y / Overlay.mouseScale.y));
                         break;
                     case (int) EVREventType.VREvent_MouseButtonDown:
-                        PointerPress(new Vector2(overlayEvent.data.mouse.x / SteamVR_Overlay.instance.mouseScale.x, overlayEvent.data.mouse.y / SteamVR_Overlay.instance.mouseScale.y));
+                        PointerPress(new Vector2(overlayEvent.data.mouse.x / Overlay.mouseScale.x,
+                            overlayEvent.data.mouse.y / Overlay.mouseScale.y));
                         break;
                     case (int) EVREventType.VREvent_MouseButtonUp:
-                        PointerRelease(new Vector2(overlayEvent.data.mouse.x / SteamVR_Overlay.instance.mouseScale.x, overlayEvent.data.mouse.y / SteamVR_Overlay.instance.mouseScale.y));
+                        PointerRelease(new Vector2(overlayEvent.data.mouse.x / Overlay.mouseScale.x,
+                            overlayEvent.data.mouse.y / Overlay.mouseScale.y));
                         break;
                     case (int) EVREventType.VREvent_FocusEnter:
                         PointerEnter();
@@ -305,7 +311,8 @@ public class FxRWindow : FxRPointableSurface
                         PointerExit();
                         break;
                     case (int) EVREventType.VREvent_ScrollDiscrete:
-                        PointerScrollDiscrete(new Vector2(overlayEvent.data.scroll.xdelta, overlayEvent.data.scroll.ydelta));
+                        PointerScrollDiscrete(new Vector2(overlayEvent.data.scroll.xdelta,
+                            overlayEvent.data.scroll.ydelta));
                         break;
                     default:
                         Debug.LogWarning(">>> event: " + overlayEvent.eventType);
@@ -320,6 +327,15 @@ public class FxRWindow : FxRPointableSurface
         }
     }
 
+//    private void CereateVideoMesh()
+//    {
+//        _videoMeshGO = FxRTextureUtils.Create2DVideoSurface(_videoTexture, textureScaleU, textureScaleV, Width, Height,
+//            0, flipX, flipY);
+//        _videoMeshGO.transform.parent = this.gameObject.transform;
+//        _videoMeshGO.transform.localPosition = Vector3.zero;
+//        _videoMeshGO.transform.localRotation = Quaternion.identity;
+//        _videoMeshGO.SetActive(Visible);
+//    }
     // Pointer events from FxRLaserPointer.
 
 //
@@ -351,6 +367,9 @@ public class FxRWindow : FxRPointableSurface
 
     private void DestroyWindow()
     {
+        Overlay.texture = null;
+        Overlay.enabled = false;
+
         bool ed = Application.isEditor;
         if (_videoTexture != null)
         {
@@ -359,12 +378,12 @@ public class FxRWindow : FxRPointableSurface
             _videoTexture = null;
         }
 
-        if (_videoMeshGO != null)
-        {
-            if (ed) DestroyImmediate(_videoMeshGO);
-            else Destroy(_videoMeshGO);
-            _videoMeshGO = null;
-        }
+//        if (_videoMeshGO != null)
+//        {
+//            if (ed) DestroyImmediate(_videoMeshGO);
+//            else Destroy(_videoMeshGO);
+//            _videoMeshGO = null;
+//        }
 
         Resources.UnloadUnusedAssets();
     }

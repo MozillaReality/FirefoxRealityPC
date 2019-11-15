@@ -21412,6 +21412,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5431483de53804cb7ce7276f93d791, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Overlay: {fileID: 1505601007}
   VRIMEKeyboardInputField: {fileID: 744748821}
   flipX: 0
   flipY: 1
