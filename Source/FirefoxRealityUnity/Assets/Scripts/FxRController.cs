@@ -128,7 +128,7 @@ public class FxRController : MonoBehaviour
     private Vector3 initialBodyDirection;
     private bool bodyDirectionInitialzed;
     private int bodyDirectionChecks;
-    
+
     void OnEnable()
     {
         initialBodyDirection = Player.instance.bodyDirectionGuess;
@@ -188,6 +188,15 @@ public class FxRController : MonoBehaviour
         VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
 
         FxRFirefoxDesktopInstallation.OnInstallationProcessComplete += HandleInstallationProcessComplete;
+        FxRController.OnBrowsingModeChanged += HandleBrowsingModeChanged;
+    }
+
+    private void HandleBrowsingModeChanged(FXR_BROWSING_MODE browsingMode)
+    {
+        foreach (var laserPointer in LaserPointers)
+        {
+            laserPointer.enabled = (browsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING);
+        }
     }
 
     private void HandleInstallationProcessComplete()
@@ -279,6 +288,7 @@ public class FxRController : MonoBehaviour
 
         // VRIME keyboard event registration
         VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
+        OnBrowsingModeChanged -= HandleBrowsingModeChanged;
     }
 
     void Start()
@@ -298,7 +308,7 @@ public class FxRController : MonoBehaviour
 
     void Update()
     {
-        if (!bodyDirectionInitialzed 
+        if (!bodyDirectionInitialzed
             && !initialBodyDirection.Equals(Player.instance.bodyDirectionGuess))
         {
             bodyDirectionChecks++;
@@ -386,7 +396,7 @@ public class FxRController : MonoBehaviour
     {
         foreach (var laserPointer in LaserPointers)
         {
-            laserPointer.enabled = !iShow;
+            laserPointer.enabled = (!iShow && CurrentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING);
         }
 
         if (iShow)

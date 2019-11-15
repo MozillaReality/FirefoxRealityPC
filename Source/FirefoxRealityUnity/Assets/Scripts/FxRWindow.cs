@@ -5,6 +5,7 @@
 
 using UnityEngine;
 using System;
+using System.Collections;
 using UnityEngine.UI;
 using Valve.VR;
 using VRIME2;
@@ -102,7 +103,17 @@ public class FxRWindow : FxRPointableSurface
 
     private void HandleIMEShow(bool isShowing)
     {
-        Overlay.MakeInteractive(!isShowing);
+        StartCoroutine(MakeOverlayInteractiveAsync(!isShowing));
+    }
+
+    private IEnumerator MakeOverlayInteractiveAsync(bool shouldBeInteractive)
+    {
+        if (shouldBeInteractive)
+        {
+            // Hack to make sure that the keyboard has a chance to disappear before allowing native laser pointer to become interactive
+            yield return new WaitForSeconds(.5f);
+        }
+        Overlay.MakeInteractive(shouldBeInteractive);
     }
 
     private void HandleVRIMESubmit(string submittedText)
@@ -314,9 +325,9 @@ public class FxRWindow : FxRPointableSurface
                         PointerScrollDiscrete(new Vector2(overlayEvent.data.scroll.xdelta,
                             overlayEvent.data.scroll.ydelta));
                         break;
-                    default:
-                        Debug.LogWarning(">>> event: " + overlayEvent.eventType);
-                        break;
+//                    default:
+//                        Debug.LogWarning(">>> event: " + overlayEvent.eventType);
+//                        break;
                 }
             }
         }
