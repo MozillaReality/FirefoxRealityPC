@@ -37500,9 +37500,9 @@ MonoBehaviour:
   texture: {fileID: 8400000, guid: 005ed5a6df2f5ff468efd6497d37fefa, type: 2}
   scale: 3
   distance: 0
-  alpha: 0.9
-  uvOffset: {x: 0, y: 0, z: 1, w: 1}
-  mouseScale: {x: 1, y: 0.5625}
+  alpha: 1
+  uvOffset: {x: 0, y: -1, z: 1, w: -1}
+  mouseScale: {x: 1, y: -0.5625}
   inputMethod: 1
 --- !u!43 &1508100180
 Mesh:
@@ -38687,7 +38687,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1696966267
 Transform:
   m_ObjectHideFlags: 0
