@@ -14,6 +14,9 @@ public class FxRWindow : FxRPointableSurface
 {
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
 
+    // NOTE: We are currently using the SteamVR_Overlay class for convenience, but if we wanted to use overlays
+    // for multiple windows down the line, we should interface directly with the underlying OpenVR.Overlay class,
+    // Since the SteamVR_Overlay class is a singleton that only supports a single overlay.
     [SerializeField] private SteamVR_Overlay Overlay;
     [SerializeField] private InputField VRIMEKeyboardInputField;
     public bool flipX = false;
