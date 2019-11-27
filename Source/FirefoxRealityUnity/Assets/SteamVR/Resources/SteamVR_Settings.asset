@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7f99b5209bd86441a74f3b0c7aab951, type: 3}
   m_Name: SteamVR_Settings
   m_EditorClassIdentifier: 
-  pauseGameWhenDashboardVisible: 1
+  pauseGameWhenDashboardVisible: 0
   lockPhysicsUpdateRateToRenderFrequency: 1
   trackingSpaceOrigin: 1
   actionsFilePath: actions.json
@@ -28,3 +28,7 @@ MonoBehaviour:
     needsReinit: 0
   mixedRealityCameraInputSource: 11
   mixedRealityActionSetAutoEnable: 1
+  previewHandLeft: {fileID: 1000013348574242, guid: 638779290bce1af49b356f33dcc6fccf,
+    type: 3}
+  previewHandRight: {fileID: 1000010304998954, guid: 6def53d002137b747aec0b29551e0e25,
+    type: 3}

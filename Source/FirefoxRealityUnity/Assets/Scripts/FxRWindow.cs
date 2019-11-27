@@ -106,7 +106,8 @@ public class FxRWindow : FxRPointableSurface
 
     private void HandleIMEShow(bool isShowing)
     {
-        StartCoroutine(MakeOverlayInteractiveAsync(!isShowing));
+        Overlay.MakeInteractive(!isShowing);
+//        StartCoroutine(MakeOverlayInteractiveAsync(!isShowing));
     }
 
     private IEnumerator MakeOverlayInteractiveAsync(bool shouldBeInteractive)

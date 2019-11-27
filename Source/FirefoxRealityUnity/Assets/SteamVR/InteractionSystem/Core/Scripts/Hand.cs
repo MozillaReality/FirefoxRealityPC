@@ -1204,7 +1204,7 @@ namespace Valve.VR.InteractionSystem
                     }
 
 
-                    if (attachedInfo.interactable.attachEaseIn)
+                    if (attachedInfo.interactable != null && attachedInfo.interactable.attachEaseIn)
                     {
                         float t = Util.RemapNumberClamped(Time.time, attachedInfo.attachTime, attachedInfo.attachTime + attachedInfo.interactable.snapAttachEaseInTime, 0.0f, 1.0f);
                         if (t < 1.0f)
