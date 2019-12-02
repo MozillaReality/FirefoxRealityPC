@@ -257,7 +257,7 @@ namespace Valve.VR
                 }
 
                 sceneResolutionScale = SteamVR_Camera.sceneResolutionScale;
-                SteamVR_Camera.sceneResolutionScale = 0.5f;
+//                SteamVR_Camera.sceneResolutionScale = 0.5f;
             }
         }
 
