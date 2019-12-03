@@ -12,6 +12,7 @@ using UnityEngine.XR;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using VRIME2;
+using Hand = Valve.VR.InteractionSystem.Hand;
 
 public class FxRController : MonoBehaviour
 {
@@ -95,6 +96,22 @@ public class FxRController : MonoBehaviour
     }
 
     private List<FxRLaserPointer> laserPointers;
+    
+    private List<Hand> Hands
+    {
+        get
+        {
+            if (hands == null)
+            {
+                hands = new List<Hand>();
+                hands.AddRange(FindObjectsOfType<Hand>());
+            }
+
+            return hands;
+        }
+    }
+
+    private List<Hand> hands;
     private int _hackKeepWindowIndex;
 
     //
@@ -396,6 +413,10 @@ public class FxRController : MonoBehaviour
             SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
                 SteamVR_Input_Sources.RightHand);
 
+            foreach (var hand in Hands)
+            {
+                hand.HideController();
+            }
             //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
             //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
 
@@ -409,6 +430,10 @@ public class FxRController : MonoBehaviour
             SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
                 SteamVR_Input_Sources.RightHand);
 
+            foreach (var hand in Hands)
+            {
+                hand.ShowController();
+            }
             //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
             //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
 

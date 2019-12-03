@@ -204,6 +204,8 @@ public class FxRLaserPointer : MonoBehaviour
 
         // Make sure only one laser pointer is showing at once
         AllLaserPointers.Add(this);
+        
+        LaserShowing = false;
     }
 
     public virtual void OnPointerIn(PointerEventArgs e)
