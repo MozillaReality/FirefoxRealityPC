@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -30,7 +29,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private const string NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY = "NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY";
     private const string FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY = "FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY";
-    private const string FXR_PC_VERSIONS_JSON_FILENAME = "fxrpc_versions.json";
+    public static readonly string FXR_PC_VERSIONS_JSON_FILENAME = "fxrpc_versions.json";
 
     int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
 

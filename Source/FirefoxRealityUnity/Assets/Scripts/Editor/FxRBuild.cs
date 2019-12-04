@@ -54,15 +54,32 @@ public class FxRBuild
         {
             // Copy nightly build to streaming assets directory
             string streamingAssetsDestination =
-                Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "firefox");
-            DirectoryCopy(nightlyBuildPath, streamingAssetsDestination, true);
+                Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets");
+
+            string streamingAssetsFirefoxDestination =
+                Path.Combine(streamingAssetsDestination, "firefox");
+            DirectoryCopy(nightlyBuildPath, streamingAssetsFirefoxDestination, true);
 
             if (!string.IsNullOrEmpty(profilePath))
             {
                 string profileDestination =
-                    Path.Combine(saveFolder, "FirefoxReality_Data", "StreamingAssets", "fxr-profile");
+                    Path.Combine(streamingAssetsDestination, "fxr-profile");
                 DirectoryCopy(profilePath, profileDestination, true);
             }
+
+            // Copy the version file to StreamingAssets
+            string versionsJSONFilePathSource = Path.Combine("..", "..", "docs",
+                FxRFirefoxDesktopInstallation.FXR_PC_VERSIONS_JSON_FILENAME);
+            string versionsJSONFilePathDestination = Path.Combine(streamingAssetsDestination,
+                FxRFirefoxDesktopInstallation.FXR_PC_VERSIONS_JSON_FILENAME);
+            // Remove any existing file that might be being used for testing purposes
+            if (File.Exists(versionsJSONFilePathDestination))
+            {
+                File.Delete(versionsJSONFilePathDestination);
+            }
+
+            FileUtil.CopyFileOrDirectory(versionsJSONFilePathSource, versionsJSONFilePathDestination);
+
             BuildSuccessfull = true;
             Debug.Log("Build successful.");
         }
