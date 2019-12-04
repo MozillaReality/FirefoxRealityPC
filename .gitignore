@@ -381,3 +381,5 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+Source/FirefoxRealityUnity/Assets/StreamingAssets/fxrpc_versions.json
+Source/FirefoxRealityUnity/Assets/StreamingAssets/fxrpc_versions.json.meta
