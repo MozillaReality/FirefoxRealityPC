@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using UnityEngine;
+ using UnityEngine;
 
 public class FxRTextureUtils : MonoBehaviour
 {
@@ -55,7 +55,7 @@ public class FxRTextureUtils : MonoBehaviour
         vmgo.layer = layer;
 
         // Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
-        Shader shaderSource = Shader.Find("TextureNoLight");
+        Shader shaderSource = Shader.Find("Unlit/Transparent");
         Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
         vm.hideFlags = HideFlags.HideAndDontSave;
         //Debug.Log("Created video material");
