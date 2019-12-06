@@ -6,5 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/LoadingScene.unity
+    guid: 2e1e6ac413329fb43963737a0d33c55e
+  - enabled: 1
     path: Assets/Environments/Mushroom_Crystal_Cave/environment_mushroom_crystal_cave.unity
     guid: 56aae1e7fa6c73f45910fcd8a044b1e0
+  m_configObjects: {}
