@@ -56,6 +56,7 @@ public:
 	FxRWindowDX11(FxRWindowDX11 &&) noexcept = default;
 	FxRWindowDX11& operator=(FxRWindowDX11 &&) noexcept = default;
 	void CloseVRWindow() override;
+	void WindowCreated(uint32_t vrWin, void* fxTexHandle, PFN_WINDOWCREATEDCALLBACK windowCreatedCallback);
 
 	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}

@@ -385,6 +385,12 @@ public class FxRController : MonoBehaviour
         }
 
         FullScreenStateChanged = false;
+
+        if (WindowCreatedCallbackCalled)
+        {
+            HandleWindowCreated();
+            WindowCreatedCallbackCalled = false;
+        }
     }
 
     public void ToggleKeyboard()
@@ -448,40 +454,15 @@ public class FxRController : MonoBehaviour
         Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" +
                   widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
 
-        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
-        if (window == null)
+        WindowCreatedCallbackCalled = true;
+        WindowCreatedCallbackParams = new WindowCreatedParams()
         {
-            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
-        }
-
-        TextureFormat format;
-        switch (formatNative)
-        {
-            case 1:
-                format = TextureFormat.RGBA32;
-                break;
-            case 2:
-                format = TextureFormat.BGRA32;
-                break;
-            case 3:
-                format = TextureFormat.ARGB32;
-                break;
-            case 5:
-                format = TextureFormat.RGB24;
-                break;
-            case 7:
-                format = TextureFormat.RGBA4444;
-                break;
-            case 9:
-                format = TextureFormat.RGB565;
-                break;
-            default:
-                format = (TextureFormat) 0;
-                break;
-        }
-
-        _hackKeepWindowIndex = windowIndex;
-        window.WasCreated(windowIndex, widthPixels, heightPixels, format);
+            uid = uid,
+            windowIndex = windowIndex,
+            widthPixels = widthPixels,
+            heightPixels = heightPixels,
+            formatNative = formatNative
+        };
 
 //        StartCoroutine(TestRsize(window));
     }
@@ -516,6 +497,19 @@ public class FxRController : MonoBehaviour
     FxRPlugin.FxREventState lastIMEState = FxRPlugin.FxREventState.Blur;
     private bool IMEStateChanged;
     private bool FullScreenStateChanged;
+    private bool WindowCreatedCallbackCalled;
+
+    private struct WindowCreatedParams
+    {
+        public int uid;
+        public int windowIndex;
+        public int widthPixels;
+        public int heightPixels;
+        public int formatNative;
+    }
+
+    private WindowCreatedParams WindowCreatedCallbackParams;
+
     FxRPlugin.FxREventState lastFullScreenState = FxRPlugin.FxREventState.Fullscreen_Exit;
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
@@ -559,5 +553,44 @@ public class FxRController : MonoBehaviour
             currentLogLevel = value;
             fxr_plugin.fxrSetLogLevel((int) currentLogLevel);
         }
+    }
+
+    private void HandleWindowCreated()
+    {
+        FxRWindow window = FxRWindow.FindWindowWithUID(WindowCreatedCallbackParams.uid);
+        if (window == null)
+        {
+            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
+        }
+
+        TextureFormat format;
+        switch (WindowCreatedCallbackParams.formatNative)
+        {
+            case 1:
+                format = TextureFormat.RGBA32;
+                break;
+            case 2:
+                format = TextureFormat.BGRA32;
+                break;
+            case 3:
+                format = TextureFormat.ARGB32;
+                break;
+            case 5:
+                format = TextureFormat.RGB24;
+                break;
+            case 7:
+                format = TextureFormat.RGBA4444;
+                break;
+            case 9:
+                format = TextureFormat.RGB565;
+                break;
+            default:
+                format = (TextureFormat) 0;
+                break;
+        }
+
+        _hackKeepWindowIndex = WindowCreatedCallbackParams.windowIndex;
+        window.WasCreated(WindowCreatedCallbackParams.windowIndex, WindowCreatedCallbackParams.widthPixels,
+            WindowCreatedCallbackParams.heightPixels, format);
     }
 }
