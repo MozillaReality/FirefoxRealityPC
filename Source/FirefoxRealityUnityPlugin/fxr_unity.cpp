@@ -249,7 +249,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessageToVRWindow");
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
 	m_pfnWaitForVREvent = (PFN_WAITFORVREVENT)::GetProcAddress(m_hVRHost, "WaitForVREvent");
-
+/*
 	CHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
 	err = sprintf_s(
 		fxCmd,
@@ -260,7 +260,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	);
 	assert(err > 0);
 
-	/*
+	
 	STARTUPINFOA startupInfoFx = { 0 };
 	bool fCreateContentProc = ::CreateProcessA(
 		nullptr,  // lpApplicationName,
