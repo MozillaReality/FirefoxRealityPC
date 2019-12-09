@@ -54,8 +54,8 @@ public class FxRTextureUtils : MonoBehaviour
 
         vmgo.layer = layer;
 
-        // Create a material which uses our "VideoPlaneNoLight" shader, and paints itself with the texture.
-        Shader shaderSource = Shader.Find("TextureNoLight");
+        // Create a material which uses our "TextureNoLight" shader, and paints itself with the texture.
+        Shader shaderSource = Shader.Find("TextureAlphaNoLight");
         Material vm = new Material(shaderSource); //fxrUnity.Properties.Resources.VideoPlaneShader;
         vm.hideFlags = HideFlags.HideAndDontSave;
         //Debug.Log("Created video material");
