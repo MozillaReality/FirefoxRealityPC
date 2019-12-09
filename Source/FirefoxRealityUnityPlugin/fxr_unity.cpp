@@ -234,7 +234,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 
 	int err;
 #ifndef USE_HARDCODED_FX_PATHS
-	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/firefox.exe");
+	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/");// firefox.exe");
 	assert(err > 0);
 	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "firefox/vrhost.dll");
 	assert(err > 0);
@@ -260,6 +260,7 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	);
 	assert(err > 0);
 
+	/*
 	STARTUPINFOA startupInfoFx = { 0 };
 	bool fCreateContentProc = ::CreateProcessA(
 		nullptr,  // lpApplicationName,
@@ -274,8 +275,9 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 		&procInfoFx
 	);
 
-	assert(fCreateContentProc);
 
+	assert(fCreateContentProc);
+	*/
 	m_windowCreatedCallback = windowCreatedCallback;
 	m_windowResizedCallback = windowResizedCallback;
 	m_vrEventCallback = vrEventCallback;
