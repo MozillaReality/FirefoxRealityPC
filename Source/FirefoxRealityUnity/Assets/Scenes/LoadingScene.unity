@@ -151,6 +151,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   LoadingOverlay: {fileID: 2045479130}
+  Hands:
+  - {fileID: 2051913668}
+  - {fileID: 2051913667}
 --- !u!4 &36074119
 Transform:
   m_ObjectHideFlags: 0
@@ -511,6 +514,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 144230, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 107946, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_Name
       value: Player
@@ -574,6 +581,10 @@ PrefabInstance:
     - target: {fileID: 125964, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_Name
       value: VRCameraLeftEye
+      objectReference: {fileID: 0}
+    - target: {fileID: 160596, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
