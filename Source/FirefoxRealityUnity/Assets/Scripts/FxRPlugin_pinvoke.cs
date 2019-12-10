@@ -43,7 +43,7 @@ public static class FxRPlugin_pinvoke
     public static extern bool fxrGetFxVersion([MarshalAs(UnmanagedType.LPStr)]StringBuilder buffer, int length);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void fxrStartFx(FxRPluginWindowCreatedCallback callback, FxRPluginWindowResizedCallback resizedCallback, FxRPluginVREventCallback vrEventCallback);
+    public static extern void fxrStartFx(FxRPluginWindowCreationRequestCompleteCallback callback, FxRPluginWindowResizedCallback resizedCallback, FxRPluginVREventCallback vrEventCallback);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrStopFx();
@@ -66,6 +66,9 @@ public static class FxRPlugin_pinvoke
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
     public static extern bool fxrRequestNewWindow(int uid, int widthPixelsRequested, int heightPixelsRequested);
+
+    [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void fxrFinishWindowCreation(int uid, int windowIndex, FxRPluginWindowCreatedCallback wccb);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrGetWindowTextureFormat(int windowIndex, out int width, out int height, out int format, [MarshalAsAttribute(UnmanagedType.I1)] out bool mipChain, [MarshalAsAttribute(UnmanagedType.I1)] out bool linear, IntPtr[] nativeTextureIDHandle);

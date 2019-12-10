@@ -123,6 +123,8 @@ enum {
 
 typedef void (FXR_CALLBACK *PFN_LOGCALLBACK)(const char* msg);
 
+typedef void (FXR_CALLBACK *PFN_WINDOWCREATIONREQUESTCOMPLETED)(int uidExt, int windowIndex);
+
 typedef void (FXR_CALLBACK *PFN_WINDOWCREATEDCALLBACK)(int uidExt, int windowIndex, int pixelWidth, int pixelHeight, int format);
 typedef void (FXR_CALLBACK *PFN_WINDOWRESIZEDCALLBACK)(int uidExt, int pixelWidth, int pixelHeight);
 
@@ -155,7 +157,7 @@ FXR_EXTERN void fxrSetLogLevel(const int logLevel);
  */
 FXR_EXTERN bool fxrGetFxVersion(char *buffer, int length);
 
-FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback);
+FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestCompletedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback);
 
 FXR_EXTERN void fxrStopFx(void);
 
@@ -171,6 +173,8 @@ FXR_EXTERN void fxrSetOpenVRSessionPtr(void *p);
 FXR_EXTERN int fxrGetWindowCount(void);
 
 FXR_EXTERN bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsRequested);
+
+FXR_EXTERN void fxrFinishWindowCreation(int uidExt, int windowIndex, PFN_WINDOWCREATEDCALLBACK windowCreatedCallback);
 
 FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
 

@@ -304,7 +304,7 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized, OnFxRVREvent);
+        fxr_plugin.fxrStartFx(OnFxWindowCreationRequestComplete, OnFxWindowResized, OnFxRVREvent);
 
         IntPtr openVRSession = XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
@@ -386,10 +386,10 @@ public class FxRController : MonoBehaviour
 
         FullScreenStateChanged = false;
 
-        if (WindowCreatedCallbackCalled)
+        if (WindowCreationRequestCompleteCallbackCalled)
         {
             HandleWindowCreated();
-            WindowCreatedCallbackCalled = false;
+            WindowCreationRequestCompleteCallbackCalled = false;
         }
     }
 
@@ -448,23 +448,15 @@ public class FxRController : MonoBehaviour
         }
     }
 
-    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
-    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreationRequestCompleteCallback))]
+    void OnFxWindowCreationRequestComplete(int uid, int windowIndex)
     {
-        Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" +
-                  widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
-
-        WindowCreatedCallbackCalled = true;
-        WindowCreatedCallbackParams = new WindowCreatedParams()
+        WindowCreationRequestCompleteCallbackCalled = true;
+        WindowCreationRequestCompleteCallbackParams = new WindowCreationRequestCompleteParams()
         {
             uid = uid,
-            windowIndex = windowIndex,
-            widthPixels = widthPixels,
-            heightPixels = heightPixels,
-            formatNative = formatNative
+            windowIndex = windowIndex
         };
-
-//        StartCoroutine(TestRsize(window));
     }
 
 //    private IEnumerator TestRsize(FxRWindow window)
@@ -497,18 +489,15 @@ public class FxRController : MonoBehaviour
     FxRPlugin.FxREventState lastIMEState = FxRPlugin.FxREventState.Blur;
     private bool IMEStateChanged;
     private bool FullScreenStateChanged;
-    private bool WindowCreatedCallbackCalled;
+    private bool WindowCreationRequestCompleteCallbackCalled;
 
-    private struct WindowCreatedParams
+    private struct WindowCreationRequestCompleteParams
     {
         public int uid;
         public int windowIndex;
-        public int widthPixels;
-        public int heightPixels;
-        public int formatNative;
     }
 
-    private WindowCreatedParams WindowCreatedCallbackParams;
+    private WindowCreationRequestCompleteParams WindowCreationRequestCompleteCallbackParams;
 
     FxRPlugin.FxREventState lastFullScreenState = FxRPlugin.FxREventState.Fullscreen_Exit;
 
@@ -557,14 +546,19 @@ public class FxRController : MonoBehaviour
 
     private void HandleWindowCreated()
     {
-        FxRWindow window = FxRWindow.FindWindowWithUID(WindowCreatedCallbackParams.uid);
+        fxr_plugin.fxrFinishWindowCreation(WindowCreationRequestCompleteCallbackParams.uid, WindowCreationRequestCompleteCallbackParams.windowIndex, OnFxWindowCreated);
+    }
+
+    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
+    {
+        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
         if (window == null)
         {
             window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
         }
 
         TextureFormat format;
-        switch (WindowCreatedCallbackParams.formatNative)
+        switch (formatNative)
         {
             case 1:
                 format = TextureFormat.RGBA32;
@@ -589,8 +583,8 @@ public class FxRController : MonoBehaviour
                 break;
         }
 
-        _hackKeepWindowIndex = WindowCreatedCallbackParams.windowIndex;
-        window.WasCreated(WindowCreatedCallbackParams.windowIndex, WindowCreatedCallbackParams.widthPixels,
-            WindowCreatedCallbackParams.heightPixels, format);
+        _hackKeepWindowIndex = windowIndex;
+        window.WasCreated(windowIndex, widthPixels,
+            heightPixels, format);
     }
 }

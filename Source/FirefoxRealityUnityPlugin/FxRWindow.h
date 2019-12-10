@@ -17,9 +17,10 @@
 class FxRWindow
 {
 protected:
-	FxRWindow(int uid, int uidExt) : m_uid(uid), m_uidExt(uidExt)  { }
+	FxRWindow(int uid, int uidExt) : m_uid(uid), m_uidExt(uidExt) { }
 	int m_uid;
 	int m_uidExt;
+	PFN_WINDOWCREATIONREQUESTCOMPLETED m_windowCreationRequestCompletedCallback;
 public:
 	virtual ~FxRWindow() {};
 
@@ -45,7 +46,12 @@ public:
 	int uid() { return m_uid; }
 	int uidExt() { return m_uidExt; }
 	int setUidExt(int uidExt) { m_uidExt = uidExt; }
-	virtual bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) = 0;
+	virtual bool init(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestCompletedCallback) {
+		m_windowCreationRequestCompletedCallback = windowCreationRequestCompletedCallback;
+		return false;
+	}
+	virtual void WindowCreationRequestComplete(uint32_t vrWin, void* fxTexHandle) = 0;
+	virtual void FinishWindowCreation(PFN_WINDOWCREATEDCALLBACK pfnWindowCreatedCallback) = 0;
 	virtual RendererAPI rendererAPI() = 0;
 	virtual Size size() = 0;
 	virtual void setSize(Size size) = 0;
