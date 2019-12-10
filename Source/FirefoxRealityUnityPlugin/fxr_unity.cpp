@@ -429,6 +429,32 @@ bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *fo
 	return true;
 }
 
+uint64_t fxrGetBufferSizeForTextureFormat(int width, int height, int format)
+{
+	if (!width || !height) return 0;
+	int Bpp;
+	switch (format) {
+		case FxRTextureFormat_BGRA32:
+		case FxRTextureFormat_RGBA32:
+		case FxRTextureFormat_ABGR32:
+		case FxRTextureFormat_ARGB32:
+			Bpp = 4;
+			break;
+		case FxRTextureFormat_BGR24:
+		case FxRTextureFormat_RGB24:
+			Bpp = 3;
+			break;
+		case FxRTextureFormat_RGB565:
+		case FxRTextureFormat_RGBA5551:
+		case FxRTextureFormat_RGBA4444:
+			Bpp = 2;
+			break;
+		default:
+			Bpp = 0;
+	}
+	return width * height * Bpp;
+}
+
 bool fxrRequestWindowSizeChange(int windowIndex, int width, int height)
 {
 	auto window_iter = s_windows.find(windowIndex);
