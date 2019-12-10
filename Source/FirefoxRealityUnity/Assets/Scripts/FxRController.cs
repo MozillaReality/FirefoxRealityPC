@@ -35,6 +35,8 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private Transform EnvironmentOrigin;
 
+    [SerializeField] private GameObject LoadingIndicator;
+
     public enum FXR_BROWSING_MODE
     {
         FXR_BROWSER_MODE_DESKTOP_INSTALL,
@@ -96,7 +98,7 @@ public class FxRController : MonoBehaviour
     }
 
     private List<FxRLaserPointer> laserPointers;
-    
+
     private List<Hand> Hands
     {
         get
@@ -145,7 +147,7 @@ public class FxRController : MonoBehaviour
     private Vector3 initialBodyDirection;
     private bool bodyDirectionInitialzed;
     private int bodyDirectionChecks;
-    
+
     void OnEnable()
     {
         initialBodyDirection = Player.instance.bodyDirectionGuess;
@@ -311,11 +313,13 @@ public class FxRController : MonoBehaviour
         {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
+        
+        LoadingIndicator.SetActive(true);
     }
 
     void Update()
     {
-        if (!bodyDirectionInitialzed 
+        if (!bodyDirectionInitialzed
             && !initialBodyDirection.Equals(Player.instance.bodyDirectionGuess))
         {
             bodyDirectionChecks++;
@@ -546,7 +550,8 @@ public class FxRController : MonoBehaviour
 
     private void HandleWindowCreated()
     {
-        fxr_plugin.fxrFinishWindowCreation(WindowCreationRequestCompleteCallbackParams.uid, WindowCreationRequestCompleteCallbackParams.windowIndex, OnFxWindowCreated);
+        fxr_plugin.fxrFinishWindowCreation(WindowCreationRequestCompleteCallbackParams.uid,
+            WindowCreationRequestCompleteCallbackParams.windowIndex, OnFxWindowCreated);
     }
 
     void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
@@ -586,5 +591,7 @@ public class FxRController : MonoBehaviour
         _hackKeepWindowIndex = windowIndex;
         window.WasCreated(windowIndex, widthPixels,
             heightPixels, format);
+
+        LoadingIndicator.SetActive(false);
     }
 }
