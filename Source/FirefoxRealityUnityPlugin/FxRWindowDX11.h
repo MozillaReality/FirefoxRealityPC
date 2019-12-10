@@ -36,6 +36,8 @@ private:
 	Size m_size;
 	int m_format;
 	void *m_unityTexPtr;
+	uint8_t *m_stagingTextureBuf;
+	ID3D11Texture2D* m_stagingTexture;
     POINT m_ptLastPointer;
 
     void ProcessPointerEvent(UINT msg, int x, int y, LONG scroll);

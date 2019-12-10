@@ -74,6 +74,8 @@ FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
 	m_fxTexPtr(nullptr),
 	m_size({0, 0}),
 	m_format(FxRTextureFormat_Invalid),
+	m_stagingTextureBuf(nullptr),
+	m_stagingTexture(nullptr),
 	m_unityTexPtr(nullptr)
 {
 }
@@ -152,6 +154,25 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
             m_size = Size({(int)descFxr.Width, (int)descFxr.Height});
 			m_format = getFxRTextureFormatForDXGIFormat(descFxr.Format);
 
+			// Create a staging texture to allow us to copy and edit the Fx texture.
+			uint64_t bufSize = fxrGetBufferSizeForTextureFormat(descFxr.Width, descFxr.Height, m_format);
+			if (bufSize) {
+				m_stagingTextureBuf = (uint8_t *)calloc(1, (size_t)bufSize);
+				if (m_stagingTextureBuf) {
+					D3D11_SUBRESOURCE_DATA subresource = { 0 };
+					subresource.pSysMem = m_stagingTextureBuf;
+					subresource.SysMemPitch = (UINT)(bufSize / descFxr.Height);
+					descFxr.Usage = D3D11_USAGE_STAGING;
+					descFxr.BindFlags = 0;
+					descFxr.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+					descFxr.MiscFlags = 0;
+					hr = s_D3D11Device->CreateTexture2D(&descFxr, &subresource, &m_stagingTexture);
+					if (FAILED(hr)) {
+						FXRLOGe("FxRWindowDX11::init DX11 error 0x%0X attempting to create staging texture.\n", hr);
+					}
+				}
+			}
+
 			if (windowCreatedCallback) (*windowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
 
 			// Start polling for vr events on this window
@@ -173,6 +194,8 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 }
 
 FxRWindowDX11::~FxRWindowDX11() {
+	free(m_stagingTextureBuf);
+	m_stagingTextureBuf = nullptr;
 }
 
 FxRWindow::Size FxRWindowDX11::size() {
@@ -210,7 +233,29 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
 	if (descFxr.Width != descUnity.Width || descFxr.Height != descUnity.Height) {
 		FXRLOGe("Error: Unity texture size %dx%d does not match Firefox texture size %dx%d.\n", descUnity.Width, descUnity.Height, descFxr.Width, descFxr.Height);
 	} else {
-		ctx->CopyResource((ID3D11Texture2D*)m_unityTexPtr, m_fxTexPtr);
+		if (!m_stagingTexture) {
+			ctx->CopyResource((ID3D11Texture2D*)m_unityTexPtr, m_fxTexPtr);
+		} else {
+			ctx->CopyResource(m_stagingTexture, m_fxTexPtr);
+			D3D11_MAPPED_SUBRESOURCE resource;
+			UINT subresource = D3D11CalcSubresource(0, 0, 0);
+			HRESULT hr = ctx->Map(m_stagingTexture, subresource, D3D11_MAP_WRITE, 0, &resource); // If writing only, use D3D11_MAP_WRITE. If also reading, use D3D11_MAP_READ_WRITE.
+			if (hr != S_OK) {
+				FXRLOGe("FxRWindowDX11::requestUpdate: DX11 error 0x%0X in ctx->Map().\n", hr);
+			} else {
+				if (resource.pData) {
+					// Zero the alpha values in top-left quadrant of image.
+					for (int i = 0; i < descUnity.Height / 2; i++) {
+						uint8_t *rowPtr = (uint8_t *)resource.pData + i * resource.RowPitch;
+						for (int j = 0; j < descUnity.Width / 2; j++) {
+							rowPtr[j * 4 + 3] = 0; //4 bytes per pixel, +3 is alpha since component ordering is RGBA.
+						}
+					}
+				}
+				ctx->Unmap(m_stagingTexture, subresource);
+			}
+			ctx->CopyResource((ID3D11Texture2D*)m_unityTexPtr, m_stagingTexture);
+		}
 	}
 
 	ctx->Release();
