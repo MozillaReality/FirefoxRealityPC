@@ -43,6 +43,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private class FirefoxRealityPCVersions
     {
         public string LATEST_FXR_PC_BUILD_NUMBER;
+        public string LATEST_FXR_PC_VERSION;
+        public string LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS;
         public string LATEST_FXR_PC_URL;
     }
 
@@ -112,13 +114,24 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 )
                 {
                     // Prompt user if new version on server version of JSON file
-                    // TODO: Update copy
                     // TODO: i18n and l10n
-                    var dialogTitle = "There’s an update available for Firefox Reality PC.";
-                    var dialogMessage = "";
+                    var dialogTitle = "An update is available!";
+                    var dialogMessage = string.Format("Firefox Reality {0}\n\n{1}",
+                        string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_VERSION)
+                            ? ""
+                            : serverVersionInfo.LATEST_FXR_PC_VERSION
+                        , string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS) ? "" : serverVersionInfo.LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS);
                     var dialogButtons = new FxRButton.ButtonConfig[2];
                     dialogButtons[0] = new FxRButton.ButtonConfig("Update Later",
-                        () => { StartFirefoxDesktopUpdateProcess(); },
+                        () =>
+                        {
+                            var updateLaterDialog = FxRDialogController.Instance.CreateDialog();
+                            updateLaterDialog.Show("You can update anytime from VIVEPORT",
+                                null,
+                                FirefoxIcon,
+                                new FxRButton.ButtonConfig("OK", () => { StartFirefoxDesktopUpdateProcess(); },
+                                    FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                        },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
                     dialogButtons[1] = new FxRButton.ButtonConfig("Update Now",
                         () =>
@@ -126,15 +139,11 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                             // Open up URL to download new version
                             Application.OpenURL(serverVersionInfo.LATEST_FXR_PC_URL);
                             var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
-                            removeHeadsetPrompt.Show("Download Firefox Reality PC",
-                                "Please remove your headset to download and install the Firefox Reality PC update",
+                            removeHeadsetPrompt.Show("An update is available!",
+                                "Remove your headset to get the update from VIVEPORT",
                                 FirefoxIcon,
-                                new FxRButton.ButtonConfig("OK", () =>
-                                    {
-                                        StartFirefoxDesktopUpdateProcess();
-                                    },
+                                new FxRButton.ButtonConfig("OK", () => { StartFirefoxDesktopUpdateProcess(); },
                                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
-
                         },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
 
@@ -372,7 +381,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
             var installPath = GetInstallationLocation(registryKey, RELEASE_AND_BETA_REGISTRY_PATH);
 
-            if (!Directory.Exists(Path.Combine(installPath, "distribution")))
+            if (Directory.Exists(Path.Combine(installPath, "distribution")))
             {
                 installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
             }
