@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using VRIME2;
 
 public class FxRLoadEnvironment : MonoBehaviour
 {
@@ -33,6 +34,11 @@ public class FxRLoadEnvironment : MonoBehaviour
             {
                 hand.SetActive(true);
             }
+        }
+        
+        if (VRIME_Manager.Ins != null && VRIME_Manager.Ins.ShowState)
+        {
+            VRIME_Manager.Ins.HideIME();
         }
     }
 }

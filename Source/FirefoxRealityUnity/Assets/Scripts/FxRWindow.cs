@@ -16,7 +16,6 @@ public class FxRWindow : FxRPointableSurface
 {
     public static Vector2Int DefaultSizeToRequest = new Vector2Int(1920, 1080);
 
-    [SerializeField] private InputField VRIMEKeyboardInputField;
     public bool flipX = false;
     public bool flipY = false;
     private static float DefaultWidth = 3.0f;
@@ -93,7 +92,7 @@ public class FxRWindow : FxRPointableSurface
     {
         VRIME_KeyboardButton.OnCloseKeyPressed += HandleCloseKeyPressed;
         VRIME_KeyboardButton.OnKeyPressed += HandleKeyPressed;
-        VRIMEKeyboardInputField.onValueChanged.AddListener(HandleVRIMEInputFieldChanged);
+        VRIME_InputFieldOversee.Ins.InputLabel.onValueChanged.AddListener(HandleVRIMEInputFieldChanged);
         VRIME_Manager.Ins.onSubmit.AddListener(HandleVRIMESubmit);
     }
 
@@ -185,7 +184,7 @@ public class FxRWindow : FxRPointableSurface
         VRIME_KeyboardButton.OnKeyPressed -= HandleKeyPressed;
         VRIME_KeyboardButton.OnCloseKeyPressed -= HandleCloseKeyPressed;
         pollForVREvents = false;
-        VRIMEKeyboardInputField.onValueChanged.RemoveListener(HandleVRIMEInputFieldChanged);
+        VRIME_InputFieldOversee.Ins.InputLabel.onValueChanged.AddListener(HandleVRIMEInputFieldChanged);
     }
 
     private void HandleCloseKeyPressed()
