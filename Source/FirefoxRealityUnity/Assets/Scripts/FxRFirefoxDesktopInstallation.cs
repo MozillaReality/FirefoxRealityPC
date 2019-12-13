@@ -381,7 +381,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
             var installPath = GetInstallationLocation(registryKey, RELEASE_AND_BETA_REGISTRY_PATH);
 
-            if (Directory.Exists(Path.Combine(installPath, "distribution")))
+            if (!Directory.Exists(Path.Combine(installPath, "distribution")))
             {
                 installationTypeRequired = INSTALLATION_TYPE_REQUIRED.UPDATE_EXISTING;
             }
