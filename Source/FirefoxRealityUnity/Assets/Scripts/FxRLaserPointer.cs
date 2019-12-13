@@ -204,7 +204,7 @@ public class FxRLaserPointer : MonoBehaviour
 
         // Make sure only one laser pointer is showing at once
         AllLaserPointers.Add(this);
-        
+
         LaserShowing = false;
     }
 
@@ -304,6 +304,26 @@ public class FxRLaserPointer : MonoBehaviour
         RaycastHit hit;
         bool bHit = Physics.Raycast(raycast, out hit);
 
+        if (previousContact && (!bHit || previousContact != hit.transform))
+        {
+            // Handle FxRWindow messages directly.
+            // TODO: convert to a more generic event system.
+            FxRWindow previousWindow =
+                previousContact.gameObject.GetComponentInParent(typeof(FxRWindow)) as FxRWindow;
+            if (previousWindow != null)
+            {
+                previousWindow.PointerExit();
+            }
+
+            // Default event system.
+            PointerEventArgs args = new PointerEventArgs();
+            args.fromInputSource = pose.inputSource;
+            args.distance = 0f;
+            args.flags = 0;
+            args.target = previousContact;
+            OnPointerOut(args);
+        }
+
         // Target not found for hit testing, so clear state
         if (!bHit)
         {
@@ -322,25 +342,6 @@ public class FxRLaserPointer : MonoBehaviour
 
             if (previousContact != hit.transform)
             {
-                if (previousContact)
-                {
-                    // Handle FxRWindow messages directly.
-                    // TODO: convert to a more generic event system.
-                    FxRWindow previousWindow = previousContact.gameObject.GetComponentInParent(typeof(FxRWindow)) as FxRWindow;
-                    if (previousWindow != null)
-                    {
-                        previousWindow.PointerExit();
-                    }
-
-                    // Default event system.
-                    PointerEventArgs args = new PointerEventArgs();
-                    args.fromInputSource = pose.inputSource;
-                    args.distance = 0f;
-                    args.flags = 0;
-                    args.target = previousContact;
-                    OnPointerOut(args);
-                }
-
                 // Handle FxRWindow messages directly.
                 // TODO: convert to a more generic event system.
                 if (fxrWindow != null)
