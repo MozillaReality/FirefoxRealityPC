@@ -174,6 +174,8 @@ FXR_EXTERN bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int he
 
 FXR_EXTERN bool fxrGetWindowTextureFormat(int windowIndex, int *width, int *height, int *format, bool *mipChain, bool *linear, void **nativeTextureID_p);
 
+FXR_EXTERN uint64_t fxrGetBufferSizeForTextureFormat(int width, int height, int format);
+
 // On Direct3D-like devices pass a pointer to the base texture type (IDirect3DBaseTexture9 on D3D9, ID3D11Resource on D3D11),
 // or on OpenGL-like devices pass the texture "name", casting the integer to a pointer.
 FXR_EXTERN bool fxrSetWindowUnityTextureID(int windowIndex, void *nativeTexturePtr);
