@@ -36,9 +36,5 @@ public class FxRLoadEnvironment : MonoBehaviour
             }
         }
         
-        if (VRIME_Manager.Ins != null && VRIME_Manager.Ins.ShowState)
-        {
-            VRIME_Manager.Ins.HideIME();
-        }
     }
 }

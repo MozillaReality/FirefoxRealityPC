@@ -90,6 +90,10 @@ public class FxRController : MonoBehaviour
             if (laserPointers == null)
             {
                 laserPointers = new List<FxRLaserPointer>();
+            }
+
+            if (laserPointers.Count == 0)
+            {
                 laserPointers.AddRange(FindObjectsOfType<FxRLaserPointer>());
             }
 
@@ -106,6 +110,10 @@ public class FxRController : MonoBehaviour
             if (hands == null)
             {
                 hands = new List<Hand>();
+            }
+
+            if (hands.Count == 0)
+            {
                 hands.AddRange(FindObjectsOfType<Hand>());
             }
 
@@ -297,7 +305,10 @@ public class FxRController : MonoBehaviour
         fxr_plugin = null;
 
         // VRIME keyboard event registration
-        VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
+        if (VRIME_Manager.Ins != null)
+        {
+            VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
+        }
     }
 
     void Start()
@@ -313,8 +324,11 @@ public class FxRController : MonoBehaviour
         {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
-        
+
         LoadingIndicator.SetActive(true);
+
+        FxRVRIMEInitializer.Instance.InitializeVRIMEKeyboard(VRIME_Manager.Ins);
+        VRIME_Manager.Ins.HideIME();
     }
 
     void Update()

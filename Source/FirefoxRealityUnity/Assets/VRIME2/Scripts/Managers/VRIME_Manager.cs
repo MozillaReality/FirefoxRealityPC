@@ -35,14 +35,12 @@ namespace VRIME2
 				{
 					instance = FindObjectOfType<VRIME_Manager>();
 
-					if (instance == null)
+
+					if (instance != null)
 					{
-						var instanceGameObject = new GameObject();
-						instanceGameObject.name = "VRIME_Manager";
-						instance = instanceGameObject.AddComponent<VRIME_Manager>();
+						VRIME_KeymapInstance.InitDefaultKeymaps();
+						instance.Init();
 					}
-					VRIME_KeymapInstance.InitDefaultKeymaps();
-					instance.Init();
 				}
 				return instance;
 			}
@@ -121,8 +119,7 @@ namespace VRIME2
 		public SteamVR_TrackedObject userControllerRight;
 #endif		
 		[Header("Head Camera")]
-		[SerializeField]
-		private Transform userHeadCamera;
+		public Transform userHeadCamera;
 
 		[Header("Move InputField Cursor")]
 		public bool MoveCursorByTouchpad = true;
