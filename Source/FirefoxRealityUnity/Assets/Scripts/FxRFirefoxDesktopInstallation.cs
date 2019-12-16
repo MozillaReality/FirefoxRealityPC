@@ -150,6 +150,14 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                     FxRDialogController.Instance.CreateDialog()
                         .Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
                 }
+                else
+                {
+                    NotifyInstallationComplete();
+                }
+            }
+            else
+            {
+                NotifyInstallationComplete();
             }
         }));
     }
@@ -260,6 +268,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 {
                     downloadProgressDialog.UpdateText("Firefox is up to date!", "");
                 }
+                NotifyInstallationComplete();
             }
             else
             {
