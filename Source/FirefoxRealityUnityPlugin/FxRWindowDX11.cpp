@@ -1,4 +1,4 @@
-﻿//
+//
 // FxRWindowDX11.cpp
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -80,6 +80,34 @@ FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
 {
 }
 
+static int getFxRTextureFormatForDXGIFormat(DXGI_FORMAT format)
+{
+	switch (format) {
+		case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+		case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+		case DXGI_FORMAT_R8G8B8A8_UINT:
+			return FxRTextureFormat_RGBA32;
+			break;
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+		case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+		case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+			return FxRTextureFormat_BGRA32;
+			break;
+		case DXGI_FORMAT_B4G4R4A4_UNORM:
+			return FxRTextureFormat_RGBA4444;
+			break;
+		case DXGI_FORMAT_B5G6R5_UNORM:
+			return FxRTextureFormat_RGB565;
+			break;
+		case DXGI_FORMAT_B5G5R5A1_UNORM:
+			return FxRTextureFormat_RGBA5551;
+			break;
+		default:
+			return FxRTextureFormat_Invalid;
+	}
+}
+
 bool FxRWindowDX11::init(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestCompletedCallback)
 {
 	FxRWindow::init(windowCreationRequestCompletedCallback);
@@ -137,6 +165,7 @@ void FxRWindowDX11::requestUpdate(float timeDelta) {
 
 	m_fxTexPtr->GetDesc(&descFxr);
 	((ID3D11Texture2D*)m_unityTexPtr)->GetDesc(&descUnity);
+	//FXRLOGd("Unity texture is %dx%d, DXGI_FORMAT=%d (FxRTextureFormat=%d), MipLevels=%d, D3D11_USAGE Usage=%d, BindFlags=%d, CPUAccessFlags=%d, MiscFlags=%d\n", descUnity.Width, descUnity.Height, descUnity.Format, getFxRTextureFormatForDXGIFormat(descUnity.Format), descUnity.MipLevels, descUnity.Usage, descUnity.BindFlags, descUnity.CPUAccessFlags, descUnity.MiscFlags);
 	if (descFxr.Width != descUnity.Width || descFxr.Height != descUnity.Height) {
 		FXRLOGe("Error: Unity texture size %dx%d does not match Firefox texture size %dx%d.\n", descUnity.Width, descUnity.Height, descFxr.Width, descFxr.Height);
 	} else {
@@ -215,28 +244,7 @@ void FxRWindowDX11::FinishWindowCreation(PFN_WINDOWCREATEDCALLBACK pfnWindowCrea
 			D3D11_TEXTURE2D_DESC descFxr = { 0 };
 			m_fxTexPtr->GetDesc(&descFxr);
 			m_size = Size({ (int)descFxr.Width, (int)descFxr.Height });
-			switch (descFxr.Format) {
-			case DXGI_FORMAT_R8G8B8A8_TYPELESS:
-			case DXGI_FORMAT_R8G8B8A8_UNORM:
-			case DXGI_FORMAT_R8G8B8A8_UINT:
-				m_format = FxRTextureFormat_RGBA32;
-				break;
-			case DXGI_FORMAT_B8G8R8A8_UNORM:
-			case DXGI_FORMAT_B8G8R8A8_TYPELESS:
-				m_format = FxRTextureFormat_BGRA32;
-				break;
-			case DXGI_FORMAT_B4G4R4A4_UNORM:
-				m_format = FxRTextureFormat_RGBA4444;
-				break;
-			case DXGI_FORMAT_B5G6R5_UNORM:
-				m_format = FxRTextureFormat_RGB565;
-				break;
-			case DXGI_FORMAT_B5G5R5A1_UNORM:
-				m_format = FxRTextureFormat_RGBA5551;
-				break;
-			default:
-				m_format = FxRTextureFormat_Invalid;
-			}
+            m_format = getFxRTextureFormatForDXGIFormat(descFxr.Format);
 
 			if (pfnWindowCreatedCallback) (*pfnWindowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
 

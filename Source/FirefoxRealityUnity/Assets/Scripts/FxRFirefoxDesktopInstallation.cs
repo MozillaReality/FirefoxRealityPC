@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using System;
+using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
@@ -29,6 +29,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private const string NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY = "NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY";
     private const string FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY = "FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY";
+    public static readonly string FXR_PC_VERSIONS_JSON_FILENAME = "fxrpc_versions.json";
 
     int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
 
@@ -36,6 +37,15 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private class FirefoxVersions
     {
         public string LATEST_FIREFOX_VERSION;
+    }
+
+    // Class to represent JSON downloaded from Firefox Reality latest version service
+    private class FirefoxRealityPCVersions
+    {
+        public string LATEST_FXR_PC_BUILD_NUMBER;
+        public string LATEST_FXR_PC_VERSION;
+        public string LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS;
+        public string LATEST_FXR_PC_URL;
     }
 
     private enum DOWNLOAD_TYPE
@@ -85,6 +95,67 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             PlayerPrefs.Save();
         }
 
+        StartCoroutine(RetrieveLatestFirefoxRealityPCVersion((fxrPCWasSuccessful, serverVersionInfo) =>
+        {
+            if (fxrPCWasSuccessful)
+            {
+                // Retrieve installed JSON versions file from Streaming Assets
+                string localJSONPath = Path.Combine(Application.streamingAssetsPath, FXR_PC_VERSIONS_JSON_FILENAME);
+                string localJSONVersionInfo = File.ReadAllText(localJSONPath);
+
+                // Compare version number
+                var localVersionInfo = JsonUtility.FromJson<FirefoxRealityPCVersions>(localJSONVersionInfo);
+
+                int localBuildNumber;
+                int serverBuildNumber;
+                if (int.TryParse(localVersionInfo.LATEST_FXR_PC_BUILD_NUMBER, out localBuildNumber)
+                    && int.TryParse(serverVersionInfo.LATEST_FXR_PC_BUILD_NUMBER, out serverBuildNumber)
+                    && serverBuildNumber > localBuildNumber
+                )
+                {
+                    // Prompt user if new version on server version of JSON file
+                    // TODO: i18n and l10n
+                    var dialogTitle = "An update is available!";
+                    var dialogMessage = string.Format("Firefox Reality {0}\n\n{1}",
+                        string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_VERSION)
+                            ? ""
+                            : serverVersionInfo.LATEST_FXR_PC_VERSION
+                        , string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS) ? "" : serverVersionInfo.LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS);
+                    var dialogButtons = new FxRButton.ButtonConfig[2];
+                    dialogButtons[0] = new FxRButton.ButtonConfig("Update Later",
+                        () =>
+                        {
+                            var updateLaterDialog = FxRDialogController.Instance.CreateDialog();
+                            updateLaterDialog.Show("You can update anytime from VIVEPORT",
+                                null,
+                                FirefoxIcon,
+                                new FxRButton.ButtonConfig("OK", () => { StartFirefoxDesktopUpdateProcess(); },
+                                    FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                        },
+                        FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
+                    dialogButtons[1] = new FxRButton.ButtonConfig("Update Now",
+                        () =>
+                        {
+                            // Open up URL to download new version
+                            Application.OpenURL(serverVersionInfo.LATEST_FXR_PC_URL);
+                            var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
+                            removeHeadsetPrompt.Show("An update is available!",
+                                "Remove your headset to get the update from VIVEPORT",
+                                FirefoxIcon,
+                                new FxRButton.ButtonConfig("OK", () => { StartFirefoxDesktopUpdateProcess(); },
+                                    FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                        },
+                        FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
+
+                    FxRDialogController.Instance.CreateDialog()
+                        .Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
+                }
+            }
+        }));
+    }
+
+    private void StartFirefoxDesktopUpdateProcess()
+    {
         StartCoroutine(RetrieveLatestFirefoxVersion((wasSuccessful, versionString) =>
         {
             int releaseMajor = MAJOR_RELEASE_REQUIRED_FALLBACK;
@@ -378,6 +449,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             // Shouldn't happen, but in the event it does, we'll catch the exception and assume we need an update...
             releaseMajor = 0;
         }
+
         releaseMinor = string.Join(".", majorMinor.Skip(1).Take(majorMinor.Length - 1).ToArray());
     }
 
@@ -397,6 +469,25 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         else
         {
             successCallback(false, "");
+        }
+    }
+
+    private IEnumerator RetrieveLatestFirefoxRealityPCVersion(Action<bool, FirefoxRealityPCVersions> successCallback)
+    {
+        string RESTUrl = "https://mixedreality.mozilla.org/FirefoxRealityPC/" + FXR_PC_VERSIONS_JSON_FILENAME;
+        var webRequest = new UnityWebRequest(RESTUrl);
+        webRequest.downloadHandler = new DownloadHandlerBuffer();
+        var operation = webRequest.SendWebRequest();
+        yield return operation;
+        if (string.IsNullOrEmpty(operation.webRequest.error))
+        {
+            string jsonResposne = webRequest.downloadHandler.text;
+            var versionInfo = JsonUtility.FromJson<FirefoxRealityPCVersions>(jsonResposne);
+            successCallback(true, versionInfo);
+        }
+        else
+        {
+            successCallback(false, null);
         }
     }
 
