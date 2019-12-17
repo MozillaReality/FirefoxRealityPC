@@ -20,6 +20,7 @@ using UnityEngine;
 public delegate void FxRPluginLogCallback([MarshalAs(UnmanagedType.LPStr)] string msg);
 
 // Delegate type declaration for window size callback.
+public delegate void FxRPluginWindowCreationRequestCompleteCallback(int uid, int windowIndex);
 public delegate void FxRPluginWindowCreatedCallback(int uid, int windowIndex, int pixelWidth, int pixelHeight, int format);
 public delegate void FxRPluginWindowResizedCallback(int uid, int pixelWidth, int pixelHeight);
 public delegate void FxRPluginVREventCallback(int uid, int eventType, int eventData1, int eventData2);
@@ -34,8 +35,8 @@ public class FxRPlugin
     // Delegate instance.
     private FxRPluginLogCallback logCallback = null;
     private GCHandle logCallbackGCH;
-    private FxRPluginWindowCreatedCallback windowCreatedCallback = null;
-    private GCHandle windowCreatedCallbackGCH;
+    private FxRPluginWindowCreationRequestCompleteCallback windowCreationRequestCompleteCallback = null;
+    private GCHandle windowCreationRequestCompleteCallbackGCH;
 
     private FxRPluginWindowResizedCallback windowResizedCallback = null;
     private GCHandle windowResizedCallbackGCH;
@@ -47,7 +48,7 @@ public class FxRPlugin
     private GCHandle fullScreenBeginCallbackGCH;
     private FxRPluginFullEndCallback fullScreenEndCallback = null;
     private GCHandle fullScreenEndCallbackGCH;
-
+    
     public void fxrRegisterLogCallback(FxRPluginLogCallback lcb)
     {
         logCallback = lcb; // Set or unset.
@@ -110,31 +111,31 @@ public class FxRPlugin
         else return "";
     }
 
-    public void fxrStartFx(FxRPluginWindowCreatedCallback wccb, FxRPluginWindowResizedCallback wrcb, FxRPluginVREventCallback vrecb)
+    public void fxrStartFx(FxRPluginWindowCreationRequestCompleteCallback wcrccb, FxRPluginWindowResizedCallback wrcb, FxRPluginVREventCallback vrecb)
     {
-        windowCreatedCallback = wccb;
+        windowCreationRequestCompleteCallback = wcrccb;
         windowResizedCallback = wrcb;
         vrEventCallback = vrecb;
         
         // Create the callback stub prior to registering the callback on the native side.
-        windowCreatedCallbackGCH =
+        windowCreationRequestCompleteCallbackGCH =
             GCHandle.Alloc(
-                windowCreatedCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
+                windowCreationRequestCompleteCallback); // Does not need to be pinned, see http://stackoverflow.com/a/19866119/316487 
         windowResizedCallbackGCH = GCHandle.Alloc(windowResizedCallback);
         vrEventCallbackGCH = GCHandle.Alloc(vrEventCallback);
         
-        FxRPlugin_pinvoke.fxrStartFx(windowCreatedCallback, windowResizedCallback, vrEventCallback);
+        FxRPlugin_pinvoke.fxrStartFx(windowCreationRequestCompleteCallback, windowResizedCallback, vrEventCallback);
     }
 
     public void fxrStopFx()
     {
         FxRPlugin_pinvoke.fxrStopFx();
-        windowCreatedCallback = null;
+        windowCreationRequestCompleteCallback = null;
         windowResizedCallback = null;
         vrEventCallback = null;
         
         // Free the callback stubs after deregistering the callbacks on the native side.
-        windowCreatedCallbackGCH.Free();
+        windowCreationRequestCompleteCallbackGCH.Free();
         windowResizedCallbackGCH.Free();
         vrEventCallbackGCH.Free();
     }
@@ -162,6 +163,11 @@ public class FxRPlugin
     public bool fxrRequestNewWindow(int uid, int widthPixelsRequested, int heightPixelsRequested)
     {
         return FxRPlugin_pinvoke.fxrRequestNewWindow(uid, widthPixelsRequested, heightPixelsRequested);
+    }
+    
+    public void fxrFinishWindowCreation(int uid, int windowIndex, FxRPluginWindowCreatedCallback wccb)
+    {
+        FxRPlugin_pinvoke.fxrFinishWindowCreation(uid, windowIndex, wccb);
     }
 
     public bool fxrRequestWindowSizeChange(int windowIndex, int widthPixelsRequested, int heightPixelsRequested)

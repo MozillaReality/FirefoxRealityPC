@@ -35,6 +35,8 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private Transform EnvironmentOrigin;
 
+    [SerializeField] private GameObject LoadingIndicator;
+
     public enum FXR_BROWSING_MODE
     {
         FXR_BROWSER_MODE_DESKTOP_INSTALL,
@@ -81,37 +83,56 @@ public class FxRController : MonoBehaviour
 
     public bool DontCloseNativeWindowOnClose = false;
 
-    private List<FxRLaserPointer> LaserPointers
+    private HashSet<FxRLaserPointer> LaserPointers
     {
         get
         {
             if (laserPointers == null)
             {
-                laserPointers = new List<FxRLaserPointer>();
-                laserPointers.AddRange(FindObjectsOfType<FxRLaserPointer>());
+                laserPointers = new HashSet<FxRLaserPointer>();
+            }
+
+            // The laser pointers are inactive at startup in order that they don't show during the loading sequence,
+            // since they end up being jittery and distracting.
+            // 
+            // Since FindObjectsOfType<> only finds active objects, we make sure that they are lazily found by FindObjectsOfType<>
+            // as soon as they become active.
+            if (laserPointers.Count < 2)
+            {
+                laserPointers.UnionWith(FindObjectsOfType<FxRLaserPointer>());
             }
 
             return laserPointers;
         }
     }
 
-    private List<FxRLaserPointer> laserPointers;
-    
-    private List<Hand> Hands
+    private HashSet<FxRLaserPointer> laserPointers;
+
+    private HashSet<Hand> Hands
     {
         get
         {
             if (hands == null)
             {
-                hands = new List<Hand>();
-                hands.AddRange(FindObjectsOfType<Hand>());
+                hands = new HashSet<Hand>();
+            }
+
+            // The controllers are inactive at startup in order that they don't show during the loading sequence,
+            // since they end up being jittery and distracting.
+            // 
+            // Since FindObjectsOfType<> only finds active objects, we make sure that they are lazily found by FindObjectsOfType<>
+            // as soon as they become active.
+            if (hands.Count < 2)
+            {
+                hands.UnionWith(FindObjectsOfType<Hand>());
             }
 
             return hands;
         }
     }
 
-    private List<Hand> hands;
+    private HashSet<Hand> hands;
+
     private int _hackKeepWindowIndex;
 
     //
@@ -145,7 +166,7 @@ public class FxRController : MonoBehaviour
     private Vector3 initialBodyDirection;
     private bool bodyDirectionInitialzed;
     private int bodyDirectionChecks;
-    
+
     void OnEnable()
     {
         initialBodyDirection = Player.instance.bodyDirectionGuess;
@@ -295,7 +316,10 @@ public class FxRController : MonoBehaviour
         fxr_plugin = null;
 
         // VRIME keyboard event registration
-        VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
+        if (VRIME_Manager.Ins != null)
+        {
+            VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
+        }
     }
 
     void Start()
@@ -304,18 +328,23 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
 
-        fxr_plugin.fxrStartFx(OnFxWindowCreated, OnFxWindowResized, OnFxRVREvent);
+        fxr_plugin.fxrStartFx(OnFxWindowCreationRequestComplete, OnFxWindowResized, OnFxRVREvent);
 
         IntPtr openVRSession = XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
         {
             fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
         }
+
+        LoadingIndicator.SetActive(true);
+
+        FxRVRIMEInitializer.Instance.InitializeVRIMEKeyboard(VRIME_Manager.Ins);
+        VRIME_Manager.Ins.HideIME();
     }
 
     void Update()
     {
-        if (!bodyDirectionInitialzed 
+        if (!bodyDirectionInitialzed
             && !initialBodyDirection.Equals(Player.instance.bodyDirectionGuess))
         {
             bodyDirectionChecks++;
@@ -385,6 +414,12 @@ public class FxRController : MonoBehaviour
         }
 
         FullScreenStateChanged = false;
+
+        if (WindowCreationRequestCompleteCallbackCalled)
+        {
+            HandleWindowCreated();
+            WindowCreationRequestCompleteCallbackCalled = false;
+        }
     }
 
     public void ToggleKeyboard()
@@ -442,48 +477,15 @@ public class FxRController : MonoBehaviour
         }
     }
 
-    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreatedCallback))]
-    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
+    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreationRequestCompleteCallback))]
+    void OnFxWindowCreationRequestComplete(int uid, int windowIndex)
     {
-        Debug.Log("FxRController.OnFxWindowCreated(uid:" + uid + ", windowIndex:" + windowIndex + ", widthPixels:" +
-                  widthPixels + ", heightPixels:" + heightPixels + ", formatNative:" + formatNative + ")");
-
-        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
-        if (window == null)
+        WindowCreationRequestCompleteCallbackCalled = true;
+        WindowCreationRequestCompleteCallbackParams = new WindowCreationRequestCompleteParams()
         {
-            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
-        }
-
-        TextureFormat format;
-        switch (formatNative)
-        {
-            case 1:
-                format = TextureFormat.RGBA32;
-                break;
-            case 2:
-                format = TextureFormat.BGRA32;
-                break;
-            case 3:
-                format = TextureFormat.ARGB32;
-                break;
-            case 5:
-                format = TextureFormat.RGB24;
-                break;
-            case 7:
-                format = TextureFormat.RGBA4444;
-                break;
-            case 9:
-                format = TextureFormat.RGB565;
-                break;
-            default:
-                format = (TextureFormat) 0;
-                break;
-        }
-
-        _hackKeepWindowIndex = windowIndex;
-        window.WasCreated(windowIndex, widthPixels, heightPixels, format);
-
-//        StartCoroutine(TestRsize(window));
+            uid = uid,
+            windowIndex = windowIndex
+        };
     }
 
 //    private IEnumerator TestRsize(FxRWindow window)
@@ -516,6 +518,16 @@ public class FxRController : MonoBehaviour
     FxRPlugin.FxREventState lastIMEState = FxRPlugin.FxREventState.Blur;
     private bool IMEStateChanged;
     private bool FullScreenStateChanged;
+    private bool WindowCreationRequestCompleteCallbackCalled;
+
+    private struct WindowCreationRequestCompleteParams
+    {
+        public int uid;
+        public int windowIndex;
+    }
+
+    private WindowCreationRequestCompleteParams WindowCreationRequestCompleteCallbackParams;
+
     FxRPlugin.FxREventState lastFullScreenState = FxRPlugin.FxREventState.Fullscreen_Exit;
 
     [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
@@ -559,5 +571,67 @@ public class FxRController : MonoBehaviour
             currentLogLevel = value;
             fxr_plugin.fxrSetLogLevel((int) currentLogLevel);
         }
+    }
+
+    private void HandleWindowCreated()
+    {
+        fxr_plugin.fxrFinishWindowCreation(WindowCreationRequestCompleteCallbackParams.uid,
+            WindowCreationRequestCompleteCallbackParams.windowIndex, OnFxWindowCreated);
+    }
+
+    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
+    {
+        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
+        if (window == null)
+        {
+            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
+        }
+
+        /*
+         Enum values from Source/FirefoxRealityUnityPlugin/fxr_unity_c.h
+         enum  {
+	            FxRTextureFormat_Invalid = 0,
+	            FxRTextureFormat_RGBA32 = 1,
+	            FxRTextureFormat_BGRA32 = 2,
+	            FxRTextureFormat_ARGB32 = 3,
+	            FxRTextureFormat_ABGR32 = 4,
+	            FxRTextureFormat_RGB24 = 5,
+	            FxRTextureFormat_BGR24 = 6,
+	            FxRTextureFormat_RGBA4444 = 7,
+	            FxRTextureFormat_RGBA5551 = 8,
+	            FxRTextureFormat_RGB565 = 9
+            };
+        */
+        TextureFormat format;
+        switch (formatNative)
+        {
+            case 1:
+                format = TextureFormat.RGBA32;
+                break;
+            case 2:
+                format = TextureFormat.BGRA32;
+                break;
+            case 3:
+                format = TextureFormat.ARGB32;
+                break;
+            case 5:
+                format = TextureFormat.RGB24;
+                break;
+            case 7:
+                format = TextureFormat.RGBA4444;
+                break;
+            case 9:
+                format = TextureFormat.RGB565;
+                break;
+            default:
+                format = (TextureFormat) 0;
+                break;
+        }
+
+        _hackKeepWindowIndex = windowIndex;
+        window.WasCreated(windowIndex, widthPixels,
+            heightPixels, format);
+
+        LoadingIndicator.SetActive(false);
     }
 }

@@ -33,6 +33,7 @@ private:
 	PFN_VREVENTCALLBACK m_pfnVREventCallback;
 	UINT m_vrWin;
 	ID3D11Texture2D* m_fxTexPtr;
+	void* m_fxTexHandle;
 	Size m_size;
 	int m_format;
 	void *m_unityTexPtr;
@@ -56,8 +57,10 @@ public:
 	FxRWindowDX11(FxRWindowDX11 &&) noexcept = default;
 	FxRWindowDX11& operator=(FxRWindowDX11 &&) noexcept = default;
 	void CloseVRWindow() override;
+	void WindowCreationRequestComplete(uint32_t vrWin, void* fxTexHandle) override;
+	void FinishWindowCreation(PFN_WINDOWCREATEDCALLBACK pfnWindowCreatedCallback) override;
 
-	bool init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback) override;
+	bool init(PFN_WINDOWCREATIONREQUESTCOMPLETED pfnWindowCreationRequestCompletedCallback) override;
     RendererAPI rendererAPI() override {return RendererAPI::DirectX11;}
 	Size size() override;
 	void setSize(Size size) override;

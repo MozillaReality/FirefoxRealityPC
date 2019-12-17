@@ -21,9 +21,6 @@
     <ClCompile Include="fxr_log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FxRWindowGL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="depends\windows\include\gl3w\gl3w.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,9 +30,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FxRWindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FxRWindowGL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fxr_log.h">

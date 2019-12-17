@@ -1,4 +1,4 @@
-﻿//
+//
 // FxRWindowDX11.cpp
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -32,6 +32,7 @@ struct CreateVRWindowParams {
 	uint32_t vrWin;
 	void* fxTexHandle;
 	PFN_VREVENTCALLBACK lpfnVREvent;
+	FxRWindowDX11 *pCallingWindow;
 //	HANDLE hSignal;
 };
 
@@ -45,8 +46,8 @@ DWORD FxRWindowDX11::CreateVRWindow(_In_ LPVOID lpParameter) {
 	//::ExitThread(0);
 
 	pParams->lpfnCreate(pParams->firefoxFolderPath, pParams->firefoxProfilePath, 0, 0, 0, &pParams->vrWin, &pParams->fxTexHandle, &width, &height);
+	pParams->pCallingWindow->WindowCreationRequestComplete(pParams->vrWin, pParams->fxTexHandle);
 	::ExitThread(0);
-
 }
 
 void FxRWindowDX11::initDevice(IUnityInterfaces* unityInterfaces) {
@@ -72,6 +73,7 @@ FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
 	m_pfnVREventCallback(pfnVREventCallback),
 	m_vrWin(0),
 	m_fxTexPtr(nullptr),
+	m_fxTexHandle(nullptr),
 	m_size({0, 0}),
 	m_format(FxRTextureFormat_Invalid),
 	m_unityTexPtr(nullptr)
@@ -106,12 +108,14 @@ static int getFxRTextureFormatForDXGIFormat(DXGI_FORMAT format)
 	}
 }
 
-bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
+bool FxRWindowDX11::init(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestCompletedCallback)
 {
+	FxRWindow::init(windowCreationRequestCompletedCallback);
 	CreateVRWindowParams* pParams = new CreateVRWindowParams;
 	pParams->lpfnCreate = m_pfnCreateVRWindow;
 	pParams->firefoxFolderPath = m_firefoxFolderPath;
 	pParams->firefoxProfilePath = m_firefoxProfilePath;
+	pParams->pCallingWindow = this;
 
 	DWORD dwTid = 0;
 	HANDLE hThreadFxWin =
@@ -124,51 +128,6 @@ bool FxRWindowDX11::init(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback)
 			&dwTid);
 	assert(hThreadFxWin != nullptr);
 
-	HANDLE fxTexHandle = nullptr;
-	DWORD waitResult = ::WaitForSingleObject(hThreadFxWin, 30000); // 30 seconds
-	if (waitResult == WAIT_TIMEOUT) {
-		FXRLOGe("Gave up waiting for Firefox VR window.\n");
-		return false;
-	} else if (waitResult != WAIT_OBJECT_0) {
-		FXRLOGe("Error waiting for Firefox VR window.\n");
-		return false;
-	} else {
-		m_vrWin = pParams->vrWin;
-		fxTexHandle = pParams->fxTexHandle;
-	}
-
-	if (!fxTexHandle) {
-		FXRLOGe("Error: Firefox texture handle is null.\n");
-		return false;
-	} else {
-		// Extract a pointer to the D3D texture from the shared handle.
-		HRESULT hr = s_D3D11Device->OpenSharedResource(fxTexHandle, IID_PPV_ARGS(&m_fxTexPtr) );
-		if (hr != S_OK) {
-			FXRLOGe("Can't get pointer to Firefox texture from handle.\n");
-			return false;
-		} else {
-			D3D11_TEXTURE2D_DESC descFxr = { 0 };
-			m_fxTexPtr->GetDesc(&descFxr);
-            m_size = Size({(int)descFxr.Width, (int)descFxr.Height});
-			m_format = getFxRTextureFormatForDXGIFormat(descFxr.Format);
-
-			if (windowCreatedCallback) (*windowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
-
-			// Start polling for vr events on this window
-			// TODO: When do we need to stop this thread?
-			DWORD dwTid = 0;
-			// Start a thread to wait for vr events
-			HANDLE hThreadFxWin =
-				::CreateThread(
-					nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
-					0,        // SIZE_T dwStackSize,
-					PollForVREvent,
-					this,  //__drv_aliasesMem LPVOID lpParameter,
-					0,     // DWORD dwCreationFlags,
-					&dwTid);
-			assert(hThreadFxWin != nullptr);
-		}
-	}
 	return true;
 }
 
@@ -257,6 +216,53 @@ void FxRWindowDX11::ProcessPointerEvent(UINT msg, int x, int y, LONG scroll) {
 
 void FxRWindowDX11::CloseVRWindow() {
   if (m_pfnCloseVRWindow) m_pfnCloseVRWindow(m_vrWin, true);
+}
+
+void FxRWindowDX11::WindowCreationRequestComplete(uint32_t vrWin, void * fxTexHandle)
+{
+	m_vrWin = vrWin;
+	m_fxTexHandle = fxTexHandle;
+	if (m_windowCreationRequestCompletedCallback) (*m_windowCreationRequestCompletedCallback)(m_uidExt, m_uid);
+}
+
+void FxRWindowDX11::FinishWindowCreation(PFN_WINDOWCREATEDCALLBACK pfnWindowCreatedCallback)
+{
+	if (!m_fxTexHandle) {
+		FXRLOGe("Error: Firefox texture handle is null.\n");
+		// TODO: Error Callback?
+		//	return false;
+	}
+	else {
+		// Extract a pointer to the D3D texture from the shared handle.
+		HRESULT hr = s_D3D11Device->OpenSharedResource(m_fxTexHandle, IID_PPV_ARGS(&m_fxTexPtr));
+		if (hr != S_OK) {
+			FXRLOGe("Can't get pointer to Firefox texture from handle.\n");
+			// TODO: Error Callback?
+//			return false;
+		}
+		else {
+			D3D11_TEXTURE2D_DESC descFxr = { 0 };
+			m_fxTexPtr->GetDesc(&descFxr);
+			m_size = Size({ (int)descFxr.Width, (int)descFxr.Height });
+            m_format = getFxRTextureFormatForDXGIFormat(descFxr.Format);
+
+			if (pfnWindowCreatedCallback) (*pfnWindowCreatedCallback)(m_uidExt, m_uid, m_size.w, m_size.h, m_format);
+
+			// Start polling for vr events on this window
+			// TODO: When do we need to stop this thread?
+			DWORD dwTid = 0;
+			// Start a thread to wait for vr events
+			HANDLE hThreadFxWin =
+				::CreateThread(
+					nullptr,  // LPSECURITY_ATTRIBUTES lpThreadAttributes
+					0,        // SIZE_T dwStackSize,
+					PollForVREvent,
+					this,  //__drv_aliasesMem LPVOID lpParameter,
+					0,     // DWORD dwCreationFlags,
+					&dwTid);
+			assert(hThreadFxWin != nullptr);
+		}
+	}
 }
 
 void FxRWindowDX11::pointerEnter() {

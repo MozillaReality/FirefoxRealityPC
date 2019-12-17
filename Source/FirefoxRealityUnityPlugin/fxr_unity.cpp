@@ -16,7 +16,6 @@
 #include "fxr_log.h"
 
 #include "FxRWindowDX11.h"
-#include "FxRWindowGL.h"
 #include <memory>
 #include <string>
 #include <assert.h>
@@ -62,7 +61,7 @@ static PFN_CREATEVRWINDOW m_pfnCreateVRWindow = nullptr;
 static PFN_SENDUIMSG m_pfnSendUIMessage = nullptr;
 static PFN_CLOSEVRWINDOW m_pfnCloseVRWindow = nullptr;
 static PFN_WAITFORVREVENT m_pfnWaitForVREvent = nullptr;
-static PFN_WINDOWCREATEDCALLBACK m_windowCreatedCallback = nullptr;
+static PFN_WINDOWCREATIONREQUESTCOMPLETED m_windowCreationRequestCompletedCallback = nullptr;
 static PFN_WINDOWRESIZEDCALLBACK m_windowResizedCallback = nullptr;
 static PFN_FULLSCREENBEGINCALLBACK m_fullScreenBeginCallback = nullptr;
 static PFN_FULLSCREENENDCALLBACK m_fullScreenEndCallback = nullptr;
@@ -106,10 +105,6 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 				FXRLOGi("Using DirectX 11 renderer.\n");
                 FxRWindowDX11::initDevice(s_UnityInterfaces);
 				break;
-			case kUnityGfxRendererOpenGLCore:
-				FXRLOGi("Using OpenGL renderer.\n");
-				FxRWindowGL::initDevice();
-				break;
 			default:
 				FXRLOGe("Unsupported renderer.\n");
 				return;
@@ -121,9 +116,6 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 			switch (s_RendererType) {
 			case kUnityGfxRendererD3D11:
                 FxRWindowDX11::finalizeDevice();
-				break;
-			case kUnityGfxRendererOpenGLCore:
-				FxRWindowGL::finalizeDevice();
 				break;
 			}
 			s_RendererType = kUnityGfxRendererNull;
@@ -146,8 +138,6 @@ static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
 	// Unknown / unsupported graphics device type? Do nothing
 	switch (s_RendererType) {
 	case kUnityGfxRendererD3D11:
-		break;
-	case kUnityGfxRendererOpenGLCore:
 		break;
 	default:
 		FXRLOGe("Unsupported renderer.\n");
@@ -228,13 +218,13 @@ void fxrSetResourcesPath(const char *path)
 	}
 }
 
-void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback)
+void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestCompletedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback)
 {
 	assert(m_hVRHost == nullptr);
 
 	int err;
 #ifndef USE_HARDCODED_FX_PATHS
-	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/firefox.exe");
+	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/");
 	assert(err > 0);
 	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "firefox/vrhost.dll");
 	assert(err > 0);
@@ -250,40 +240,14 @@ void fxrStartFx(PFN_WINDOWCREATEDCALLBACK windowCreatedCallback, PFN_WINDOWRESIZ
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
 	m_pfnWaitForVREvent = (PFN_WAITFORVREVENT)::GetProcAddress(m_hVRHost, "WaitForVREvent");
 
-	CHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
-	err = sprintf_s(
-		fxCmd,
-		ARRAYSIZE(fxCmd),
-		"%s -wait-for-browser -profile %s --fxr",
-		s_pszFxPath,
-		s_pszFxProfile
-	);
-	assert(err > 0);
-
-	STARTUPINFOA startupInfoFx = { 0 };
-	bool fCreateContentProc = ::CreateProcessA(
-		nullptr,  // lpApplicationName,
-		fxCmd,
-		nullptr,  // lpProcessAttributes,
-		nullptr,  // lpThreadAttributes,
-		TRUE,     // bInheritHandles,
-		0,        // dwCreationFlags,
-		nullptr,  // lpEnvironment,
-		nullptr,  // lpCurrentDirectory,
-		&startupInfoFx,
-		&procInfoFx
-	);
-
-	assert(fCreateContentProc);
-
-	m_windowCreatedCallback = windowCreatedCallback;
+	m_windowCreationRequestCompletedCallback = windowCreationRequestCompletedCallback;
 	m_windowResizedCallback = windowResizedCallback;
 	m_vrEventCallback = vrEventCallback;
 }
 
 void fxrStopFx(void)
 {
-	m_windowCreatedCallback = nullptr;
+	m_windowCreationRequestCompletedCallback = nullptr;
 	m_windowResizedCallback = nullptr;
 	m_vrEventCallback = nullptr;
 
@@ -328,20 +292,29 @@ bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsR
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
 		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnWaitForVREvent, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr, m_vrEventCallback);
-	} else if (s_RendererType == kUnityGfxRendererOpenGLCore) {
-		window = std::make_unique<FxRWindowGL>(s_windowIndexNext++, uidExt, FxRWindow::Size({ widthPixelsRequested, heightPixelsRequested }));
+	} else {
+		FXRLOGe("Cannot create window. Unknown render type detected. Only D3D11 is supported.\n");
 	}
 	auto inserted = s_windows.emplace(window->uid(), move(window));
-	if (!inserted.second || !inserted.first->second->init(m_windowCreatedCallback)) {
+	if (!inserted.second || !inserted.first->second->init(m_windowCreationRequestCompletedCallback)) {
 		FXRLOGe("Error initing window.\n");
 		return false;
 	}
 	return true;
 }
 
+
+void fxrFinishWindowCreation(int uidExt, int windowIndex, PFN_WINDOWCREATEDCALLBACK pfnWindowCreatedCallback)
+{
+	auto window_iter = s_windows.find(windowIndex);
+	if (window_iter != s_windows.end()) {
+		window_iter->second->FinishWindowCreation(pfnWindowCreatedCallback);
+	}
+}
+
 bool fxrSetWindowUnityTextureID(int windowIndex, void *nativeTexturePtr)
 {
-    if (s_RendererType != kUnityGfxRendererD3D11 && s_RendererType != kUnityGfxRendererOpenGLCore) {
+    if (s_RendererType != kUnityGfxRendererD3D11) {
         FXRLOGe("Unsupported renderer.\n");
         return false;
     }
