@@ -83,45 +83,58 @@ public class FxRController : MonoBehaviour
 
     public bool DontCloseNativeWindowOnClose = false;
 
-    private List<FxRLaserPointer> LaserPointers
+    private HashSet<FxRLaserPointer> LaserPointers
     {
         get
         {
             if (laserPointers == null)
             {
-                laserPointers = new List<FxRLaserPointer>();
+                laserPointers = new HashSet<FxRLaserPointer>();
             }
 
-            if (laserPointers.Count == 0)
+            // The laser pointers are inactive at startup in order that they don't show during the loading sequence,
+            // since they end up being jittery and distracting.
+            // 
+            // Because of this, they will not be picked up by the FindObjectsOfType<> call until they are active.
+            // So we make sure that they are lazily found by FindObjectsOfType<> (which only finds active objects)
+            // whenever they become active.
+            if (laserPointers.Count < 2)
             {
-                laserPointers.AddRange(FindObjectsOfType<FxRLaserPointer>());
+                laserPointers.UnionWith(FindObjectsOfType<FxRLaserPointer>());
             }
 
             return laserPointers;
         }
     }
 
-    private List<FxRLaserPointer> laserPointers;
+    private HashSet<FxRLaserPointer> laserPointers;
 
-    private List<Hand> Hands
+    private HashSet<Hand> Hands
     {
         get
         {
             if (hands == null)
             {
-                hands = new List<Hand>();
+                hands = new HashSet<Hand>();
             }
 
-            if (hands.Count == 0)
+            // The controllers are inactive at startup in order that they don't show during the loading sequence,
+            // since they end up being jittery and distracting.
+            // 
+            // Because of this, they will not be picked up by the FindObjectsOfType<> call until they are active.
+            // So we make sure that they are lazily found by FindObjectsOfType<> (which only finds active objects)
+            // whenever they become active.
+            if (hands.Count < 2)
             {
-                hands.AddRange(FindObjectsOfType<Hand>());
+                hands.UnionWith(FindObjectsOfType<Hand>());
             }
 
             return hands;
         }
     }
 
-    private List<Hand> hands;
+    private HashSet<Hand> hands;
+
     private int _hackKeepWindowIndex;
 
     //
