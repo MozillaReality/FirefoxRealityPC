@@ -95,9 +95,8 @@ public class FxRController : MonoBehaviour
             // The laser pointers are inactive at startup in order that they don't show during the loading sequence,
             // since they end up being jittery and distracting.
             // 
-            // Because of this, they will not be picked up by the FindObjectsOfType<> call until they are active.
-            // So we make sure that they are lazily found by FindObjectsOfType<> (which only finds active objects)
-            // whenever they become active.
+            // Since FindObjectsOfType<> only finds active objects, we make sure that they are lazily found by FindObjectsOfType<>
+            // as soon as they become active.
             if (laserPointers.Count < 2)
             {
                 laserPointers.UnionWith(FindObjectsOfType<FxRLaserPointer>());
@@ -121,9 +120,8 @@ public class FxRController : MonoBehaviour
             // The controllers are inactive at startup in order that they don't show during the loading sequence,
             // since they end up being jittery and distracting.
             // 
-            // Because of this, they will not be picked up by the FindObjectsOfType<> call until they are active.
-            // So we make sure that they are lazily found by FindObjectsOfType<> (which only finds active objects)
-            // whenever they become active.
+            // Since FindObjectsOfType<> only finds active objects, we make sure that they are lazily found by FindObjectsOfType<>
+            // as soon as they become active.
             if (hands.Count < 2)
             {
                 hands.UnionWith(FindObjectsOfType<Hand>());
