@@ -224,7 +224,7 @@ void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestComplete
 
 	int err;
 #ifndef USE_HARDCODED_FX_PATHS
-	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/");// firefox.exe");
+	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/");
 	assert(err > 0);
 	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "firefox/vrhost.dll");
 	assert(err > 0);
@@ -239,35 +239,7 @@ void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestComplete
 	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessageToVRWindow");
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
 	m_pfnWaitForVREvent = (PFN_WAITFORVREVENT)::GetProcAddress(m_hVRHost, "WaitForVREvent");
-/*
-	CHAR fxCmd[MAX_PATH + MAX_PATH] = { 0 };
-	err = sprintf_s(
-		fxCmd,
-		ARRAYSIZE(fxCmd),
-		"%s -wait-for-browser -profile %s --fxr",
-		s_pszFxPath,
-		s_pszFxProfile
-	);
-	assert(err > 0);
 
-	
-	STARTUPINFOA startupInfoFx = { 0 };
-	bool fCreateContentProc = ::CreateProcessA(
-		nullptr,  // lpApplicationName,
-		fxCmd,
-		nullptr,  // lpProcessAttributes,
-		nullptr,  // lpThreadAttributes,
-		TRUE,     // bInheritHandles,
-		0,        // dwCreationFlags,
-		nullptr,  // lpEnvironment,
-		nullptr,  // lpCurrentDirectory,
-		&startupInfoFx,
-		&procInfoFx
-	);
-
-
-	assert(fCreateContentProc);
-	*/
 	m_windowCreationRequestCompletedCallback = windowCreationRequestCompletedCallback;
 	m_windowResizedCallback = windowResizedCallback;
 	m_vrEventCallback = vrEventCallback;

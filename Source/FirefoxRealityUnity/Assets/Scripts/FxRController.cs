@@ -587,6 +587,21 @@ public class FxRController : MonoBehaviour
             window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
         }
 
+        /*
+         Enum values from Source/FirefoxRealityUnityPlugin/fxr_unity_c.h
+         enum  {
+	            FxRTextureFormat_Invalid = 0,
+	            FxRTextureFormat_RGBA32 = 1,
+	            FxRTextureFormat_BGRA32 = 2,
+	            FxRTextureFormat_ARGB32 = 3,
+	            FxRTextureFormat_ABGR32 = 4,
+	            FxRTextureFormat_RGB24 = 5,
+	            FxRTextureFormat_BGR24 = 6,
+	            FxRTextureFormat_RGBA4444 = 7,
+	            FxRTextureFormat_RGBA5551 = 8,
+	            FxRTextureFormat_RGB565 = 9
+            };
+        */
         TextureFormat format;
         switch (formatNative)
         {
