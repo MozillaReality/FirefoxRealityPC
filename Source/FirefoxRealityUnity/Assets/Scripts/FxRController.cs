@@ -581,6 +581,10 @@ public class FxRController : MonoBehaviour
 
     void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
     {
+        // Hide the loading indicator
+        FindObjectOfType<FxRLoadEnvironment>()?.HideLoadingOverlay();
+        LoadingIndicator.SetActive(false);
+
         FxRWindow window = FxRWindow.FindWindowWithUID(uid);
         if (window == null)
         {
@@ -631,7 +635,5 @@ public class FxRController : MonoBehaviour
         _hackKeepWindowIndex = windowIndex;
         window.WasCreated(windowIndex, widthPixels,
             heightPixels, format);
-
-        LoadingIndicator.SetActive(false);
     }
 }
