@@ -66,6 +66,7 @@ static PFN_WINDOWRESIZEDCALLBACK m_windowResizedCallback = nullptr;
 static PFN_FULLSCREENBEGINCALLBACK m_fullScreenBeginCallback = nullptr;
 static PFN_FULLSCREENENDCALLBACK m_fullScreenEndCallback = nullptr;
 static PFN_VREVENTCALLBACK m_vrEventCallback = nullptr;
+static PFN_SENDVRTELEMETRY m_pfnSendVRTelemetry = nullptr;
 static PROCESS_INFORMATION procInfoFx = { 0 };
 
 static std::map<int, std::unique_ptr<FxRWindow>> s_windows;
@@ -237,6 +238,7 @@ void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestComplete
 	m_pfnSendUIMessage = (PFN_SENDUIMSG)::GetProcAddress(m_hVRHost, "SendUIMessageToVRWindow");
 	m_pfnCloseVRWindow = (PFN_CLOSEVRWINDOW)::GetProcAddress(m_hVRHost, "CloseVRWindow");
 	m_pfnWaitForVREvent = (PFN_WAITFORVREVENT)::GetProcAddress(m_hVRHost, "WaitForVREvent");
+	m_pfnSendVRTelemetry = (PFN_SENDVRTELEMETRY)::GetProcAddress(m_hVRHost, "SendVRTelemetry");
 
 	m_windowCreationRequestCompletedCallback = windowCreationRequestCompletedCallback;
 	m_windowResizedCallback = windowResizedCallback;
@@ -289,7 +291,7 @@ bool fxrRequestNewWindow(int uidExt, int widthPixelsRequested, int heightPixelsR
 {
 	std::unique_ptr<FxRWindow> window;
 	if (s_RendererType == kUnityGfxRendererD3D11) {
-		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnWaitForVREvent, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr, m_vrEventCallback);
+		window = std::make_unique<FxRWindowDX11>(s_windowIndexNext++, uidExt, s_pszFxPath, s_pszFxProfile, m_pfnCreateVRWindow, m_pfnSendUIMessage, m_pfnWaitForVREvent, s_param_CloseNativeWindowOnClose ? m_pfnCloseVRWindow : nullptr, m_vrEventCallback, m_pfnSendVRTelemetry);
 	} else {
 		FXRLOGe("Cannot create window. Unknown render type detected. Only D3D11 is supported.\n");
 	}

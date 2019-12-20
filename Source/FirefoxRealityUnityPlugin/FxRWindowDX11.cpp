@@ -62,7 +62,8 @@ void FxRWindowDX11::finalizeDevice() {
 FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
 	, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow
 	, PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent
-	, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback) :
+	, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback
+	, PFN_SENDVRTELEMETRY pfnSendVRTelemetry) :
 	FxRWindow(uid, uidExt),
 	m_pfnCreateVRWindow(pfnCreateVRWindow),
 	m_firefoxFolderPath(pfirefoxFolderPath),
@@ -71,6 +72,7 @@ FxRWindowDX11::FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath
 	m_pfnWaitForVREvent(pfnWaitForVREvent),
 	m_pfnCloseVRWindow(pfnCloseVRWindow),
 	m_pfnVREventCallback(pfnVREventCallback),
+	m_pfnSendVRTelemetry(pfnSendVRTelemetry),
 	m_vrWin(0),
 	m_fxTexPtr(nullptr),
 	m_fxTexHandle(nullptr),

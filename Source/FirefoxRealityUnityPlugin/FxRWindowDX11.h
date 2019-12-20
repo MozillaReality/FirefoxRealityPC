@@ -27,6 +27,7 @@ private:
 	PFN_CREATEVRWINDOW m_pfnCreateVRWindow;
 	PFN_SENDUIMSG m_pfnSendUIMessage;
 	PFN_WAITFORVREVENT m_pfnWaitForVREvent;
+	PFN_SENDVRTELEMETRY m_pfnSendVRTelemetry;
 	char *m_firefoxFolderPath;
 	char *m_firefoxProfilePath;
 	PFN_CLOSEVRWINDOW m_pfnCloseVRWindow;
@@ -50,7 +51,8 @@ public:
 
 
 	FxRWindowDX11(int uid, int uidExt, char *pfirefoxFolderPath, char *pfirefoxProfilePath, PFN_CREATEVRWINDOW pfnCreateVRWindow,
-		PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback);
+		PFN_SENDUIMSG pfnSendUIMessage, PFN_WAITFORVREVENT pfnWaitForVREvent, PFN_CLOSEVRWINDOW pfnCloseVRWindow, PFN_VREVENTCALLBACK pfnVREventCallback,
+		PFN_SENDVRTELEMETRY pfnSendVRTelemetry);
 	~FxRWindowDX11() ;
 	FxRWindowDX11(const FxRWindowDX11&) = delete;
 	void operator=(const FxRWindowDX11&) = delete;
