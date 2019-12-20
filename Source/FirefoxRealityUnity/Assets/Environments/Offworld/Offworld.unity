@@ -271,5 +271,70 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7444364504007633329, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7444364504007633329, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_BoxSize.y
+      value: 51.154297
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_BoxOffset.y
+      value: 22.135983
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_BoxSize.x
+      value: 105.38208
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_BoxOffset.x
+      value: -17.094389
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_Resolution
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_HDR
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_CullingMask.m_Bits
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_UseOcclusionCulling
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_TimeSlicingMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 55539488416796266, guid: 00cd3e5e6e9118e42a1b55c8e5416908,
+        type: 3}
+      propertyPath: m_RefreshMode
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 00cd3e5e6e9118e42a1b55c8e5416908, type: 3}
