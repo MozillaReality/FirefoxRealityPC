@@ -12,7 +12,6 @@ public class FxREnvironment : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.LogWarning(">>>> Loading environment skybox settings");
         RenderSettings.skybox = SkyboxMaterial;
         RenderSettings.ambientMode = AmbientLightSource;
         RenderSettings.ambientLight = AmbientLightColor;

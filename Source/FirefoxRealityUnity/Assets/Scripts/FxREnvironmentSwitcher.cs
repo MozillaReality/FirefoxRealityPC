@@ -16,11 +16,11 @@ public class FxREnvironmentSwitcher : MonoBehaviour
     }
 
     // Update is called once per frame
-    void SwitchEnvironment(int environmentIndex)
+    public void SwitchEnvironment(int environmentIndex)
     {
         if (CurrentEnvironment != null)
         {
-            Destroy(CurrentEnvironment);
+            Destroy(CurrentEnvironment.gameObject);
         }
         CurrentEnvironment = Instantiate(EnvironmentPrefabs[environmentIndex]
             , EnvironmentParent.transform.position
