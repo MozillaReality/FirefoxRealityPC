@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class FxREnvironmentSwitcher : MonoBehaviour
 {
@@ -8,12 +7,6 @@ public class FxREnvironmentSwitcher : MonoBehaviour
     [SerializeField] private List<FxREnvironment> EnvironmentPrefabs;
 
     private FxREnvironment CurrentEnvironment;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        SwitchEnvironment(0);
-    }
 
     // Update is called once per frame
     public void SwitchEnvironment(int environmentIndex)

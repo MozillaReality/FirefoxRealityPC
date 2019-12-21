@@ -34,7 +34,7 @@ public class FxRController : MonoBehaviour
     [SerializeField] private FxRVideoController VideoController;
 
     [SerializeField] private Transform EnvironmentOrigin;
-    [SerializeField] private GameObject Environment;
+    [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
 
     [SerializeField] private GameObject LoadingIndicator;
 
@@ -341,9 +341,6 @@ public class FxRController : MonoBehaviour
 
         FxRVRIMEInitializer.Instance.InitializeVRIMEKeyboard(VRIME_Manager.Ins);
         VRIME_Manager.Ins.HideIME();
-        
-        // Don't show the environment until we have rotated the origin based on player's orientation 
-        Environment.SetActive(false);
     }
 
     void Update()
@@ -357,7 +354,8 @@ public class FxRController : MonoBehaviour
                 // Orient the environment so that the user is facing the browser window, and activate the environment
                 EnvironmentOrigin.forward = Player.instance.bodyDirectionGuess;
                 EnvironmentOrigin.transform.position = Player.instance.feetPositionGuess;
-                Environment.SetActive(true);
+                // Initialize the environment
+                EnvironmentSwitcher.SwitchEnvironment(0);
                 bodyDirectionInitialzed = true;
             }
         }
