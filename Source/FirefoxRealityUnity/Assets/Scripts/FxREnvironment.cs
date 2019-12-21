@@ -13,15 +13,26 @@ public class FxREnvironment : MonoBehaviour
     // Start is called before the first frame update
     IEnumerator Start()
     {
-        RenderSettings.skybox = SkyboxMaterial;
+        // Set up the lighting and skybox
+        RenderSettings.skybox = Instantiate(SkyboxMaterial);
         RenderSettings.ambientMode = AmbientLightSource;
         RenderSettings.ambientLight = AmbientLightColor;
-        yield return new WaitForSeconds(.5f);
+        // Let the environment render before we render the reflections
+        yield return new WaitForEndOfFrame();
+        // Snapshot the reflections
+        // TODO: this could probably be baked 
         foreach (var reflectionProbe in ReflectionProbs)
         {
             reflectionProbe.RenderProbe();
         }
-        
+
+        // Rotate the skybox opposite the direction the environment is rotated, so it properly aligns 
+        if (RenderSettings.skybox.HasProperty("_Rotation"))
+        {
+            var baseRotation = SkyboxMaterial.GetFloat("_Rotation");
+            var adjustedRotation = baseRotation - transform.rotation.eulerAngles.y;
+            RenderSettings.skybox.SetFloat("_Rotation", adjustedRotation);
+        }
     }
 
 }
