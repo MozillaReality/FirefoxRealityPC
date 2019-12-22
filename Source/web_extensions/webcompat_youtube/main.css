@@ -1,6 +1,11 @@
 /* To hide harmless warnings. */
-.alert-with-button-renderer, .ytm-alert-with-button-renderer, ytm-alert-with-button-renderer,
+.alert-with-button-renderer, .ytm-alert-with-button-renderer, ytm-alert-with-button-renderer, .whitelist-alert,
 .ytp-ad-module, ytp-ad-module,
 .ytp-generic-popup, ytp-generic-popup {
   display: none;
+}
+
+/* Improve readability a bit in FxR. */
+hr, html, i, iframe, img, ins, kbd, label, legend, li, menu, object, ol, p, pre, q, s, samp, small, span, strike, strong, sub {
+  font-size: 110%;
 }
