@@ -176,12 +176,12 @@ void fxrRegisterFullScreenEndCallback(PFN_FULLSCREENENDCALLBACK fullScreenEndCal
 
 void fxrTriggerFullScreenBeginEvent()
 {
-	FXRLOGw("Triggering full screen begin.\n");
+	FXRLOGi("Triggering full screen begin.\n");
 	auto window_iter = s_windows.find(1);
 	if (window_iter != s_windows.end()) {
 		FxRWindow::Size size = window_iter->second->size();
 		m_fullScreenBeginCallback(size.w, size.h, window_iter->second->format(), FxRVideoProjection_360);
-		FXRLOGw("Triggered full screen begin.\n");
+		FXRLOGi("Triggered full screen begin.\n");
 	}
 }
 
@@ -197,15 +197,13 @@ void fxrSetLogLevel(const int logLevel)
 	}
 }
 
-bool fxrGetFxVersion(char *buffer, int length)
+bool fxrGetVersion(char *buffer, int length)
 {
 	if (!buffer) return false;
 
-	if (const char *version = "69.0") { // TODO: replace with method that fetches the actual Firefox version.
-		strncpy(buffer, version, length - 1); buffer[length - 1] = '\0';
-		return true;
-	}
-	return false;
+	const char *version = FXR_PLUGIN_VERSION;
+	strncpy(buffer, version, length - 1); buffer[length - 1] = '\0';
+	return true;
 }
 
 void fxrSetResourcesPath(const char *path)
@@ -257,7 +255,7 @@ void fxrStopFx(void)
 
 void fxrKeyEvent(int windowIndex, int keyCode)
 {
-	FXRLOGi("Got keyCode %d.\n", keyCode);
+	FXRLOGd("Got keyCode %d.\n", keyCode);
 
 	auto window_iter = s_windows.find(windowIndex);
 	if (window_iter != s_windows.end()) {
@@ -267,7 +265,7 @@ void fxrKeyEvent(int windowIndex, int keyCode)
 
 void fxrSetOpenVRSessionPtr(void *p)
 {
-	FXRLOGi("Got OpenVR session ptr %p.\n", p);
+	FXRLOGd("Got OpenVR session ptr %p.\n", p);
 	HMODULE hOpenVR = GetModuleHandleA(OPENVR_API_LIBRARY_NAME);
 	if (hOpenVR == NULL) {
 		FXRLOGw("Couldn't access " OPENVR_API_LIBRARY_NAME ".dll.\n");
