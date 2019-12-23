@@ -103,10 +103,10 @@ public class FxRPlugin
         FxRPlugin_pinvoke.fxrSetLogLevel(logLevel);
     }
 
-    public string fxrGetFxVersion()
+    public string fxrGetVersion()
     {
         StringBuilder sb = new StringBuilder(128);
-        bool ok = FxRPlugin_pinvoke.fxrGetFxVersion(sb, sb.Capacity);
+        bool ok = FxRPlugin_pinvoke.fxrGetVersion(sb, sb.Capacity);
         if (ok) return sb.ToString();
         else return "";
     }

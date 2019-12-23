@@ -326,7 +326,7 @@ public class FxRController : MonoBehaviour
     {
         Debug.Log("FxRController.Start()");
 
-        Debug.Log("Fx version " + fxr_plugin.fxrGetFxVersion());
+        Debug.Log("Plugin version " + fxr_plugin.fxrGetVersion());
 
         fxr_plugin.fxrStartFx(OnFxWindowCreationRequestComplete, OnFxWindowResized, OnFxRVREvent);
 
