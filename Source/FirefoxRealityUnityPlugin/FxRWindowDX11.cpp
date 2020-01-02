@@ -266,11 +266,11 @@ void FxRWindowDX11::FinishWindowCreation(PFN_WINDOWCREATEDCALLBACK pfnWindowCrea
 }
 
 void FxRWindowDX11::pointerEnter() {
-	FXRLOGi("FxRWindowDX11::pointerEnter()\n");
+	FXRLOGd("FxRWindowDX11::pointerEnter()\n");
 }
 
 void FxRWindowDX11::pointerExit() {
-	FXRLOGi("FxRWindowDX11::pointerExit()\n");
+	FXRLOGd("FxRWindowDX11::pointerExit()\n");
 }
 
 void FxRWindowDX11::pointerOver(int x, int y) {
@@ -279,17 +279,17 @@ void FxRWindowDX11::pointerOver(int x, int y) {
 }
 
 void FxRWindowDX11::pointerPress(int x, int y) {
-	FXRLOGi("FxRWindowDX11::pointerPress(%d, %d)\n", x, y);
+	FXRLOGd("FxRWindowDX11::pointerPress(%d, %d)\n", x, y);
 	ProcessPointerEvent(WM_LBUTTONDOWN, x, y, 0);
 }
 
 void FxRWindowDX11::pointerRelease(int x, int y) {
-	FXRLOGi("FxRWindowDX11::pointerRelease(%d, %d)\n", x, y);
+	FXRLOGd("FxRWindowDX11::pointerRelease(%d, %d)\n", x, y);
 	ProcessPointerEvent(WM_LBUTTONUP, x, y, 0);
 }
 
 void FxRWindowDX11::pointerScrollDiscrete(int x, int y) {
-	FXRLOGi("FxRWindowDX11::pointerScrollDiscrete(%d, %d)\n", x, y);
+	FXRLOGd("FxRWindowDX11::pointerScrollDiscrete(%d, %d)\n", x, y);
 
 	SHORT scrollDelta = WHEEL_DELTA * (SHORT)y;
 	ProcessPointerEvent(WM_MOUSEWHEEL, m_ptLastPointer.x, m_ptLastPointer.y, scrollDelta);

@@ -29,6 +29,9 @@ do
             ;;
         --debug) DEBUG=
             ;;
+        -h)
+            usage
+            ;;
         --*) echo "bad option $1"
             usage
             ;;

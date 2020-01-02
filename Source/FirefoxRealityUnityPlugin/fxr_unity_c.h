@@ -75,6 +75,8 @@
 
 // FxR defines.
 
+#define FXR_PLUGIN_VERSION "1.0"
+
 #ifdef _WIN32
 #  ifdef FXR_UNITY_STATIC
 #    define FXR_EXTERN
@@ -155,7 +157,7 @@ FXR_EXTERN void fxrSetLogLevel(const int logLevel);
  * @param length	The maximum number of characters to set in buffer
  * @return			true if successful, false if an error occurred
  */
-FXR_EXTERN bool fxrGetFxVersion(char *buffer, int length);
+FXR_EXTERN bool fxrGetVersion(char *buffer, int length);
 
 FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestCompletedCallback, PFN_WINDOWRESIZEDCALLBACK windowResizedCallback, PFN_VREVENTCALLBACK vrEventCallback);
 

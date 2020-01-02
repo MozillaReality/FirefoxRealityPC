@@ -40,7 +40,7 @@ public static class FxRPlugin_pinvoke
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAsAttribute(UnmanagedType.I1)]
-    public static extern bool fxrGetFxVersion([MarshalAs(UnmanagedType.LPStr)]StringBuilder buffer, int length);
+    public static extern bool fxrGetVersion([MarshalAs(UnmanagedType.LPStr)]StringBuilder buffer, int length);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrStartFx(FxRPluginWindowCreationRequestCompleteCallback callback, FxRPluginWindowResizedCallback resizedCallback, FxRPluginVREventCallback vrEventCallback);
