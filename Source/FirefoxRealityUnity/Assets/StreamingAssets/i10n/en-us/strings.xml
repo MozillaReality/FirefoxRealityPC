@@ -1,0 +1,59 @@
+<resources>
+    <!-- This string labels a button that is used to cancel an action.
+         This appears in such contexts as dialog boxes, `<select>` menus, etc. -->
+    <string name="cancel_button">Cancel</string>
+
+    <!-- This string labels a button that is used to approve an action.
+         This appears in such contexts as dialog boxes, `<select>` menus, etc. -->
+    <string name="ok_button">OK</string>
+
+    <!-- This string labels a button to open the Video Projection selector. -->
+    <string name="video_mode_tooltip">Video Projection</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_3d_side">3D Side by Side</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_360">360</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_360_stereo">360 Stereo</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_180">180</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_180_left_right">Stereo 180 Left to Right</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_180_top_bottom">Stereo 180 Top to Bottom</string>
+
+    <!-- This string is displayed when selecting a video playback mode. -->
+    <string name="video_mode_2d">2D</string>
+
+    <!-- This string is displayed in a tooltip in the video controls UI. -->
+    <string name="video_controls_play">Play</string>
+
+    <!-- This string is displayed in a tooltip in the video controls UI. -->
+    <string name="video_controls_pause">Pause</string>
+
+    <!-- This string is displayed in a tooltip in the video controls UI. -->
+    <string name="video_controls_mute">Mute</string>
+
+    <!-- This string is displayed in a tooltip in the video controls UI. -->
+    <string name="video_controls_unmute">Unmute</string>
+
+    <!-- This string is displayed in a tooltip below the video controls UI. -->
+    <string name="video_controls_volume">Volume</string>
+
+    <!-- This string is displayed in a tooltip in the video controls UI.-->
+    <string name="video_controls_seek_forward">Seek forward</string>
+
+    <!-- This string is displayed in a tooltip in the video controls UI.-->
+    <string name="video_controls_seek_backward">Seek backward</string>
+
+    <!-- This string is displayed in the video control seekbar when the media is not seekable
+         (e.g., a live video stream). Prefer a short text because it affects the width of the seek bar. -->
+    <string name="video_controls_live">LIVE</string>
+
+</resources>
