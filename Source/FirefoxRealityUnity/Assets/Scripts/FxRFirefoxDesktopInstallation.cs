@@ -289,15 +289,15 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             {
                 if (downloadProgressDialog != null)
                 {
-                    var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                    var downloadProgressDialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
                         ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_finished_dialog_title")
                         : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_finished_dialog_title");
 
-                    var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                    var downloadProgressDialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
                         ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_finished_dialog_message")
                         : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_finished_dialog_message");
 
-                    downloadProgressDialog.UpdateText(dialogTitle, dialogMessage);
+                    downloadProgressDialog.UpdateText(downloadProgressDialogTitle, downloadProgressDialogMessage);
                 }
 
                 NotifyInstallationComplete();
