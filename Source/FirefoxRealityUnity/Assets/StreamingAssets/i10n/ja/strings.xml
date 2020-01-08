@@ -1,56 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- This string labels a button that is used to cancel an action.
          This appears in such contexts as dialog boxes, `<select>` menus, etc. -->
-    <string name="cancel_button">Cancel</string>
+    <string name="cancel_button">キャンセル</string>
 
     <!-- This string labels a button that is used to approve an action.
          This appears in such contexts as dialog boxes, `<select>` menus, etc. -->
     <string name="ok_button">OK</string>
 
     <!-- This string labels a button to open the Video Projection selector. -->
-    <string name="video_mode_tooltip">Video Projection</string>
+    <string name="video_mode_tooltip">ビデオ投影</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
-    <string name="video_mode_3d_side">3D Side by Side</string>
+    <string name="video_mode_3d_side">3D サイドバイサイド</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
     <string name="video_mode_360">360</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
-    <string name="video_mode_360_stereo">Stereo 360</string>
+    <string name="video_mode_360_stereo">360 ステレオ</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
     <string name="video_mode_180">180</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
-    <string name="video_mode_180_left_right">Stereo 180 (Left/Right)</string>
+    <string name="video_mode_180_left_right">ステレオ 180 左から右</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
-    <string name="video_mode_180_top_bottom">Stereo 180 (Top/Bottom)</string>
+    <string name="video_mode_180_top_bottom">ステレオ 180 上から下</string>
 
     <!-- This string is displayed when selecting a video playback mode. -->
     <string name="video_mode_2d">2D</string>
 
     <!-- This string is displayed in a tooltip in the video controls UI. -->
-    <string name="video_controls_play">Play</string>
+    <string name="video_controls_play">再生</string>
 
     <!-- This string is displayed in a tooltip in the video controls UI. -->
-    <string name="video_controls_pause">Pause</string>
+    <string name="video_controls_pause">停止</string>
 
     <!-- This string is displayed in a tooltip in the video controls UI. -->
-    <string name="video_controls_mute">Mute</string>
+    <string name="video_controls_mute">ミュート</string>
 
     <!-- This string is displayed in a tooltip in the video controls UI. -->
-    <string name="video_controls_unmute">Unmute</string>
+    <string name="video_controls_unmute">ミュート解除</string>
 
     <!-- This string is displayed in a tooltip below the video controls UI. -->
-    <string name="video_controls_volume">Volume</string>
+    <string name="video_controls_volume">音量</string>
 
-    <!-- This string is displayed in a tooltip in the video controls UI.-->
-    <string name="video_controls_seek_forward">Seek forward</string>
+    <!-- This string is displayed in a tooltip in the video controls UI, for seeking forward.-->
+    <string name="video_controls_seek_forward">秒早送り</string>
 
-    <!-- This string is displayed in a tooltip in the video controls UI.-->
-    <string name="video_controls_seek_backward">Seek backward</string>
+    <!-- This string is displayed in a tooltip in the video controls UI, for seeking backward.-->
+    <string name="video_controls_seek_backward">秒巻き戻し</string>
 
     <!-- This string is displayed in the video control seekbar when the media is not seekable
          (e.g., a live video stream). Prefer a short text because it affects the width of the seek bar. -->
@@ -64,9 +65,6 @@
          The {1} will be replaced with the release note highlights of the new version.
          BOTH {0} and {1} must appear in the string somewhere!-->
     <string name="fxr_update_availables_dialog_message">Firefox Reality {0}\n\n{1}</string>
-
-    <!-- This string is displayed in the title of the dialog letting the user know an update is available to FxR Desktop. -->
-    <string name="fxr_update_available_dialog_title">An update is available!</string>
 
     <!-- This string labels a button in an update available dialog, that the user presses to dismiss the dialog and update later. -->
     <string name="fxr_update_available_dialog_update_later_button">Update Later</string>
@@ -85,22 +83,16 @@
     <string name="fxr_update_available_update_now_response_dialog_title">An update is available!</string>
 
     <!-- This string is displayed in the dialog body that appears if the user decides to update FxR Desktop now. -->
-    <string name="fxr_update_available_update_now_response_dialog_message">Remove your headset to get the update from
-        VIVEPORT
-    </string>
+    <string name="fxr_update_available_update_now_response_dialog_message">Remove your headset to get the update from VIVEPORT</string>
 
     <!-- This string is displayed in the dialog title that appears if the user does not have Firefox Desktop installed . -->
     <string name="desktop_installation_new_install_dialog_title">Try the Firefox Browser for your computer too?</string>
 
     <!-- This string is displayed in the dialog body that appears if the user does not have Firefox Desktop installed . -->
-    <string name="desktop_installation_new_install_dialog_message">Get the browser that respects your privacy
-        automatically.
-    </string>
+    <string name="desktop_installation_new_install_dialog_message">Get the browser that respects your privacy automatically.</string>
 
     <!-- This string is displayed in the dialog title that appears if the user has Firefox Desktop installed, but there is an update available. -->
-    <string name="desktop_installation_update_dialog_title">There’s an update available for Firefox Browser for
-        Desktop.
-    </string>
+    <string name="desktop_installation_update_dialog_title">There’s an update available for Firefox Browser for Desktop.</string>
 
     <!-- This string is displayed in the dialog body that appears if the user has Firefox Desktop installed, but there is an update available. 
          INTENTIONALLY LEFT BLANK -->
@@ -119,16 +111,14 @@
     <string name="desktop_installation_install_now_button">Install Now</string>
 
     <!-- This string is displayed in the dialog title that appears if the user decides to install FxR Desktop now. -->
-    <string name="desktop_installation_install_started_dialog_title">Check your computer to finish installing Firefox
-    </string>
+    <string name="desktop_installation_install_started_dialog_title">Check your computer to finish installing Firefox</string>
 
     <!-- This string is displayed in the dialog body that appears if the user decides to install FxR Desktop now.
     INTENTIONALLY LEFT BLANK -->
     <string name="desktop_installation_install_started_dialog_message"></string>
 
     <!-- This string is displayed in the dialog title that appears if the user decides to update FxR Desktop now. -->
-    <string name="desktop_installation_update_started_dialog_title">Check your computer to finish updating Firefox
-    </string>
+    <string name="desktop_installation_update_started_dialog_title">Check your computer to finish updating Firefox</string>
 
     <!-- This string is displayed in the dialog body that appears if the user decides to update FxR Desktop now.
     INTENTIONALLY LEFT BLANK -->
@@ -149,14 +139,10 @@
     <string name="desktop_installation_update_finished_dialog_message"></string>
 
     <!-- This string is displayed in the dialog title that appears if there was an error installing Firefox Desktop. -->
-    <string name="desktop_installation_install_error_dialog_title">There was an issue installing Firefox on your
-        computer.!
-    </string>
+    <string name="desktop_installation_install_error_dialog_title">There was an issue installing Firefox on your computer.</string>
 
     <!-- This string is displayed in the dialog title that appears if there was an error updating Firefox Desktop. -->
-    <string name="desktop_installation_update_error_dialog_title">There was an issue updating Firefox on your
-        computer.
-    </string>
+    <string name="desktop_installation_update_error_dialog_title">There was an issue updating Firefox on your computer.</string>
 
     <!-- This string labels a button in the error dialog, that the user presses to retry the install/udpate of FxR Desktop. -->
     <string name="desktop_installation_retry_button">Retry</string>

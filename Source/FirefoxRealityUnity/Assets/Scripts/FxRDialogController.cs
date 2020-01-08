@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using UnityEngine;
+ using UnityEngine;
 
 public class FxRDialogController : Singleton<FxRDialogController>
 {

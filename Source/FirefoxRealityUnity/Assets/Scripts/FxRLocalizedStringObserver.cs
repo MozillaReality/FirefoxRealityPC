@@ -1,4 +1,8 @@
-using System;
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+// If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) 2020, Mozilla.
+
 using TMPro;
 using UnityEngine;
 
@@ -6,6 +10,7 @@ using UnityEngine;
 public class FxRLocalizedStringObserver : MonoBehaviour
 {
     [SerializeField] protected string LocalizedStringKey;
+
     private TMP_Text TextField
     {
         get
@@ -18,6 +23,7 @@ public class FxRLocalizedStringObserver : MonoBehaviour
             return textField;
         }
     }
+
     private TMP_Text textField;
 
     private void OnEnable()
