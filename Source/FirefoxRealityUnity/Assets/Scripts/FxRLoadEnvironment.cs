@@ -68,7 +68,7 @@ public class FxRLoadEnvironment : MonoBehaviour
                 Destroy(LoadingOverlay.gameObject);
                 Destroy(gameObject);
             }
-            else
+            else if (!spinnerActive)
             {
                 // Scene is loaded - show spinner until we are told to hide
                 LoadingSpinner.gameObject.SetActive(true);

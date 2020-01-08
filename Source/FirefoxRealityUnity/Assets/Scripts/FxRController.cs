@@ -2,6 +2,61 @@
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 // Copyright (c) 2019, Mozilla.
+//
+// FxRController acts in the middle of bootstrapping Firefox
+// Reality with desktop Firefox. Details of the classes and processes involved are
+// described below:
+//
+//                              
+//  FxRController       FxRWindow                 Unity Plugin             Fx Main/VRHost      
+//       +                  +                    (fxr_unity.dll)                  |                   
+//       +                  +                         +                           |   
+//   [Start]                +                         +                           |
+//       |                  +           fxrStartFx    +                           |   
+//       |  --------------------------------------->  |                           |
+//       +                  +                   Initialize plugin,                |
+//       +                  +                   recording passed-in               |
+//       +                  +                   callbacks                         |      
+//       +               [Start]                      +                           | 
+//       +                  |                         +                           | 
+//       +                  |    fxrRequestNewWindow  +                           | 
+//       +                  |   --------------------> |                           | 
+//       +                  |                         |                           | 
+//       +           (Unity continues)          Create thread to start            |
+//       +                  +                   Firefox Desktop, and              |                 
+//       +                  +                   wait for return                   |                 
+//       +                  +                         |                           |
+//       +                  +                         |          CreateVRWindow   |                 
+//       +                  +                         |  ---------------------=>  |                 
+//       +                  +                         |                    Launch firefox.exe     
+//       +                  +                         |                    with --fxr           
+//       +                  +                         |                           |               
+//       +                  +                         |                    Return with window id
+//       +                  +                         |                    and texture handle  
+//       +                  +                   Record texture handle.            + 
+//       +                  +                   Call back to tell Unity           + 
+//       +                  +                   that window created               + 
+//       +                  +                   (from background thread)          +      
+//       +    OnFxWindowCreationRequestComplete       |                           +       
+//       | <----------------------------------------  |                           +       
+//   Record uid             +                         +                           + 
+//   and window index       +                         +                           + 
+//       +                  +                         +                           + 
+//    [Update]              +                         +                           +
+//  (on UI thread)          +                         +                           +
+//       |                  fxrFinishWindowCreation   +                           + 
+//       |  --------------------------------------->  |                           + 
+//       |                  +                   Retrieve texture                  + 
+//       |                  +                   format and size from              + 
+//       |                  +                   texture handle                    + 
+//       |                  +                   and pass it back                  + 
+//       |    OnFxWindowCreated                       |                           + 
+//       | <----------------------------------------  |                           + 
+//       |   WasCreated     +                         +                           |
+//       | -------------->  |                         +                           | 
+//       |                  |                         +                           | 
+//      ...                ...                       ...                         ...  
+
 
 #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
@@ -34,6 +89,7 @@ public class FxRController : MonoBehaviour
     [SerializeField] private FxRVideoController VideoController;
 
     [SerializeField] private Transform EnvironmentOrigin;
+    [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
 
     [SerializeField] private GameObject LoadingIndicator;
 
@@ -350,8 +406,11 @@ public class FxRController : MonoBehaviour
             bodyDirectionChecks++;
             if (bodyDirectionChecks > 3)
             {
+                // Orient the environment so that the user is facing the browser window, and activate the environment
                 EnvironmentOrigin.forward = Player.instance.bodyDirectionGuess;
                 EnvironmentOrigin.transform.position = Player.instance.feetPositionGuess;
+                // Initialize the environment
+                EnvironmentSwitcher.SwitchEnvironment(0);
                 bodyDirectionInitialzed = true;
             }
         }
