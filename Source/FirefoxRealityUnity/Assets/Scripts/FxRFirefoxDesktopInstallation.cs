@@ -80,7 +80,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
             if (CompareVersions(lastBrowserCheckFxRVersion, Application.version) < 0)
             {
-                // User upgraded since we last checked desktop browser, so reset our checks
+                // User updated since we last checked desktop browser, so reset our checks
                 PlayerPrefs.SetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, 0);
                 browserChecks = 0;
             }
@@ -115,34 +115,47 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 {
                     // Prompt user if new version on server version of JSON file
                     // TODO: i18n and l10n
-                    var dialogTitle = "An update is available!";
-                    var dialogMessage = string.Format("Firefox Reality {0}\n\n{1}",
+                    var dialogTitle =
+                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_title");
+                    var dialogMessage = string.Format(
+                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_availables_dialog_message"),
                         string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_VERSION)
                             ? ""
                             : serverVersionInfo.LATEST_FXR_PC_VERSION
                         , string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS) ? "" : serverVersionInfo.LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS);
                     var dialogButtons = new FxRButton.ButtonConfig[2];
-                    dialogButtons[0] = new FxRButton.ButtonConfig("Update Later",
+                    dialogButtons[0] = new FxRButton.ButtonConfig(
+                        FxRLocalizedStringsLoader.GetApplicationString(
+                            "fxr_update_available_dialog_update_later_button"),
                         () =>
                         {
                             var updateLaterDialog = FxRDialogController.Instance.CreateDialog();
-                            updateLaterDialog.Show("You can update anytime from VIVEPORT",
-                                null,
+                            updateLaterDialog.Show(
+                                FxRLocalizedStringsLoader.GetApplicationString(
+                                    "fxr_update_available_update_later_response_dialog_title"),
+                                FxRLocalizedStringsLoader.GetApplicationString(
+                                    "fxr_update_available_update_later_response_dialog_message"),
                                 FirefoxIcon,
-                                new FxRButton.ButtonConfig("OK", () => { StartFirefoxDesktopUpdateProcess(); },
+                                new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
+                                    () => { StartFirefoxDesktopUpdateProcess(); },
                                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
                         },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
-                    dialogButtons[1] = new FxRButton.ButtonConfig("Update Now",
+                    dialogButtons[1] = new FxRButton.ButtonConfig(
+                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_update_now_button"),
                         () =>
                         {
                             // Open up URL to download new version
                             Application.OpenURL(serverVersionInfo.LATEST_FXR_PC_URL);
                             var removeHeadsetPrompt = FxRDialogController.Instance.CreateDialog();
-                            removeHeadsetPrompt.Show("An update is available!",
-                                "Remove your headset to get the update from VIVEPORT",
+                            removeHeadsetPrompt.Show(
+                                FxRLocalizedStringsLoader.GetApplicationString(
+                                    "fxr_update_available_update_now_response_dialog_title"),
+                                FxRLocalizedStringsLoader.GetApplicationString(
+                                    "fxr_update_available_update_now_response_dialog_message"),
                                 FirefoxIcon,
-                                new FxRButton.ButtonConfig("OK", () => { StartFirefoxDesktopUpdateProcess(); },
+                                new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
+                                    () => { StartFirefoxDesktopUpdateProcess(); },
                                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
                         },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
@@ -202,18 +215,24 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         // TODO: Update copy
         // TODO: i18n and l10n
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "Try the Firefox Browser for your computer too?"
-            : "There’s an update available for Firefox Browser for Desktop.";
+            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_new_install_dialog_title")
+            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_dialog_title");
         var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "Get the browser that respects your privacy automatically."
-            : "";
+            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_new_install_dialog_message")
+            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_dialog_message");
         var dialogButtons = new FxRButton.ButtonConfig[2];
-        var updateOrInstall =
-            (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW) ? "Install" : "Update";
-        dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstall + " Later",
+        
+        var updateOrInstallLater = (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW)
+            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_later_button")
+            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_later_button");
+        var updateOrInstallNow = (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW)
+            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_now_button")
+            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_now_button");
+        
+        dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstallLater,
             () => { NotifyInstallationComplete(); },
             FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
-        dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstall + " Now",
+        dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstallNow,
             () => { ContinueDesktopFirefoxInstall(installationTypeRequired, downloadType, installationScope); },
             FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
 
@@ -225,11 +244,15 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     {
         FxRDialogBox downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? "Check your computer to finish installing Firefox"
-            : "Check your computer to finish updating Firefox";
+            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_started_dialog_title")
+            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_started_dialog_title");
 
-        downloadProgressDialog.Show(dialogTitle, "", FirefoxIcon
-            , new FxRButton.ButtonConfig("OK"
+        var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_started_dialog_message")
+            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_started_dialog_message");
+
+        downloadProgressDialog.Show(dialogTitle, dialogMessage, FirefoxIcon
+            , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
                 , () => { NotifyInstallationComplete(); }
                 , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 //                    , new FxRButton.ButtonConfig("Cancel",
@@ -249,7 +272,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 //                            removeHeadsetPrompt.Show("Firefox Desktop Installation Started",
 //                                "Please remove your headset to continue the Desktop Firefox install process",
 //                                FirefoxIcon,
-//                                new FxRButton.ButtonConfig("OK", null, FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+//                                new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"), null, FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 //                        }
                 Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
             });
@@ -266,8 +289,17 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             {
                 if (downloadProgressDialog != null)
                 {
-                    downloadProgressDialog.UpdateText("Firefox is up to date!", "");
+                    var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                        ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_finished_dialog_title")
+                        : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_finished_dialog_title");
+
+                    var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                        ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_finished_dialog_message")
+                        : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_finished_dialog_message");
+
+                    downloadProgressDialog.UpdateText(dialogTitle, dialogMessage);
                 }
+
                 NotifyInstallationComplete();
             }
             else
@@ -280,9 +312,9 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 var installationErrorDialog = FxRDialogController.Instance.CreateDialog();
                 string installationErrorTitle =
                     installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-                        ? "There was an issue installing Firefox on your computer."
-                        : "There was an issue updating Firefox on your computer.";
-                var okButton = new FxRButton.ButtonConfig("OK",
+                        ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_error_dialog_title")
+                        : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_error_dialog_title");
+                var okButton = new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
                     () => { NotifyInstallationComplete(); },
                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
                 if (retryCount > 0)
@@ -291,7 +323,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 }
                 else
                 {
-                    var retryButton = new FxRButton.ButtonConfig("Retry",
+                    var retryButton = new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_retry_button"),
                         () =>
                         {
                             retryCount++;
