@@ -10,7 +10,7 @@ public class FxRLocalizedStringsLoader : MonoBehaviour
 
     public static LocalizedStringsLoaded onLocalizedStringsLoaded;
     
-    static private Dictionary<string, string> LoadedStrings;
+    static private Dictionary<string, string> LoadedStrings = new Dictionary<string, string>();
 
     public static string GetApplicationString(string key)
     {
