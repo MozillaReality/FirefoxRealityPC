@@ -40,5 +40,7 @@ public class FxRLocalizedStringObserver : MonoBehaviour
     private void HandleLocalizedStringsLoaded()
     {
         TextField.text = FxRLocalizedStringsLoader.GetApplicationString(LocalizedStringKey);
+        Debug.LogWarningFormat("Preferred width: {0:F2}", TextField.preferredWidth);
+        
     }
 }

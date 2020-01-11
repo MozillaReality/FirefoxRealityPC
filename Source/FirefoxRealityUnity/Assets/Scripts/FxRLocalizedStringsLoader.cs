@@ -27,7 +27,7 @@ public class FxRLocalizedStringsLoader : MonoBehaviour
     void Start()
     {
         // TODO: Detect Firefox Desktop language, and load the strings for that locale. For now, we'll load en-us...
-        LoadApplicationStringsForLocale("en");
+        LoadApplicationStringsForLocale("pl");
     }
 
     public static void LoadApplicationStringsForLocale(string locale)
