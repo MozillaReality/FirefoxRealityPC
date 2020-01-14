@@ -3,6 +3,9 @@
 //
 // Copyright (c) 2020, Mozilla.
 
+/*
+ * Class that represents a single localized string key/value pair. Used by FxRLocalizedStringsLoader to deserialize a strings.xml file.
+ */
 using System;
 using System.Xml.Serialization;
 

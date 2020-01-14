@@ -3,6 +3,10 @@
 //
 // Copyright (c) 2020, Mozilla.
 
+/*
+ * Class that represents a list of localized string key/value pairs. Used by FxRLocalizedStringsLoader to deserialize a strings.xml file.
+ */
+
 using System;
 using System.Xml.Serialization;
 
@@ -10,6 +14,5 @@ using System.Xml.Serialization;
 [XmlRoot("resources")]
 public class FxRLocalizedStringResources
 {
-    [XmlElement("string")]
-    public FxRLocalizedString[] strings;
+    [XmlElement("string")] public FxRLocalizedString[] strings;
 }

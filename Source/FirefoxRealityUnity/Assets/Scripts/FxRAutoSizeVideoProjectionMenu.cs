@@ -1,4 +1,14 @@
-﻿using System.Collections;
+﻿// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+// If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) 2020, Mozilla.
+
+/*
+ * This class is used to ensure that all of the video projection choices in the video projection menu are
+ * wide enough to accommodate the strings for every potential language, by auto-sizing the width of the grid
+ * containing them to the width of the largest text field preferred size.
+ */
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

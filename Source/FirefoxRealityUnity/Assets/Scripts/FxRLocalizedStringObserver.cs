@@ -3,6 +3,11 @@
 //
 // Copyright (c) 2020, Mozilla.
 
+/*
+ * This class can be attached to a TextMesh Pro text field, to keep its text contents updated based upon
+ * the current language translation for a specified localized string key. This class populates the string
+ * when it is enabled, and also listens for the "OnLocalizedStringsLoaded" event from the FxRLocalizedStringsLoader.
+ */
 using TMPro;
 using UnityEngine;
 
@@ -28,13 +33,13 @@ public class FxRLocalizedStringObserver : MonoBehaviour
 
     private void OnEnable()
     {
-        FxRLocalizedStringsLoader.onLocalizedStringsLoaded += HandleLocalizedStringsLoaded;
+        FxRLocalizedStringsLoader.OnLocalizedStringsLoaded += HandleLocalizedStringsLoaded;
         HandleLocalizedStringsLoaded();
     }
 
     private void OnDisable()
     {
-        FxRLocalizedStringsLoader.onLocalizedStringsLoaded -= HandleLocalizedStringsLoaded;
+        FxRLocalizedStringsLoader.OnLocalizedStringsLoaded -= HandleLocalizedStringsLoaded;
     }
 
     private void HandleLocalizedStringsLoaded()
