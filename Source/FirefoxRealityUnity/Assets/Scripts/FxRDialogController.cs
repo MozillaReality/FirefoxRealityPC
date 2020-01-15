@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
-﻿using UnityEngine;
+using UnityEngine;
 
 public class FxRDialogController : Singleton<FxRDialogController>
 {
@@ -11,6 +11,7 @@ public class FxRDialogController : Singleton<FxRDialogController>
     [SerializeField] protected Transform DialogParent;
 
     private FxRDialogBox currentlyOpenedDialog;
+
     /*
      * Instantiate a dialog box at the proper location
      */
@@ -18,7 +19,8 @@ public class FxRDialogController : Singleton<FxRDialogController>
     // TODO: Only allow for a single instance of any given type of dialog? 
     public FxRDialogBox CreateDialog()
     {
-        var dialogBox = Instantiate<FxRDialogBox>(DialogBoxPrefab,DialogParent.transform.position, DialogParent.transform.rotation, DialogParent);
+        var dialogBox = Instantiate<FxRDialogBox>(DialogBoxPrefab, DialogParent.transform.position,
+            DialogParent.transform.rotation, DialogParent);
         dialogBox.transform.localScale = Vector3.one;
         currentlyOpenedDialog = dialogBox;
         return dialogBox;
