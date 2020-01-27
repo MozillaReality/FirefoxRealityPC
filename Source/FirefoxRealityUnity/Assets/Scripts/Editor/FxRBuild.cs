@@ -19,21 +19,8 @@ public class FxRBuild
     public static void BuildGame()
     {
         BuildSuccessfull = false;
-        // Get filename.
-        string nightlyBuildPath =
-            EditorUtility.OpenFolderPanel("Choose top-level folder of Nightly Build", "", "firefox");
-        if (string.IsNullOrEmpty(nightlyBuildPath)) return;
-        Debug.Log("Path to nightly build selected: " + nightlyBuildPath);
-        if (!File.Exists(Path.Combine(nightlyBuildPath, "firefox.exe")))
-        {
-            Debug.LogError("No Firefox executable found in provided nightly build path!");
-            return;
-        }
-
-        string profilePath =
-            EditorUtility.OpenFolderPanel("Choose profile directory to include (or cancel to not include one)", "",
-                "fxr-profile");
-
+        
+        // Prompt user to choose output directory
         string saveFolder = EditorUtility.SaveFolderPanel("Choose folder to save built executable", "", "");
         if (string.IsNullOrEmpty(saveFolder)) return;
 //        string[] levels = new string[] {"Assets/Scene1.unity", "Assets/Scene2.unity"};
@@ -61,14 +48,11 @@ public class FxRBuild
 
             string streamingAssetsFirefoxDestination =
                 Path.Combine(streamingAssetsDestination, "firefox");
-            DirectoryCopy(nightlyBuildPath, streamingAssetsFirefoxDestination, true);
+            // Copy the version file to StreamingAssets
+            string firefoxDesktopOverlayPath = Path.Combine("..", "..", "tools", "bundle", "firefox", "overlay");
 
-            if (!string.IsNullOrEmpty(profilePath))
-            {
-                string profileDestination =
-                    Path.Combine(streamingAssetsDestination, "fxr-profile");
-                DirectoryCopy(profilePath, profileDestination, true);
-            }
+            FxRUtilityFunctions.DirectoryCopy(firefoxDesktopOverlayPath, streamingAssetsFirefoxDestination, true, true,
+                true);
 
             // Copy the version file to StreamingAssets
             string versionsJSONFilePathSource = Path.Combine("..", "..", "docs",

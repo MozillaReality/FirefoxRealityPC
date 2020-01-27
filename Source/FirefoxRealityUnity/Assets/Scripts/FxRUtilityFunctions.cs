@@ -18,6 +18,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -105,5 +106,53 @@ public static class FxRUtilityFunctions
 
 		return lhm;
 	}
+	
+	// Based on: https://docs.microsoft.com/en-us/dotnet/standard/io/how-to-copy-directories
+	public static void DirectoryCopy(string sourceDirectoryPath, string destinationDirectoryPath,
+		bool copySubdirectories, bool overwriteFiles, bool createDestinationDirectoryIfNotFound)
+	{
+		// Get the subdirectories for the specified directory.
+		DirectoryInfo dir = new DirectoryInfo(sourceDirectoryPath);
 
+		if (!dir.Exists)
+		{
+			throw new DirectoryNotFoundException(
+				"Source directory does not exist or could not be found: "
+				+ sourceDirectoryPath);
+		}
+
+		DirectoryInfo[] dirs = dir.GetDirectories();
+		// If the destination directory doesn't exist, create it.
+		if (!Directory.Exists(destinationDirectoryPath))
+		{
+			if (createDestinationDirectoryIfNotFound)
+			{
+				Directory.CreateDirectory(destinationDirectoryPath);
+			}
+			else
+			{
+				throw new DirectoryNotFoundException(
+					"Destination directory does not exist or could not be found: "
+					+ destinationDirectoryPath);
+			}
+		}
+
+		// Get the files in the directory and copy them to the new location.
+		FileInfo[] files = dir.GetFiles();
+		foreach (FileInfo file in files)
+		{
+			string temppath = Path.Combine(destinationDirectoryPath, file.Name);
+			file.CopyTo(temppath, overwriteFiles);
+		}
+
+		// If copying subdirectories, copy them and their contents to new location.
+		if (copySubdirectories)
+		{
+			foreach (DirectoryInfo subDirectory in dirs)
+			{
+				string temporaryPath = Path.Combine(destinationDirectoryPath, subDirectory.Name);
+				DirectoryCopy(subDirectory.FullName, temporaryPath, true, overwriteFiles, true);
+			}
+		}
+	}
 }
