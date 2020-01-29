@@ -234,7 +234,7 @@ void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestComplete
 	assert(err > 0);
 	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_FirefoxDesktopPath, "vrhost.dll");
 	assert(err > 0);
-	err = sprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), "%s/%s", s_FirefoxProfileParentPath, "fxr-profile");
+	err = sprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), "\"%s/%s\"", s_FirefoxProfileParentPath, "fxr-profile");
 	assert(err > 0);
 #endif
 
