@@ -155,4 +155,46 @@ public static class FxRUtilityFunctions
 			}
 		}
 	}
+
+	public static bool DoAllFilesExist(string sourceDirectoryPath, string destinationDirectoryPath)
+	{
+		// Get the subdirectories for the specified directory.
+		DirectoryInfo dir = new DirectoryInfo(sourceDirectoryPath);
+
+		if (!dir.Exists)
+		{
+			throw new DirectoryNotFoundException(
+				"Source directory does not exist or could not be found: "
+				+ sourceDirectoryPath);
+		}
+
+		DirectoryInfo[] dirs = dir.GetDirectories();
+		// If the destination directory doesn't exist, return false
+		if (!Directory.Exists(destinationDirectoryPath))
+		{
+			return false;
+		}
+
+		// Get the files in the directory and copy them to the new location.
+		FileInfo[] files = dir.GetFiles();
+		foreach (FileInfo file in files)
+		{
+			string temppath = Path.Combine(destinationDirectoryPath, file.Name);
+			if (!File.Exists(temppath))
+			{
+				return false;
+			}
+		}
+
+		foreach (DirectoryInfo subDirectory in dirs)
+		{
+			string temporaryPath = Path.Combine(destinationDirectoryPath, subDirectory.Name);
+			if (!DoAllFilesExist(subDirectory.FullName, temporaryPath))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

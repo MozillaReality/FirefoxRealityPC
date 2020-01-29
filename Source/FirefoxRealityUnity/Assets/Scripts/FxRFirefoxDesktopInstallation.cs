@@ -747,6 +747,14 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     {
         try
         {
+            var configurationSourceDirectory = Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_DIRECTORY);
+            var firefoxDesktopInstallationPath = GetFirefoxDesktopInstallationPath();
+            if (FxRUtilityFunctions.DoAllFilesExist(configurationSourceDirectory, firefoxDesktopInstallationPath))
+            {
+                // No need to copy anything
+                return;
+            }
+            
             Process configurationInjectionProcess = new Process();
             configurationInjectionProcess.StartInfo.FileName = "cmd.exe";
 
@@ -754,8 +762,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             configurationInjectionProcess.StartInfo.Arguments =
                 string.Format("/C (\"\"\"{0}\"\"\" \"\"\"{1}\"\"\" \"\"\"{2}\"\"\")"
                     , Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_INJECTION_BATCH_FILE)
-                    , Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_DIRECTORY)
-                    , GetFirefoxDesktopInstallationPath());
+                    , configurationSourceDirectory
+                    , firefoxDesktopInstallationPath);
 
             StartCoroutine(LaunchPrivilegedProcess(configurationInjectionProcess,
                 (wasSuccessful, errorString, wasCancelled) =>
