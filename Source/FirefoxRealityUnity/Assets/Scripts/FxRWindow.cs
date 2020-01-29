@@ -208,8 +208,16 @@ public class FxRWindow : FxRPointableSurface
 
     void Start()
     {
-        Debug.Log("FxRWindow.Start()");
+        FxRFirefoxDesktopInstallation.OnInstallationProcessComplete += HandleInstallationProcessComplete;
+    }
 
+    private void OnDestroy()
+    {
+        FxRFirefoxDesktopInstallation.OnInstallationProcessComplete -= HandleInstallationProcessComplete;
+    }
+
+    private void HandleInstallationProcessComplete()
+    {
         if (_windowIndex == 0)
             fxr_plugin?.fxrRequestNewWindow(GetInstanceID(), DefaultSizeToRequest.x, DefaultSizeToRequest.y);
     }

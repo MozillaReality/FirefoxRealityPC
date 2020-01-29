@@ -140,9 +140,9 @@ public class FxRPlugin
         vrEventCallbackGCH.Free();
     }
 
-    public void fxrSetResourcesPath(string path)
+    public void fxrSetResourcePaths(string firefoxPath, string profileParentPath)
     {
-        FxRPlugin_pinvoke.fxrSetResourcesPath(path);
+        FxRPlugin_pinvoke.fxrSetResourcePaths(firefoxPath, profileParentPath);
     }
 
     public void fxrKeyEvent(int windowIndex, int keyCode)

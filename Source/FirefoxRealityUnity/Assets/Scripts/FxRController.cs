@@ -62,6 +62,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
@@ -73,7 +74,9 @@ public class FxRController : MonoBehaviour
 {
 #if UNITY_EDITOR
     // Set the following to the location of your local desktop firefox build to use in editor
-    private const string HardcodedFirefoxPath = "d:\\patri\\dev\\Mozilla\\gecko_build_release";
+    private const string HardcodedFirefoxPath = "d:\\patri\\dev\\Mozilla\\gecko_build_release\\firefox";
+    // private const string HardcodedFirefoxPath = "C:/Users/patri/AppData/LocalLow/Mozilla/Firefox Reality";
+    private const string HardcodedProfileParentPath = "d:\\patri\\dev\\Mozilla\\gecko_build_release";//"C:\\Users\\patri\\AppData\\LocalLow\\Mozilla\\Firefox Reality";
 #endif
     public enum FXR_LOG_LEVEL
     {
@@ -256,16 +259,7 @@ public class FxRController : MonoBehaviour
         // Register the full screen video callbacks
         fxr_plugin.fxrRegisterFullScreenBeginCallback(HandleFullScreenBegin);
         fxr_plugin.fxrRegisterFullScreenEndCallback(HandleFullScreenEnd);
-
-        // Give the plugin a place to look for resources.
-
-        string resourcesPath = Application.streamingAssetsPath;
-
-#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
-        resourcesPath = HardcodedFirefoxPath;
-#endif
-        fxr_plugin.fxrSetResourcesPath(resourcesPath);
-
+        
         // Set any launch-time parameters.
         if (DontCloseNativeWindowOnClose)
             fxr_plugin.fxrSetParamBool(FxRPlugin.FxRParam.b_CloseNativeWindowOnClose, false);
@@ -287,6 +281,20 @@ public class FxRController : MonoBehaviour
     private void HandleInstallationProcessComplete()
     {
         CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
+        
+        // Give the plugin a place to look for resources.
+        string firefoxInstallationPath = FxRFirefoxDesktopInstallation.GetFirefoxDesktopInstallationPath();
+        string profileParentPath = Application.persistentDataPath;
+        
+#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
+        firefoxInstallationPath = HardcodedFirefoxPath;
+        profileParentPath = HardcodedProfileParentPath;
+#endif
+        fxr_plugin.fxrSetResourcePaths(firefoxInstallationPath, profileParentPath);
+        
+        Debug.Log("Plugin version " + fxr_plugin.fxrGetVersion());
+
+        fxr_plugin.fxrStartFx(OnFxWindowCreationRequestComplete, OnFxWindowResized, OnFxRVREvent);
     }
 
     private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
@@ -338,7 +346,7 @@ public class FxRController : MonoBehaviour
             w.fxr_plugin = null;
         }
 
-        fxr_plugin.fxrSetResourcesPath(null);
+        fxr_plugin.fxrSetResourcePaths(null, null);
 
         // Since we might be going away, tell users of our Log function
         // to stop calling it.
@@ -381,11 +389,7 @@ public class FxRController : MonoBehaviour
     void Start()
     {
         Debug.Log("FxRController.Start()");
-
-        Debug.Log("Plugin version " + fxr_plugin.fxrGetVersion());
-
-        fxr_plugin.fxrStartFx(OnFxWindowCreationRequestComplete, OnFxWindowResized, OnFxRVREvent);
-
+        
         IntPtr openVRSession = XRDevice.GetNativePtr();
         if (openVRSession != IntPtr.Zero)
         {

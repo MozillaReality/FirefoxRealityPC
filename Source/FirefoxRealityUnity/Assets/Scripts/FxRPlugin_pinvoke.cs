@@ -49,7 +49,7 @@ public static class FxRPlugin_pinvoke
     public static extern void fxrStopFx();
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void fxrSetResourcesPath(string path);
+    public static extern void fxrSetResourcePaths(string firefoxPath, string profileParentPath);
 
     [DllImport(LIBRARY_NAME, CallingConvention = CallingConvention.Cdecl)]
     public static extern void fxrKeyEvent(int windowIndex, int keyCode);

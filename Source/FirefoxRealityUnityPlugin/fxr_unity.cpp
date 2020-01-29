@@ -38,7 +38,8 @@
 static IUnityInterfaces* s_UnityInterfaces = NULL;
 static IUnityGraphics* s_Graphics = NULL;
 static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
-static char *s_ResourcesPath = NULL;
+static char *s_FirefoxDesktopPath = NULL;
+static char *s_FirefoxProfileParentPath = NULL;
 
 // --------------------------------------------------------------------------
 // vrhost.dll
@@ -206,13 +207,20 @@ bool fxrGetVersion(char *buffer, int length)
 	return true;
 }
 
-void fxrSetResourcesPath(const char *path)
+void fxrSetResourcePaths(const char *firefox_path, const char *profile_parent_path)
 {
-	free(s_ResourcesPath);
-	s_ResourcesPath = NULL;
-	if (path && path[0]) {
-		s_ResourcesPath = strdup(path);
-		FXRLOGi("Resources path is '%s'.\n", s_ResourcesPath);
+	free(s_FirefoxDesktopPath);
+	s_FirefoxDesktopPath = NULL;
+	if (firefox_path && firefox_path[0]) {
+		s_FirefoxDesktopPath = strdup(firefox_path);
+		FXRLOGi("Firefox Desktop path is '%s'.\n", s_FirefoxDesktopPath);
+	}
+
+	free(s_FirefoxProfileParentPath);
+	s_FirefoxProfileParentPath = NULL;
+	if (profile_parent_path && profile_parent_path[0]) {
+		s_FirefoxProfileParentPath = strdup(profile_parent_path);
+		FXRLOGi("Firefox profile parent path is '%s'.\n", s_FirefoxProfileParentPath);
 	}
 }
 
@@ -222,11 +230,11 @@ void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequestComplete
 
 	int err;
 #ifndef USE_HARDCODED_FX_PATHS
-	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/%s", s_ResourcesPath, "firefox/");
+	err = sprintf_s(s_pszFxPath, ARRAYSIZE(s_pszFxPath), "%s/", s_FirefoxDesktopPath);
 	assert(err > 0);
-	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_ResourcesPath, "firefox/vrhost.dll");
+	err = swprintf_s(s_pszVrHostPath, ARRAYSIZE(s_pszVrHostPath), L"%S/%S", s_FirefoxDesktopPath, "vrhost.dll");
 	assert(err > 0);
-	err = sprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), "%s/%s", s_ResourcesPath, "fxr-profile");
+	err = sprintf_s(s_pszFxProfile, ARRAYSIZE(s_pszFxProfile), "%s/%s", s_FirefoxProfileParentPath, "fxr-profile");
 	assert(err > 0);
 #endif
 
