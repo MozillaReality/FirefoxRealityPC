@@ -16,6 +16,12 @@ public class FxRDialogBox : MonoBehaviour
     [SerializeField] protected TMP_Text BodyText;
     [SerializeField] protected Image ProgressBar;
     [SerializeField] protected Image BackgroundImage;
+    
+    public delegate void DialogBoxOpen();
+    public static DialogBoxOpen OnDialogBoxOpen;
+
+    public delegate void DialogBoxClosed();
+    public static DialogBoxClosed OnDialogBoxCLosed;
 
     // TODO: Do dialogs need to have an option to close them without pressing a button?
     public void Show(string title, string message, Sprite icon, params FxRButton.ButtonConfig[] buttonConfigs)
@@ -44,6 +50,7 @@ public class FxRDialogBox : MonoBehaviour
         BackgroundImage.color = FxRConfiguration.Instance.ColorPalette.NormalBrowsingDialogBackgroundColor;
         TitleText.color = FxRConfiguration.Instance.ColorPalette.DialogTitleTextColor;
         BodyText.color = FxRConfiguration.Instance.ColorPalette.DialogBodyTextColor;
+        OnDialogBoxOpen?.Invoke();
     }
 
     public void ShowProgress(float zeroToOne)
@@ -51,9 +58,10 @@ public class FxRDialogBox : MonoBehaviour
         ProgressBar.gameObject.SetActive(true);
         ProgressBar.fillAmount = zeroToOne;
     }
-    
+
     public void Close()
     {
+        OnDialogBoxCLosed?.Invoke();
         // TODO: Animation to have dialog go away?
         Destroy(gameObject);
     }

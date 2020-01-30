@@ -113,7 +113,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                     var dialogTitle =
                         FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_title");
                     var dialogMessage = string.Format(
-                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_availables_dialog_message"),
+                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_message"),
                         string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_VERSION)
                             ? ""
                             : serverVersionInfo.LATEST_FXR_PC_VERSION
@@ -675,8 +675,17 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private IEnumerator LaunchPrivilegedProcess(Process installProcess, Action<bool, string, bool> successCallback)
     {
+        yield return new WaitForEndOfFrame();
         installProcess.StartInfo.Verb = "runas";
-        installProcess.Start();
+        try
+        {
+            installProcess.Start();
+        }
+        catch (Exception e)
+        {
+            successCallback?.Invoke(false, "There was an issue starting privileged process", false);
+            yield break;
+        }
 
         while (!installProcess.HasExited)
         {
@@ -747,18 +756,34 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     {
         try
         {
-            var configurationSourceDirectory = Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_DIRECTORY);
+            var configurationSourceDirectory =
+                Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_DIRECTORY);
             var firefoxDesktopInstallationPath = GetFirefoxDesktopInstallationPath();
             if (FxRUtilityFunctions.DoAllFilesExist(configurationSourceDirectory, firefoxDesktopInstallationPath))
             {
                 // No need to copy anything
                 return;
             }
-            
+
+            FxRDialogBox configurationStartedDialog = FxRDialogController.Instance.CreateDialog();
+            var dialogTitle =
+                FxRLocalizedStringsLoader.GetApplicationString(
+                    "desktop_installation_configuration_started_dialog_title");
+
+            var dialogMessage =
+                FxRLocalizedStringsLoader.GetApplicationString(
+                    "desktop_installation_configuration_started_dialog_message");
+
+            configurationStartedDialog.Show(dialogTitle, dialogMessage, FirefoxIcon
+                , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
+                    , () => { }
+                    , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+
             Process configurationInjectionProcess = new Process();
             configurationInjectionProcess.StartInfo.FileName = "cmd.exe";
 
             // Pass the batch file, configuration overlay directory, and the firefox installation path to "cmd.exe"
+            // Arguments are triple-quoted to ensure the quotes are passed to the command line properly.
             configurationInjectionProcess.StartInfo.Arguments =
                 string.Format("/C (\"\"\"{0}\"\"\" \"\"\"{1}\"\"\" \"\"\"{2}\"\"\")"
                     , Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_INJECTION_BATCH_FILE)
@@ -768,6 +793,11 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             StartCoroutine(LaunchPrivilegedProcess(configurationInjectionProcess,
                 (wasSuccessful, errorString, wasCancelled) =>
                 {
+                    if (configurationStartedDialog != null)
+                    {
+                        configurationStartedDialog.Close();
+                    }
+
                     if (wasSuccessful)
                     {
                         Debug.Log("Successfully configured FxR!");
@@ -777,15 +807,34 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                         Debug.LogError(
                             "There was a problem configuring Firefox Desktop for use with Firefox Reality: " +
                             errorString);
+                        
+                        ShowConfigurationError();
                     }
                 }));
         }
         catch (Exception e)
         {
-            // TODO: Determine what to do in the event the injection fails
+            // TODO: Determine if there is any more to do in the event the injection fails
+            ShowConfigurationError();
+
             Debug.LogError("There was a problem configuring Firefox Desktop for use with Firefox Reality: " +
                            e.Message);
             Debug.LogException(e, this);
         }
+    }
+
+    private void ShowConfigurationError()
+    {
+        FxRDialogBox configurationStartedDialog = FxRDialogController.Instance.CreateDialog();
+        var dialogTitle =
+            FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_configuration_failed_dialog_title");
+
+        var dialogMessage =
+            FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_configuration_failed_dialog_message");
+
+        configurationStartedDialog.Show(dialogTitle, dialogMessage, FirefoxIcon
+            , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
+                , () => { }
+                , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
     }
 }
