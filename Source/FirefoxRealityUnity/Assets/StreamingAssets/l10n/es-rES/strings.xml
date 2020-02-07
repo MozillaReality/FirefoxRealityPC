@@ -162,6 +162,6 @@
 
     <!-- This string is displayed in the dialog body that appears if Firefox Reality cannot add its configuration to Firefox Desktop.
     INTENTIONALLY LEFT BLANK -->
-    <string name="desktop_installation_configuration_failed_dialog_message">Please exit and restart Firefox Reality to try again.</string>
+    <string name="desktop_installation_configuration_failed_dialog_message">Firefox Reality will exit. Please restart Firefox Reality to try again.</string>
 
 </resources>

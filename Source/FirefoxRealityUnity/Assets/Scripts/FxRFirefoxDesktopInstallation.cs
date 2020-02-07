@@ -743,16 +743,18 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private void DesktopInstallationComplete()
     {
-        CopyFxRConfiguration();
-        if (!installationCompleteNotificationSent)
+        CopyFxRConfiguration((wasSuccessful, error) =>
         {
-            OnInstallationProcessComplete?.Invoke();
-        }
+            if (wasSuccessful && !installationCompleteNotificationSent)
+            {
+                OnInstallationProcessComplete?.Invoke();
+            }
 
-        installationCompleteNotificationSent = true;
+            installationCompleteNotificationSent = true;
+        });
     }
 
-    private void CopyFxRConfiguration()
+    private void CopyFxRConfiguration(Action<bool, string> successCallback)
     {
         try
         {
@@ -762,6 +764,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             if (FxRUtilityFunctions.DoAllFilesExist(configurationSourceDirectory, firefoxDesktopInstallationPath))
             {
                 // No need to copy anything
+                successCallback?.Invoke(true, "");
                 return;
             }
 
@@ -801,6 +804,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                     if (wasSuccessful)
                     {
                         Debug.Log("Successfully configured FxR!");
+                        successCallback?.Invoke(true, "");
                     }
                     else
                     {
@@ -809,6 +813,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                             errorString);
                         
                         ShowConfigurationError();
+                        successCallback?.Invoke(false, errorString);
                     }
                 }));
         }
@@ -820,6 +825,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             Debug.LogError("There was a problem configuring Firefox Desktop for use with Firefox Reality: " +
                            e.Message);
             Debug.LogException(e, this);
+            successCallback?.Invoke(false, e.Message);
         }
     }
 
@@ -834,7 +840,12 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
         configurationStartedDialog.Show(dialogTitle, dialogMessage, FirefoxIcon
             , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
-                , () => { }
+                , () =>
+                {
+#if !UNITY_EDITOR
+                    Application.Quit(1);
+#endif
+                }
                 , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
     }
 }

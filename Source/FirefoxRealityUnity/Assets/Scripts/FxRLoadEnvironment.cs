@@ -26,7 +26,7 @@ public class FxRLoadEnvironment : MonoBehaviour
     IEnumerator Start()
     {
         FxRDialogBox.OnDialogBoxOpen += HandleDialogBoxOpen;
-        FxRDialogBox.OnDialogBoxCLosed += HandleDialogBoxClosed;
+        FxRDialogBox.OnAllDialogBoxesCLosed += HandleDialogBoxClosed;
         yield return new WaitForSeconds(1f);
         LoadingOperation = SceneManager.LoadSceneAsync(1, LoadSceneMode.Additive);
         foreach (var hand in Hands)
@@ -40,7 +40,7 @@ public class FxRLoadEnvironment : MonoBehaviour
     private void OnDestroy()
     {
         FxRDialogBox.OnDialogBoxOpen -= HandleDialogBoxOpen;
-        FxRDialogBox.OnDialogBoxCLosed -= HandleDialogBoxClosed;
+        FxRDialogBox.OnAllDialogBoxesCLosed -= HandleDialogBoxClosed;
     }
 
     public void HideLoadingOverlay()

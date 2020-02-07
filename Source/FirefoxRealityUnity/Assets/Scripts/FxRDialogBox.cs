@@ -21,7 +21,9 @@ public class FxRDialogBox : MonoBehaviour
     public static DialogBoxOpen OnDialogBoxOpen;
 
     public delegate void DialogBoxClosed();
-    public static DialogBoxClosed OnDialogBoxCLosed;
+    public static DialogBoxClosed OnAllDialogBoxesCLosed;
+    
+    private static int DialogsOpenCount = 0;
 
     // TODO: Do dialogs need to have an option to close them without pressing a button?
     public void Show(string title, string message, Sprite icon, params FxRButton.ButtonConfig[] buttonConfigs)
@@ -50,6 +52,7 @@ public class FxRDialogBox : MonoBehaviour
         BackgroundImage.color = FxRConfiguration.Instance.ColorPalette.NormalBrowsingDialogBackgroundColor;
         TitleText.color = FxRConfiguration.Instance.ColorPalette.DialogTitleTextColor;
         BodyText.color = FxRConfiguration.Instance.ColorPalette.DialogBodyTextColor;
+        DialogsOpenCount++;
         OnDialogBoxOpen?.Invoke();
     }
 
@@ -61,7 +64,11 @@ public class FxRDialogBox : MonoBehaviour
 
     public void Close()
     {
-        OnDialogBoxCLosed?.Invoke();
+        DialogsOpenCount--;
+        if (DialogsOpenCount == 0)
+        {
+            OnAllDialogBoxesCLosed?.Invoke();
+        }
         // TODO: Animation to have dialog go away?
         Destroy(gameObject);
     }
