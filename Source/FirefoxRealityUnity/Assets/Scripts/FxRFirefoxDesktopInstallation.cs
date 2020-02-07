@@ -27,7 +27,6 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     public static readonly string FXR_PC_VERSIONS_JSON_FILENAME = "fxrpc_versions.json";
     private static readonly string FXR_CONFIGURATION_DIRECTORY = "firefox";
-    private static readonly string FXR_CONFIGURATION_INJECTION_BATCH_FILE = "InjectFxRConfig.bat";
 
     int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
 
@@ -783,13 +782,13 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                     , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
 
             Process configurationInjectionProcess = new Process();
-            configurationInjectionProcess.StartInfo.FileName = "cmd.exe";
+            configurationInjectionProcess.StartInfo.FileName = "XCOPY";
 
             // Pass the batch file, configuration overlay directory, and the firefox installation path to "cmd.exe"
             // Arguments are triple-quoted to ensure the quotes are passed to the command line properly.
             configurationInjectionProcess.StartInfo.Arguments =
-                string.Format("/C (\"\"\"{0}\"\"\" \"\"\"{1}\"\"\" \"\"\"{2}\"\"\")"
-                    , Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_INJECTION_BATCH_FILE)
+                string.Format("\"\"\"{0}\"\"\" \"\"\"{1}\"\"\" /F /R /C /Y /S"
+                    // , Path.Combine(Application.streamingAssetsPath, FXR_CONFIGURATION_INJECTION_BATCH_FILE)
                     , configurationSourceDirectory
                     , firefoxDesktopInstallationPath);
 
