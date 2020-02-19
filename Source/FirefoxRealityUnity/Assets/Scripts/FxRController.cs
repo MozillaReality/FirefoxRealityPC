@@ -64,9 +64,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using Valve.VR;
 using Valve.VR.InteractionSystem;
-using VRIME2;
 using Hand = Valve.VR.InteractionSystem.Hand;
 
 public class FxRController : MonoBehaviour
@@ -116,11 +114,6 @@ public class FxRController : MonoBehaviour
             }
 
             currentBrowsingMode = value;
-            if (currentBrowsingMode != FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING
-                && VRIME_Manager.Ins.ShowState)
-            {
-                VRIME_Manager.Ins.HideIME();
-            }
 
             FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
             foreach (FxRWindow w in fxrwindows)
@@ -278,8 +271,6 @@ public class FxRController : MonoBehaviour
         }
 
         VideoController.fxr_plugin = fxr_plugin;
-        // VRIME keyboard event registration
-        VRIME_Manager.Ins.onCallIME.AddListener(imeShowHandle);
 
         FxRFirefoxDesktopInstallation.OnInstallationProcessComplete += HandleInstallationProcessComplete;
     }
@@ -370,12 +361,6 @@ public class FxRController : MonoBehaviour
         fxr_plugin.fxrRegisterFullScreenEndCallback(null);
 
         fxr_plugin = null;
-
-        // VRIME keyboard event registration
-        if (VRIME_Manager.Ins != null)
-        {
-            VRIME_Manager.Ins.onCallIME.RemoveListener(imeShowHandle);
-        }
     }
 
     void Start()
@@ -393,9 +378,6 @@ public class FxRController : MonoBehaviour
         }
 
         LoadingIndicator.SetActive(true);
-
-        FxRVRIMEInitializer.Instance.InitializeVRIMEKeyboard(VRIME_Manager.Ins);
-        VRIME_Manager.Ins.HideIME();
     }
 
     void Update()
@@ -414,17 +396,6 @@ public class FxRController : MonoBehaviour
                 bodyDirectionInitialzed = true;
             }
         }
-
-        if (IMEStateChanged && lastIMEState == FxRPlugin.FxREventState.Focus && !VRIME_Manager.Ins.ShowState)
-        {
-            VRIME_Manager.Ins.ShowIME("");
-        }
-        else if (IMEStateChanged && lastIMEState == FxRPlugin.FxREventState.Blur && VRIME_Manager.Ins.ShowState)
-        {
-            VRIME_Manager.Ins.HideIME();
-        }
-
-        IMEStateChanged = false;
 
         if (FullScreenStateChanged)
         {
@@ -481,61 +452,6 @@ public class FxRController : MonoBehaviour
         }
     }
 
-    public void ToggleKeyboard()
-    {
-        if (!VRIME_Manager.Ins.ShowState)
-        {
-            VRIME_Manager.Ins.ShowIME("");
-        }
-        else
-        {
-            VRIME_Manager.Ins.HideIME();
-        }
-    }
-
-    private void imeShowHandle(bool iShow)
-    {
-        foreach (var laserPointer in LaserPointers)
-        {
-            laserPointer.enabled = !iShow;
-        }
-
-        if (iShow)
-        {
-            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
-                SteamVR_Input_Sources.LeftHand);
-            SteamVR_Actions._default.GrabGrip.AddOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
-                SteamVR_Input_Sources.RightHand);
-
-            foreach (var hand in Hands)
-            {
-                hand.HideController();
-            }
-            //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
-            //SteamVR_Actions._default.TouchPress.AddOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
-
-            //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
-            //SteamVR_Actions._default.TouchPos.AddOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
-        }
-        else
-        {
-            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
-                SteamVR_Input_Sources.LeftHand);
-            SteamVR_Actions._default.GrabGrip.RemoveOnChangeListener(VRIME_Manager.Ins.MoveKeyboardHandle,
-                SteamVR_Input_Sources.RightHand);
-
-            foreach (var hand in Hands)
-            {
-                hand.ShowController();
-            }
-            //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.LeftHand);
-            //SteamVR_Actions._default.TouchPress.RemoveOnChangeListener(VRIME_Manager.Ins.MoveCursorHandle, SteamVR_Input_Sources.RightHand);
-
-            //SteamVR_Actions._default.TouchPos.RemoveOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.LeftHand);
-            //SteamVR_Actions._default.TouchPos.RemoveOnAxisListener(VRIME_Manager.Ins.MoveCursorPositionHandle, SteamVR_Input_Sources.RightHand);
-        }
-    }
-
     [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreationRequestCompleteCallback))]
     void OnFxWindowCreationRequestComplete(int uid, int windowIndex)
     {
@@ -574,8 +490,6 @@ public class FxRController : MonoBehaviour
         window.WasResized(widthPixels, heightPixels);
     }
 
-    FxRPlugin.FxREventState lastIMEState = FxRPlugin.FxREventState.Blur;
-    private bool IMEStateChanged;
     private bool FullScreenStateChanged;
     private bool WindowCreationRequestCompleteCallbackCalled;
 
@@ -593,22 +507,13 @@ public class FxRController : MonoBehaviour
     void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
     {
         FxRPlugin.FxREventState eventState = (FxRPlugin.FxREventState) eventData1;
-        if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.IME)
-        {
-            if (eventState != lastIMEState)
-            {
-                IMEStateChanged = true;
-                lastIMEState = eventState;
-            }
-        }
-        else if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.Fullscreen)
+        if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.Fullscreen)
         {
             FullScreenStateChanged = true;
             lastFullScreenState = eventState;
         }
     }
-
-
+    
     private void OnApplicationQuit()
     {
         Debug.Log("FxRController.OnApplicationQuit()");

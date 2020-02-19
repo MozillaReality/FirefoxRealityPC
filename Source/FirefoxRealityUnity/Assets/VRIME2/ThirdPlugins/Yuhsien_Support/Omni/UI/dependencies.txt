@@ -1,2 +1,0 @@
-This package depends on:
-* Htc.Omni/Common
