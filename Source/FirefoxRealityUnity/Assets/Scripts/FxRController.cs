@@ -284,7 +284,7 @@ public class FxRController : MonoBehaviour
         
         // Give the plugin a place to look for resources.
         string firefoxInstallationPath = FxRFirefoxDesktopInstallation.GetFirefoxDesktopInstallationPath();
-        string profileParentPath = Application.persistentDataPath;
+        string profileParentPath = Application.streamingAssetsPath;
         
 #if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
         firefoxInstallationPath = HardcodedFirefoxPath;

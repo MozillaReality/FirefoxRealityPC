@@ -722,7 +722,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     }
 
     private string FirefoxInstallerDownloadPath =>
-        Path.Combine(Application.persistentDataPath, "Firefox Installer.exe");
+        Path.Combine(Application.streamingAssetsPath, "Firefox Installer.exe");
 
     private string CultureStringTwoSegmentsOnly
     {
