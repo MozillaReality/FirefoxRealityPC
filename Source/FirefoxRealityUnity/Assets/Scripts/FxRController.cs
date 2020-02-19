@@ -4,66 +4,12 @@
 // Copyright (c) 2019, Mozilla.
 //
 // FxRController acts in the middle of bootstrapping Firefox
-// Reality with desktop Firefox. Details of the classes and processes involved are
-// described below:
-//
-//                              
-//  FxRController       FxRWindow                 Unity Plugin             Fx Main/VRHost      
-//       +                  +                    (fxr_unity.dll)                  |                   
-//       +                  +                         +                           |   
-//   [Start]                +                         +                           |
-//       |                  +           fxrStartFx    +                           |   
-//       |  --------------------------------------->  |                           |
-//       +                  +                   Initialize plugin,                |
-//       +                  +                   recording passed-in               |
-//       +                  +                   callbacks                         |      
-//       +               [Start]                      +                           | 
-//       +                  |                         +                           | 
-//       +                  |    fxrRequestNewWindow  +                           | 
-//       +                  |   --------------------> |                           | 
-//       +                  |                         |                           | 
-//       +           (Unity continues)          Create thread to start            |
-//       +                  +                   Firefox Desktop, and              |                 
-//       +                  +                   wait for return                   |                 
-//       +                  +                         |                           |
-//       +                  +                         |          CreateVRWindow   |                 
-//       +                  +                         |  ---------------------=>  |                 
-//       +                  +                         |                    Launch firefox.exe     
-//       +                  +                         |                    with --fxr           
-//       +                  +                         |                           |               
-//       +                  +                         |                    Return with window id
-//       +                  +                         |                    and texture handle  
-//       +                  +                   Record texture handle.            + 
-//       +                  +                   Call back to tell Unity           + 
-//       +                  +                   that window created               + 
-//       +                  +                   (from background thread)          +      
-//       +    OnFxWindowCreationRequestComplete       |                           +       
-//       | <----------------------------------------  |                           +       
-//   Record uid             +                         +                           + 
-//   and window index       +                         +                           + 
-//       +                  +                         +                           + 
-//    [Update]              +                         +                           +
-//  (on UI thread)          +                         +                           +
-//       |                  fxrFinishWindowCreation   +                           + 
-//       |  --------------------------------------->  |                           + 
-//       |                  +                   Retrieve texture                  + 
-//       |                  +                   format and size from              + 
-//       |                  +                   texture handle                    + 
-//       |                  +                   and pass it back                  + 
-//       |    OnFxWindowCreated                       |                           + 
-//       | <----------------------------------------  |                           + 
-//       |   WasCreated     +                         +                           |
-//       | -------------->  |                         +                           | 
-//       |                  |                         +                           | 
-//      ...                ...                       ...                         ...  
-
+// Reality with desktop Firefox.
 
 #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
 using Valve.VR.InteractionSystem;
 using Hand = Valve.VR.InteractionSystem.Hand;
 
@@ -73,30 +19,14 @@ public class FxRController : MonoBehaviour
     // Set the following to the location of your local desktop firefox build to use in editor
     private const string HardcodedFirefoxPath = "d:\\patri\\dev\\Mozilla\\gecko_build_release";
 #endif
-    public enum FXR_LOG_LEVEL
-    {
-        FXR_LOG_LEVEL_DEBUG = 0,
-        FXR_LOG_LEVEL_INFO,
-        FXR_LOG_LEVEL_WARN,
-        FXR_LOG_LEVEL_ERROR,
-        FXR_LOG_LEVEL_REL_INFO
-    }
-
-    [SerializeField] private FXR_LOG_LEVEL currentLogLevel = FXR_LOG_LEVEL.FXR_LOG_LEVEL_INFO;
-
-    [SerializeField] private FxRVideoController VideoController;
 
     [SerializeField] private Transform EnvironmentOrigin;
     [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
 
-    [SerializeField] private GameObject LoadingIndicator;
-
     public enum FXR_BROWSING_MODE
     {
         FXR_BROWSER_MODE_DESKTOP_INSTALL,
-        FXR_BROWSER_MODE_WEB_BROWSING,
-        FXR_BROWSER_MODE_FULLSCREEN_VIDEO,
-        FXR_BROWSER_MODE_WEBXR
+        FXR_BROWSER_MODE_WEB_BROWSING
     }
 
     public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
@@ -114,23 +44,10 @@ public class FxRController : MonoBehaviour
             }
 
             currentBrowsingMode = value;
-
-            FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-            foreach (FxRWindow w in fxrwindows)
-            {
-                w.Visible = currentBrowsingMode == FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
-            }
         }
     }
 
     private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_DESKTOP_INSTALL;
-
-    public FxRPlugin Plugin => fxr_plugin;
-
-    // Main reference to the plugin functions. Created in OnEnable(), destroyed in OnDisable().
-    private FxRPlugin fxr_plugin = null;
-
-    public bool DontCloseNativeWindowOnClose = false;
 
     private HashSet<FxRLaserPointer> LaserPointers
     {
@@ -193,25 +110,6 @@ public class FxRController : MonoBehaviour
         Debug.Log("FxRController.Awake())");
     }
 
-    [AOT.MonoPInvokeCallback(typeof(FxRPluginLogCallback))]
-    public static void Log(System.String msg)
-    {
-        if (msg.StartsWith("[error]")) Debug.LogError(msg);
-        else if (msg.StartsWith("[warning]")) Debug.LogWarning(msg);
-        else Debug.Log(msg); // includes [info] and [debug].
-    }
-
-    public void SendKeyEvent(int keycode)
-    {
-        // TODO: Introduce concept of "focused" window, once we allow more than one, so these events can be sent to the window that has focus 
-        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-
-        if (fxrwindows.Length > 0)
-        {
-            fxr_plugin.fxrKeyEvent(fxrwindows[0].WindowIndex, keycode);
-        }
-    }
-
     private Vector3 initialBodyDirection;
     private bool bodyDirectionInitialzed;
     private int bodyDirectionChecks;
@@ -222,55 +120,7 @@ public class FxRController : MonoBehaviour
 
         Debug.Log("FxRController.OnEnable()");
 
-        fxr_plugin = new FxRPlugin();
-
         Application.runInBackground = true;
-
-        // Register the log callback.
-        switch (Application.platform)
-        {
-            case RuntimePlatform.OSXEditor: // Unity Editor on OS X.
-            case RuntimePlatform.OSXPlayer: // Unity Player on OS X.
-            case RuntimePlatform.WindowsEditor: // Unity Editor on Windows.
-            case RuntimePlatform.WindowsPlayer: // Unity Player on Windows.
-            case RuntimePlatform.LinuxEditor:
-            case RuntimePlatform.LinuxPlayer:
-            case RuntimePlatform.WSAPlayerX86: // Unity Player on Windows Store X86.
-            case RuntimePlatform.WSAPlayerX64: // Unity Player on Windows Store X64.
-            case RuntimePlatform.WSAPlayerARM: // Unity Player on Windows Store ARM.
-            case RuntimePlatform.Android: // Unity Player on Android.
-            case RuntimePlatform.IPhonePlayer: // Unity Player on iOS.
-                fxr_plugin.fxrRegisterLogCallback(Log);
-                break;
-            default:
-                break;
-        }
-
-        // Register the full screen video callbacks
-        fxr_plugin.fxrRegisterFullScreenBeginCallback(HandleFullScreenBegin);
-        fxr_plugin.fxrRegisterFullScreenEndCallback(HandleFullScreenEnd);
-
-        // Give the plugin a place to look for resources.
-
-        string resourcesPath = Application.streamingAssetsPath;
-
-#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
-        resourcesPath = HardcodedFirefoxPath;
-#endif
-        fxr_plugin.fxrSetResourcesPath(resourcesPath);
-
-        // Set any launch-time parameters.
-        if (DontCloseNativeWindowOnClose)
-            fxr_plugin.fxrSetParamBool(FxRPlugin.FxRParam.b_CloseNativeWindowOnClose, false);
-
-        // Set the reference to the plugin in any other objects in the scene that need it.
-        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-        foreach (FxRWindow w in fxrwindows)
-        {
-            w.fxr_plugin = fxr_plugin;
-        }
-
-        VideoController.fxr_plugin = fxr_plugin;
 
         FxRFirefoxDesktopInstallation.OnInstallationProcessComplete += HandleInstallationProcessComplete;
     }
@@ -278,106 +128,23 @@ public class FxRController : MonoBehaviour
     private void HandleInstallationProcessComplete()
     {
         CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
-    }
+        // Hide the loading indicator
+        FindObjectOfType<FxRLoadEnvironment>()?.HideLoadingOverlay();
 
-    private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format, int projection)
-    {
-        HandleFullScreenBegin(pixelwidth, pixelheight, format, (FxRVideoProjectionMode.PROJECTION_MODE) projection);
-    }
+        // Give the plugin a place to look for resources.
+        string resourcesPath = Application.streamingAssetsPath;
 
-    private void HandleFullScreenBegin(int pixelwidth, int pixelheight, int format,
-        FxRVideoProjectionMode.PROJECTION_MODE projectionMode)
-    {
-        Debug.Log("Received Full Screen Begin from Plugin");
+#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
+        resourcesPath = HardcodedFirefoxPath;
+#endif
 
-        if (VideoController.ShowVideo(pixelwidth, pixelheight, format, projectionMode, _hackKeepWindowIndex))
-        {
-            CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_FULLSCREEN_VIDEO;
-        }
-        else
-        {
-            Debug.LogError("FxRController::HandleFullScreenBegin: Couldn't start full screen video.");
-        }
-    }
-
-    public void UserExitFullScreenVideo()
-    {
-        // Notify plugin we are closing video by sending escape key
-        SendKeyEvent(27);
-        HandleFullScreenEnd();
-    }
-
-    private void HandleFullScreenEnd()
-    {
-        VideoController.ExitVideo();
-        CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
-        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-        foreach (FxRWindow window in fxrwindows)
-        {
-            window.RecreateVideoTexture();
-        }
+        // TODO: Launch the browser, then exit...
     }
 
     void OnDisable()
     {
         Debug.Log("FxRController.OnDisable()");
-
-        // Clear the references to the plugin in any other objects in the scene that have it.
-        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-        foreach (FxRWindow w in fxrwindows)
-        {
-            w.fxr_plugin = null;
-        }
-
-        fxr_plugin.fxrSetResourcesPath(null);
-
-        // Since we might be going away, tell users of our Log function
-        // to stop calling it.
-        switch (Application.platform)
-        {
-            case RuntimePlatform.OSXEditor:
-            case RuntimePlatform.OSXPlayer:
-                goto case RuntimePlatform.WindowsPlayer;
-            case RuntimePlatform.WindowsEditor:
-            case RuntimePlatform.WindowsPlayer:
-            //case RuntimePlatform.LinuxEditor:
-            case RuntimePlatform.LinuxPlayer:
-                fxr_plugin.fxrRegisterLogCallback(null);
-                break;
-            case RuntimePlatform.Android:
-                break;
-            case RuntimePlatform.IPhonePlayer:
-                break;
-            case RuntimePlatform.WSAPlayerX86:
-            case RuntimePlatform.WSAPlayerX64:
-            case RuntimePlatform.WSAPlayerARM:
-                fxr_plugin.fxrRegisterLogCallback(null);
-                break;
-            default:
-                break;
-        }
-
-        fxr_plugin.fxrRegisterFullScreenBeginCallback(null);
-        fxr_plugin.fxrRegisterFullScreenEndCallback(null);
-
-        fxr_plugin = null;
-    }
-
-    void Start()
-    {
-        Debug.Log("FxRController.Start()");
-
-        Debug.Log("Plugin version " + fxr_plugin.fxrGetVersion());
-
-        fxr_plugin.fxrStartFx(OnFxWindowCreationRequestComplete, OnFxWindowResized, OnFxRVREvent);
-
-        IntPtr openVRSession = XRDevice.GetNativePtr();
-        if (openVRSession != IntPtr.Zero)
-        {
-            fxr_plugin.fxrSetOpenVRSessionPtr(openVRSession);
-        }
-
-        LoadingIndicator.SetActive(true);
+        FxRFirefoxDesktopInstallation.OnInstallationProcessComplete -= HandleInstallationProcessComplete;
     }
 
     void Update()
@@ -396,208 +163,5 @@ public class FxRController : MonoBehaviour
                 bodyDirectionInitialzed = true;
             }
         }
-
-        if (FullScreenStateChanged)
-        {
-            if (lastFullScreenState == FxRPlugin.FxREventState.Fullscreen_Enter)
-            {
-                FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-                if (fxrwindows.Length > 0)
-                {
-                    // TODO: Eventually, the pixel size, format, and video projection should come from browser. For now, we'll grab it from the window
-                    var window = fxrwindows[0];
-
-                    int formatNative;
-                    switch (window.TextureFormat)
-                    {
-                        case TextureFormat.RGBA32:
-                            formatNative = 1;
-                            break;
-                        case TextureFormat.BGRA32:
-                            formatNative = 2;
-                            break;
-                        case TextureFormat.ARGB32:
-                            formatNative = 3;
-                            break;
-                        case TextureFormat.RGB24:
-                            formatNative = 5;
-                            break;
-                        case TextureFormat.RGBA4444:
-                            formatNative = 7;
-                            break;
-                        case TextureFormat.RGB565:
-                            formatNative = 9;
-                            break;
-                        default:
-                            formatNative = 0;
-                            break;
-                    }
-
-                    HandleFullScreenBegin(window.PixelSize.x, window.PixelSize.y, formatNative,
-                        FxRVideoProjectionMode.PROJECTION_MODE.VIDEO_PROJECTION_2D);
-                }
-            }
-            else if (lastFullScreenState == FxRPlugin.FxREventState.Fullscreen_Exit)
-            {
-                HandleFullScreenEnd();
-            }
-        }
-
-        FullScreenStateChanged = false;
-
-        if (WindowCreationRequestCompleteCallbackCalled)
-        {
-            HandleWindowCreated();
-            WindowCreationRequestCompleteCallbackCalled = false;
-        }
-    }
-
-    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowCreationRequestCompleteCallback))]
-    void OnFxWindowCreationRequestComplete(int uid, int windowIndex)
-    {
-        WindowCreationRequestCompleteCallbackCalled = true;
-        WindowCreationRequestCompleteCallbackParams = new WindowCreationRequestCompleteParams()
-        {
-            uid = uid,
-            windowIndex = windowIndex
-        };
-    }
-
-//    private IEnumerator TestRsize(FxRWindow window)
-//    {
-//        while (true)
-//        {
-//            yield return new WaitForSeconds(5f);
-//            int width = Mathf.CeilToInt(Random.Range(1000f, 1080f));
-//            int height = Mathf.CeilToInt(Random.Range(1000f, 1080f));
-//            if (!window.Resize(width, height))
-//            {
-//                Debug.LogWarning(">>> unsuccessful at resizing window.");
-//            }
-//        }
-//    }
-
-    [AOT.MonoPInvokeCallback(typeof(FxRPluginWindowResizedCallback))]
-    void OnFxWindowResized(int uid, int widthPixels, int heightPixels)
-    {
-        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
-        if (window == null)
-        {
-            Debug.LogError("FxRController.OnFxWindowResized: Received update request for a window that doesn't exist.");
-            return;
-        }
-
-        window.WasResized(widthPixels, heightPixels);
-    }
-
-    private bool FullScreenStateChanged;
-    private bool WindowCreationRequestCompleteCallbackCalled;
-
-    private struct WindowCreationRequestCompleteParams
-    {
-        public int uid;
-        public int windowIndex;
-    }
-
-    private WindowCreationRequestCompleteParams WindowCreationRequestCompleteCallbackParams;
-
-    FxRPlugin.FxREventState lastFullScreenState = FxRPlugin.FxREventState.Fullscreen_Exit;
-
-    [AOT.MonoPInvokeCallback(typeof(FxRPluginVREventCallback))]
-    void OnFxRVREvent(int uid, int eventType, int eventData1, int eventData2)
-    {
-        FxRPlugin.FxREventState eventState = (FxRPlugin.FxREventState) eventData1;
-        if ((FxRPlugin.FxREventType) eventType == FxRPlugin.FxREventType.Fullscreen)
-        {
-            FullScreenStateChanged = true;
-            lastFullScreenState = eventState;
-        }
-    }
-    
-    private void OnApplicationQuit()
-    {
-        Debug.Log("FxRController.OnApplicationQuit()");
-        FxRWindow[] fxrwindows = FindObjectsOfType<FxRWindow>();
-        foreach (FxRWindow w in fxrwindows)
-        {
-            w.Close();
-        }
-
-        fxr_plugin.fxrStopFx();
-    }
-
-    public FXR_LOG_LEVEL LogLevel
-    {
-        get { return currentLogLevel; }
-
-        set
-        {
-            currentLogLevel = value;
-            fxr_plugin.fxrSetLogLevel((int) currentLogLevel);
-        }
-    }
-
-    private void HandleWindowCreated()
-    {
-        fxr_plugin.fxrFinishWindowCreation(WindowCreationRequestCompleteCallbackParams.uid,
-            WindowCreationRequestCompleteCallbackParams.windowIndex, OnFxWindowCreated);
-    }
-
-    void OnFxWindowCreated(int uid, int windowIndex, int widthPixels, int heightPixels, int formatNative)
-    {
-        // Hide the loading indicator
-        FindObjectOfType<FxRLoadEnvironment>()?.HideLoadingOverlay();
-        LoadingIndicator.SetActive(false);
-
-        FxRWindow window = FxRWindow.FindWindowWithUID(uid);
-        if (window == null)
-        {
-            window = FxRWindow.CreateNewInParent(transform.parent.gameObject);
-        }
-
-        /*
-         Enum values from Source/FirefoxRealityUnityPlugin/fxr_unity_c.h
-         enum  {
-	            FxRTextureFormat_Invalid = 0,
-	            FxRTextureFormat_RGBA32 = 1,
-	            FxRTextureFormat_BGRA32 = 2,
-	            FxRTextureFormat_ARGB32 = 3,
-	            FxRTextureFormat_ABGR32 = 4,
-	            FxRTextureFormat_RGB24 = 5,
-	            FxRTextureFormat_BGR24 = 6,
-	            FxRTextureFormat_RGBA4444 = 7,
-	            FxRTextureFormat_RGBA5551 = 8,
-	            FxRTextureFormat_RGB565 = 9
-            };
-        */
-        TextureFormat format;
-        switch (formatNative)
-        {
-            case 1:
-                format = TextureFormat.RGBA32;
-                break;
-            case 2:
-                format = TextureFormat.BGRA32;
-                break;
-            case 3:
-                format = TextureFormat.ARGB32;
-                break;
-            case 5:
-                format = TextureFormat.RGB24;
-                break;
-            case 7:
-                format = TextureFormat.RGBA4444;
-                break;
-            case 9:
-                format = TextureFormat.RGB565;
-                break;
-            default:
-                format = (TextureFormat) 0;
-                break;
-        }
-
-        _hackKeepWindowIndex = windowIndex;
-        window.WasCreated(windowIndex, widthPixels,
-            heightPixels, format);
     }
 }
