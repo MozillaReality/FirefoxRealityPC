@@ -22,33 +22,7 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private Transform EnvironmentOrigin;
     [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
-
-    public enum FXR_BROWSING_MODE
-    {
-        FXR_BROWSER_MODE_DESKTOP_INSTALL,
-        FXR_BROWSER_MODE_WEB_BROWSING
-    }
-
-    public delegate void BrowsingModeChanged(FXR_BROWSING_MODE browsingMode);
-
-    public static BrowsingModeChanged OnBrowsingModeChanged;
-
-    public static FXR_BROWSING_MODE CurrentBrowsingMode
-    {
-        get => currentBrowsingMode;
-        private set
-        {
-            if (currentBrowsingMode != value)
-            {
-                OnBrowsingModeChanged?.Invoke(value);
-            }
-
-            currentBrowsingMode = value;
-        }
-    }
-
-    private static FXR_BROWSING_MODE currentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_DESKTOP_INSTALL;
-
+    
     private HashSet<FxRLaserPointer> LaserPointers
     {
         get
@@ -127,7 +101,6 @@ public class FxRController : MonoBehaviour
 
     private void HandleInstallationProcessComplete()
     {
-        CurrentBrowsingMode = FXR_BROWSING_MODE.FXR_BROWSER_MODE_WEB_BROWSING;
         // Hide the loading indicator
         FindObjectOfType<FxRLoadEnvironment>()?.HideLoadingOverlay();
 
