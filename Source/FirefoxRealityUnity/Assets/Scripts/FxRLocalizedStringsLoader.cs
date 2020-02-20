@@ -27,7 +27,7 @@ public class FxRLocalizedStringsLoader : MonoBehaviour
     public static string GetApplicationString(string key)
     {
         LoadedStrings.TryGetValue(key, out var applicationString);
-        return applicationString;
+        return applicationString.Replace("\\n", "\n");
     }
 
     void Start()

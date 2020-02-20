@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.Win32;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
@@ -29,7 +30,6 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private const string NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY = "NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY";
     private const string FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY = "FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY";
-    public static readonly string FXR_PC_VERSIONS_JSON_FILENAME = "fxrpc_versions.json";
 
     int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
 
@@ -37,15 +37,6 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private class FirefoxVersions
     {
         public string LATEST_FIREFOX_VERSION;
-    }
-
-    // Class to represent JSON downloaded from Firefox Reality latest version service
-    private class FirefoxRealityPCVersions
-    {
-        public string LATEST_FXR_PC_BUILD_NUMBER;
-        public string LATEST_FXR_PC_VERSION;
-        public string LATEST_FXR_PC_RELEASE_NOTE_HIGHLIGHTS;
-        public string LATEST_FXR_PC_URL;
     }
 
     private enum DOWNLOAD_TYPE
@@ -71,54 +62,17 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     void Start()
     {
-        if (!FORCE_DESKTOP_BROWSER_CHECK)
-        {
-            int browserChecks = PlayerPrefs.GetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, 0);
-            string lastBrowserCheckFxRVersion =
-                PlayerPrefs.GetString(FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY, Application.version);
-            PlayerPrefs.SetString(FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY, Application.version);
-
-            if (CompareVersions(lastBrowserCheckFxRVersion, Application.version) < 0)
+        FxRFirefoxRealityVersionChecker.Instance.CheckForNewFirefoxRealityPC(
+            (newFirefoxRealityPCVersionAvailable, serverVersionInfo) =>
             {
-                // User updated since we last checked desktop browser, so reset our checks
-                PlayerPrefs.SetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, 0);
-                browserChecks = 0;
-            }
-            else if (browserChecks >= NUMBER_OF_TIMES_TO_CHECK_BROWSER)
-            {
-                NotifyInstallationComplete();
-                return;
-            }
-
-            PlayerPrefs.SetInt(NUMBER_OF_TIMES_CHECKED_BROWSER_PREF_KEY, browserChecks + 1);
-            PlayerPrefs.SetString(FXR_VERSION_LAST_CHECKED_BROWSER_PREF_KEY, Application.version);
-            PlayerPrefs.Save();
-        }
-
-        StartCoroutine(RetrieveLatestFirefoxRealityPCVersion((fxrPCWasSuccessful, serverVersionInfo) =>
-        {
-            if (fxrPCWasSuccessful)
-            {
-                // Retrieve installed JSON versions file from Streaming Assets
-                string localJSONPath = Path.Combine(Application.streamingAssetsPath, FXR_PC_VERSIONS_JSON_FILENAME);
-                string localJSONVersionInfo = File.ReadAllText(localJSONPath);
-
-                // Compare version number
-                var localVersionInfo = JsonUtility.FromJson<FirefoxRealityPCVersions>(localJSONVersionInfo);
-
-                int localBuildNumber;
-                int serverBuildNumber;
-                if (int.TryParse(localVersionInfo.LATEST_FXR_PC_BUILD_NUMBER, out localBuildNumber)
-                    && int.TryParse(serverVersionInfo.LATEST_FXR_PC_BUILD_NUMBER, out serverBuildNumber)
-                    && serverBuildNumber > localBuildNumber
-                )
+                if (newFirefoxRealityPCVersionAvailable)
                 {
                     // Prompt user if new version on server version of JSON file
                     // TODO: i18n and l10n
                     var dialogTitle =
                         FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_title");
                     var dialogMessage = string.Format(
-                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_availables_dialog_message"),
+                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_message"),
                         string.IsNullOrEmpty(serverVersionInfo.LATEST_FXR_PC_VERSION)
                             ? ""
                             : serverVersionInfo.LATEST_FXR_PC_VERSION
@@ -136,13 +90,21 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                                 FxRLocalizedStringsLoader.GetApplicationString(
                                     "fxr_update_available_update_later_response_dialog_message"),
                                 FirefoxIcon,
-                                new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
-                                    () => { StartFirefoxDesktopUpdateProcess(); },
-                                    FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                                new FxRButton.ButtonConfig(
+                                    FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
+                                    () =>
+                                    {
+                                        // TODO: Uncomment following, if we want to encourage people to download Desktop
+                                        // StartFirefoxDesktopUpdateProcess();
+                                        NotifyInstallationComplete();
+                                    },
+                                    FxRConfiguration.Instance.ColorPalette
+                                        .NormalBrowsingSecondaryDialogButtonColors));
                         },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
                     dialogButtons[1] = new FxRButton.ButtonConfig(
-                        FxRLocalizedStringsLoader.GetApplicationString("fxr_update_available_dialog_update_now_button"),
+                        FxRLocalizedStringsLoader.GetApplicationString(
+                            "fxr_update_available_dialog_update_now_button"),
                         () =>
                         {
                             // Open up URL to download new version
@@ -154,9 +116,14 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                                 FxRLocalizedStringsLoader.GetApplicationString(
                                     "fxr_update_available_update_now_response_dialog_message"),
                                 FirefoxIcon,
-                                new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
-                                    () => { StartFirefoxDesktopUpdateProcess(); },
-                                    FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+                                new FxRButton.ButtonConfig(
+                                    FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
+                                    () =>
+                                    {
+                                        FxRController.Quit(0);
+                                    },
+                                    FxRConfiguration.Instance.ColorPalette
+                                        .NormalBrowsingSecondaryDialogButtonColors));
                         },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
 
@@ -167,12 +134,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 {
                     NotifyInstallationComplete();
                 }
-            }
-            else
-            {
-                NotifyInstallationComplete();
-            }
-        }));
+            });
     }
 
     private void StartFirefoxDesktopUpdateProcess()
@@ -212,30 +174,32 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private void InitiateDesktopFirefoxInstall(INSTALLATION_TYPE_REQUIRED installationTypeRequired,
         DOWNLOAD_TYPE downloadType, INSTALLATION_SCOPE installationScope)
     {
-        // TODO: Update copy
-        // TODO: i18n and l10n
+// TODO: Update copy
+// TODO: i18n and l10n
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
             ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_new_install_dialog_title")
             : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_dialog_title");
+
         var dialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
             ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_new_install_dialog_message")
             : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_dialog_message");
+
         var dialogButtons = new FxRButton.ButtonConfig[2];
-        
+
         var updateOrInstallLater = (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW)
             ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_later_button")
             : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_later_button");
+
         var updateOrInstallNow = (installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW)
             ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_now_button")
             : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_now_button");
-        
+
         dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstallLater,
             () => { NotifyInstallationComplete(); },
             FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
         dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstallNow,
             () => { ContinueDesktopFirefoxInstall(installationTypeRequired, downloadType, installationScope); },
             FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
-
         FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
     }
 
@@ -243,6 +207,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         DOWNLOAD_TYPE downloadType, INSTALLATION_SCOPE installationScope)
     {
         FxRDialogBox downloadProgressDialog = FxRDialogController.Instance.CreateDialog();
+
         var dialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
             ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_started_dialog_title")
             : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_started_dialog_title");
@@ -255,6 +220,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
                 , () => { NotifyInstallationComplete(); }
                 , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+
 //                    , new FxRButton.ButtonConfig("Cancel",
 //                        () => { downloadCancelled = true; }, FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
         var progress =
@@ -276,6 +242,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 //                        }
                 Debug.Log("Download progress: " + zeroToOne.ToString("P1"));
             });
+
         DownloadAndInstallDesktopFirefox(progress, (wasSuccessful, error, wasCancelled) =>
         {
             if (wasCancelled)
@@ -290,12 +257,17 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 if (downloadProgressDialog != null)
                 {
                     var downloadProgressDialogTitle = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-                        ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_finished_dialog_title")
-                        : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_finished_dialog_title");
+                        ? FxRLocalizedStringsLoader.GetApplicationString(
+                            "desktop_installation_install_finished_dialog_title")
+                        : FxRLocalizedStringsLoader.GetApplicationString(
+                            "desktop_installation_update_finished_dialog_title");
 
-                    var downloadProgressDialogMessage = installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-                        ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_finished_dialog_message")
-                        : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_finished_dialog_message");
+                    var downloadProgressDialogMessage =
+                        installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
+                            ? FxRLocalizedStringsLoader.GetApplicationString(
+                                "desktop_installation_install_finished_dialog_message")
+                            : FxRLocalizedStringsLoader.GetApplicationString(
+                                "desktop_installation_update_finished_dialog_message");
 
                     downloadProgressDialog.UpdateText(downloadProgressDialogTitle, downloadProgressDialogMessage);
                 }
@@ -312,8 +284,10 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 var installationErrorDialog = FxRDialogController.Instance.CreateDialog();
                 string installationErrorTitle =
                     installationTypeRequired == INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-                        ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_error_dialog_title")
-                        : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_error_dialog_title");
+                        ? FxRLocalizedStringsLoader.GetApplicationString(
+                            "desktop_installation_install_error_dialog_title")
+                        : FxRLocalizedStringsLoader.GetApplicationString(
+                            "desktop_installation_update_error_dialog_title");
                 var okButton = new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
                     () => { NotifyInstallationComplete(); },
                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
@@ -323,7 +297,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 }
                 else
                 {
-                    var retryButton = new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_retry_button"),
+                    var retryButton = new FxRButton.ButtonConfig(
+                        FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_retry_button"),
                         () =>
                         {
                             retryCount++;
@@ -349,12 +324,12 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     private static readonly string UPGRADE_INSTALLER_BASE_URL =
         "https://download.mozilla.org/?product=partner-firefox-release-firefoxreality-ffreality-htc-up-001-latest&os=win64&lang=";
 
-    // Check if Firefox Desktop is installed
-    // Logic for installation:
-    // * If user has no Nightly or Release version installed, we download and install the stub installer
-    // * If the user has an old Release version, we download and install the release installer into the existing release location
-    // * If the user has an up-to-date Release version, or don't have a Release version but have any Nightly version, we don't prompt them to install
-    // We'll compare minor version #'s ordinally, as they can contain letters
+// Check if Firefox Desktop is installed
+// Logic for installation:
+// * If user has no Nightly or Release version installed, we download and install the stub installer
+// * If the user has an old Release version, we download and install the release installer into the existing release location
+// * If the user has an up-to-date Release version, or don't have a Release version but have any Nightly version, we don't prompt them to install
+// We'll compare minor version #'s ordinally, as they can contain letters
     private void DetermineFirefoxDesktopInstallationRequirements(int majorVersionRequired,
         string minorVersionRequired, out INSTALLATION_TYPE_REQUIRED? installationTypeRequired,
         out DOWNLOAD_TYPE? downloadTypeRequired, out INSTALLATION_SCOPE? installationScope
@@ -431,6 +406,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                 installationTypeRequired = INSTALLATION_TYPE_REQUIRED.NONE;
             }
         }
+
         else
         {
             downloadTypeRequired = DOWNLOAD_TYPE.STUB;
@@ -442,11 +418,11 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         string minorVersionRequired)
     {
         ParseBrowserVersion(installedVersion, out var releaseMajor, out var releaseMinor);
-
         if (releaseMajor > majorVersionRequired
             || (releaseMajor == majorVersionRequired
                 && string.CompareOrdinal(minorVersionRequired, releaseMinor) <= 0)
         )
+
         {
             return true;
         }
@@ -462,12 +438,13 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         }
 
         ParseBrowserVersion(versionA, out var majorA, out var minorA);
-        ParseBrowserVersion(versionB, out var majorB, out var minorB);
 
+        ParseBrowserVersion(versionB, out var majorB, out var minorB);
         if (majorA < majorB)
         {
             return -1;
         }
+
         else if (majorA > majorB)
         {
             return 1;
@@ -482,6 +459,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     {
         string[] majorMinor = versionString.Split(new char[] {'.'});
         try
+
         {
             releaseMajor = int.Parse(majorMinor[0]);
         }
@@ -513,32 +491,12 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         }
     }
 
-    private IEnumerator RetrieveLatestFirefoxRealityPCVersion(Action<bool, FirefoxRealityPCVersions> successCallback)
-    {
-        string RESTUrl = "https://mixedreality.mozilla.org/FirefoxRealityPC/" + FXR_PC_VERSIONS_JSON_FILENAME;
-        var webRequest = new UnityWebRequest(RESTUrl);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-        var operation = webRequest.SendWebRequest();
-        yield return operation;
-        if (string.IsNullOrEmpty(operation.webRequest.error))
-        {
-            string jsonResposne = webRequest.downloadHandler.text;
-            var versionInfo = JsonUtility.FromJson<FirefoxRealityPCVersions>(jsonResposne);
-            successCallback(true, versionInfo);
-        }
-        else
-        {
-            successCallback(false, null);
-        }
-    }
-
-    // Download the Firefox stub installer
+// Download the Firefox stub installer
     private IEnumerator DownloadFirefox(IProgress<float> percentDownloaded,
         Action<bool, string, bool> successCallback // <was successful, error, was cancelled>
         , DOWNLOAD_TYPE downloadType = DOWNLOAD_TYPE.STUB)
     {
         string downloadURL = null;
-
         switch (downloadType)
         {
             case DOWNLOAD_TYPE.STUB:
@@ -554,7 +512,6 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         }
 
         yield return AttemptDownload(percentDownloaded, successCallback, downloadURL);
-
         if (!downloadCancelled && lastDownloadResponseCode == 404)
         {
             switch (downloadType)
@@ -583,6 +540,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         var webRequest = new UnityWebRequest(downloadURL);
         webRequest.downloadHandler = new DownloadHandlerFile(FirefoxInstallerDownloadPath, false);
         downloadCancelled = false;
+
         var downloadOperation = webRequest.SendWebRequest();
         while (!downloadOperation.isDone && !downloadCancelled)
         {
@@ -596,6 +554,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             webRequest.Abort();
             successCallback?.Invoke(true, "", true);
         }
+
         else
         {
             if (lastDownloadResponseCode != 404)

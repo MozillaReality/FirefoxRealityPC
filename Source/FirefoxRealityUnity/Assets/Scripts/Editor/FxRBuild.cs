@@ -72,9 +72,9 @@ public class FxRBuild
 
             // Copy the version file to StreamingAssets
             string versionsJSONFilePathSource = Path.Combine("..", "..", "docs",
-                FxRFirefoxDesktopInstallation.FXR_PC_VERSIONS_JSON_FILENAME);
+                FxRFirefoxRealityVersionChecker.FXR_PC_VERSIONS_JSON_FILENAME);
             string versionsJSONFilePathDestination = Path.Combine(streamingAssetsDestination,
-                FxRFirefoxDesktopInstallation.FXR_PC_VERSIONS_JSON_FILENAME);
+                FxRFirefoxRealityVersionChecker.FXR_PC_VERSIONS_JSON_FILENAME);
             // Remove any existing file that might be being used for testing purposes
             if (File.Exists(versionsJSONFilePathDestination))
             {

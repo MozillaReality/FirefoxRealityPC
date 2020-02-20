@@ -9,8 +9,11 @@
 #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
+using Debug = UnityEngine.Debug;
 using Hand = Valve.VR.InteractionSystem.Hand;
 
 public class FxRController : MonoBehaviour
@@ -22,7 +25,7 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private Transform EnvironmentOrigin;
     [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
-    
+
     private HashSet<FxRLaserPointer> LaserPointers
     {
         get
@@ -104,14 +107,41 @@ public class FxRController : MonoBehaviour
         // Hide the loading indicator
         FindObjectOfType<FxRLoadEnvironment>()?.HideLoadingOverlay();
 
+        // We're all set - launch the overlay browser
+        if (LaunchFirefoxDesktop())
+        {
+            Quit(0);
+        }
+        else
+        {
+            // TODO: Show an error/retry dialog?
+            Quit(1);
+        }
+    }
+
+    public static void Quit(int exitCode)
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit(exitCode);
+#endif
+    }
+
+    public static bool LaunchFirefoxDesktop()
+    {
         // Give the plugin a place to look for resources.
-        string resourcesPath = Application.streamingAssetsPath;
+        string firefoxInstallPath = Application.streamingAssetsPath;
 
 #if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
-        resourcesPath = HardcodedFirefoxPath;
+        firefoxInstallPath = HardcodedFirefoxPath;
 #endif
+        string profileDirectoryPath = Path.Combine(firefoxInstallPath, "fxr-profile");
 
-        // TODO: Launch the browser, then exit...
+        Process launchProcess = new Process();
+        launchProcess.StartInfo.FileName = Path.Combine(firefoxInstallPath, "firefox", "firefox.exe");
+        launchProcess.StartInfo.Arguments = string.Format("-profile {0} --fxr", profileDirectoryPath);
+        return launchProcess.Start();
     }
 
     void OnDisable()

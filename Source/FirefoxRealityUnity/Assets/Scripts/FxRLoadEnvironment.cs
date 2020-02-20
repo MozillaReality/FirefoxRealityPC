@@ -3,6 +3,7 @@
 //
 // Copyright (c) 2019, Mozilla.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,6 +25,8 @@ public class FxRLoadEnvironment : MonoBehaviour
     // Start is called before the first frame update
     IEnumerator Start()
     {
+        FxRDialogBox.OnDialogBoxOpen += HandleDialogBoxOpen;
+        FxRDialogBox.OnAllDialogBoxesCLosed += HandleDialogBoxClosed;
         yield return new WaitForSeconds(1f);
         LoadingOperation = SceneManager.LoadSceneAsync(1, LoadSceneMode.Additive);
         foreach (var hand in Hands)
@@ -32,6 +35,12 @@ public class FxRLoadEnvironment : MonoBehaviour
         }
 
         LoadingSpinner.gameObject.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        FxRDialogBox.OnDialogBoxOpen -= HandleDialogBoxOpen;
+        FxRDialogBox.OnAllDialogBoxesCLosed -= HandleDialogBoxClosed;
     }
 
     public void HideLoadingOverlay()
@@ -74,6 +83,35 @@ public class FxRLoadEnvironment : MonoBehaviour
                 LoadingSpinner.gameObject.SetActive(true);
                 spinnerActive = true;
             }
+        }
+    }
+
+    // Don't show the loading indicators when dialog boxes are open, so they don't interfere with visibility or interactivity with the dialog boxes
+    private void HandleDialogBoxOpen()
+    {
+        SetLoadingIndicatorVisibility(false);
+    }
+    
+    private void HandleDialogBoxClosed()
+    {
+        SetLoadingIndicatorVisibility(true);
+    }
+    
+    private void SetLoadingIndicatorVisibility(bool shouldBeVisible)
+    {
+        if (!loadingOverlayHidden)
+        {
+            foreach (var hand in Hands)
+            {
+                hand.SetActive(!shouldBeVisible);
+            }
+
+            LoadingOverlay.gameObject.SetActive(shouldBeVisible);
+        }
+
+        if (spinnerActive)
+        {
+            LoadingSpinner.gameObject.SetActive(shouldBeVisible);
         }
     }
 }
