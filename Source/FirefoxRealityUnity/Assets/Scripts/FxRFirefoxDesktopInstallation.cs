@@ -21,17 +21,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     [SerializeField] protected Sprite FirefoxIcon;
 
-    public static readonly string FXR_PC_VERSIONS_JSON_FILENAME = "fxrpc_versions.json";
     private static readonly string FXR_CONFIGURATION_DIRECTORY = "firefox";
-
-    int NUMBER_OF_TIMES_TO_CHECK_BROWSER = 1;
-
-    // Class to represent JSON downloaded from Firefox latest version service
-    private class FirefoxVersions
-    {
-        public string LATEST_FIREFOX_VERSION;
-        public string FIREFOX_NIGHTLY;
-    }
 
     void Start()
     {
@@ -123,40 +113,6 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
     }
 
     private int retryCount = 0;
-
-    private void InitiateDesktopFirefoxInstall(
-        FxRFirefoxDesktopVersionChecker.INSTALLATION_TYPE_REQUIRED installationTypeRequired,
-        FxRFirefoxDesktopVersionChecker.DOWNLOAD_TYPE downloadType,
-        FxRFirefoxDesktopVersionChecker.INSTALLATION_SCOPE installationScope)
-    {
-        var dialogTitle = installationTypeRequired ==
-                          FxRFirefoxDesktopVersionChecker.INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_new_install_dialog_title")
-            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_dialog_title");
-        var dialogMessage = installationTypeRequired ==
-                            FxRFirefoxDesktopVersionChecker.INSTALLATION_TYPE_REQUIRED.INSTALL_NEW
-            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_new_install_dialog_message")
-            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_dialog_message");
-        var dialogButtons = new FxRButton.ButtonConfig[1];
-
-        var updateOrInstallLater = (installationTypeRequired ==
-                                    FxRFirefoxDesktopVersionChecker.INSTALLATION_TYPE_REQUIRED.INSTALL_NEW)
-            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_later_button")
-            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_later_button");
-        var updateOrInstallNow = (installationTypeRequired ==
-                                  FxRFirefoxDesktopVersionChecker.INSTALLATION_TYPE_REQUIRED.INSTALL_NEW)
-            ? FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_install_now_button")
-            : FxRLocalizedStringsLoader.GetApplicationString("desktop_installation_update_now_button");
-
-        dialogButtons[0] = new FxRButton.ButtonConfig(updateOrInstallLater,
-            () => { DesktopInstallationComplete(); },
-            FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
-        dialogButtons[1] = new FxRButton.ButtonConfig(updateOrInstallNow,
-            () => { ContinueDesktopFirefoxInstall(installationTypeRequired, downloadType, installationScope); },
-            FxRConfiguration.Instance.ColorPalette.NormalBrowsingPrimaryDialogButtonColors);
-
-        FxRDialogController.Instance.CreateDialog().Show(dialogTitle, dialogMessage, FirefoxIcon, dialogButtons);
-    }
 
     private void ContinueDesktopFirefoxInstall(
         FxRFirefoxDesktopVersionChecker.INSTALLATION_TYPE_REQUIRED installationTypeRequired,
@@ -286,28 +242,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         "https://download.mozilla.org/?product=firefox-nightly-latest-ssl&os=win64&lang=";
 //        "https://download.mozilla.org/?product=partner-firefox-release-firefoxreality-ffreality-htc-up-001-latest&os=win64&lang=";
 
-    private IEnumerator RetrieveLatestFirefoxVersion(Action<bool, string> successCallback)
-    {
-        string RESTUrl = "https://product-details.mozilla.org/1.0/firefox_versions.json";
-        var webRequest = new UnityWebRequest(RESTUrl);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-        var operation = webRequest.SendWebRequest();
-        yield return operation;
-        if (string.IsNullOrEmpty(operation.webRequest.error))
-        {
-            string jsonResposne = webRequest.downloadHandler.text;
-            // TODO: Change this to release, once release is ready...
-            string latestVersion =
-                JsonUtility.FromJson<FirefoxVersions>(jsonResposne).FIREFOX_NIGHTLY; //LATEST_FIREFOX_VERSION;
-            successCallback(true, latestVersion);
-        }
-        else
-        {
-            successCallback(false, "");
-        }
-    }
-
-    // Download the Firefox stub installer
+// Download the Firefox stub installer
     private IEnumerator DownloadFirefox(IProgress<float> percentDownloaded,
         Action<bool, string, bool> successCallback // <was successful, error, was cancelled>
         , FxRFirefoxDesktopVersionChecker.DOWNLOAD_TYPE downloadType = FxRFirefoxDesktopVersionChecker.DOWNLOAD_TYPE.STUB)
@@ -475,13 +410,12 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             if (wasSuccessful && !installationCompleteNotificationSent)
             {
                 OnInstallationProcessComplete?.Invoke();
+                installationCompleteNotificationSent = true;
             }
             else
             {
-                // TODO: Inform user that configuration was unsuccessful
+                ShowConfigurationError();
             }
-
-            installationCompleteNotificationSent = true;
         });
     }
 
@@ -573,12 +507,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
         configurationStartedDialog.Show(dialogTitle, dialogMessage, FirefoxIcon
             , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
-                , () =>
-                {
-#if !UNITY_EDITOR
-                    Application.Quit(1);
-#endif
-                }
+                , () => { FxRController.Quit(1); }
                 , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
     }
 }
