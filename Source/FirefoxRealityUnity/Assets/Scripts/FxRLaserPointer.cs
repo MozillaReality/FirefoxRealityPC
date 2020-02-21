@@ -306,15 +306,6 @@ public class FxRLaserPointer : MonoBehaviour
 
         if (previousContact && (!bHit || previousContact != hit.transform))
         {
-            // Handle FxRWindow messages directly.
-            // TODO: convert to a more generic event system.
-            FxRWindow previousWindow =
-                previousContact.gameObject.GetComponentInParent(typeof(FxRWindow)) as FxRWindow;
-            if (previousWindow != null)
-            {
-                previousWindow.PointerExit();
-            }
-
             // Default event system.
             PointerEventArgs args = new PointerEventArgs();
             args.fromInputSource = pose.inputSource;
@@ -337,18 +328,8 @@ public class FxRLaserPointer : MonoBehaviour
         }
         else
         {
-            FxRPointableSurface fxrWindow =
-                hit.transform.gameObject.GetComponentInParent(typeof(FxRPointableSurface)) as FxRPointableSurface;
-
             if (previousContact != hit.transform)
             {
-                // Handle FxRWindow messages directly.
-                // TODO: convert to a more generic event system.
-                if (fxrWindow != null)
-                {
-                    fxrWindow.PointerEnter();
-                }
-
                 // Default event system.
                 PointerEventArgs argsIn = new PointerEventArgs();
                 argsIn.fromInputSource = pose.inputSource;
@@ -368,24 +349,8 @@ public class FxRLaserPointer : MonoBehaviour
                 hitTarget.SetActive(true);
             }
 
-            // Handle FxRWindow messages directly.
-            // TODO: convert to a more generic event system.
-            if (fxrWindow != null)
-            {
-                fxrWindow.PointerOver(hit.textureCoord);
-                Vector2 scrollDelta = scroll2D.GetAxis(pose.inputSource);
-                if (scrollDelta != Vector2.zero) fxrWindow.PointerScrollDiscrete(scrollDelta);
-            }
-
             if (interactWithUI.GetStateDown(pose.inputSource))
             {
-                // Handle FxRWindow messages directly.
-                // TODO: convert to a more generic event system.
-                if (fxrWindow != null)
-                {
-                    fxrWindow.PointerPress(hit.textureCoord);
-                }
-
                 PointerEventArgs argsClick = new PointerEventArgs();
                 argsClick.fromInputSource = pose.inputSource;
                 argsClick.distance = hit.distance;
@@ -396,13 +361,6 @@ public class FxRLaserPointer : MonoBehaviour
 
             if (interactWithUI.GetStateUp(pose.inputSource))
             {
-                // Handle FxRWindow messages directly.
-                // TODO: convert to a more generic event system.
-                if (fxrWindow != null)
-                {
-                    fxrWindow.PointerRelease(hit.textureCoord);
-                }
-
                 // Default event system.
                 PointerEventArgs argsClick = new PointerEventArgs();
                 argsClick.fromInputSource = pose.inputSource;
