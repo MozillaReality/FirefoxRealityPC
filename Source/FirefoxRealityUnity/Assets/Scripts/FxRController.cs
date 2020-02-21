@@ -7,6 +7,9 @@
 
 #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
+#if !UNITY_EDITOR
+using System;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
