@@ -19,7 +19,7 @@ public class FxRBootstrapper : MonoBehaviour
                 FxRFirefoxDesktopVersionChecker.Instance.CheckIfFirefoxInstallationOrConfigurationRequired(
                     (installRequired, configurationRequired, firefoxInstallationRequirements) =>
                     {
-                        if (installRequired)
+                        if (installRequired || configurationRequired)
                         {
                             StartCoroutine(LoadLoadingScene());
                         }
