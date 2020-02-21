@@ -5,7 +5,7 @@
 //
 // FxRController acts in the middle of bootstrapping Firefox Reality with desktop Firefox.
 
-#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
+// #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
 #if !UNITY_EDITOR
 using System;
@@ -134,22 +134,24 @@ public class FxRController : MonoBehaviour
     {
         string firefoxInstallPath = FxRFirefoxDesktopVersionChecker.GetFirefoxDesktopInstallationPath();
         string firefoxExePath = Path.Combine(firefoxInstallPath, "firefox.exe");
-        string profileDirectoryPath = Path.Combine(firefoxInstallPath, "fxr-profile");
+        string profileDirectoryPath = Path.Combine(Application.streamingAssetsPath, "fxr-profile");
 
-#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
-        firefoxExePath = Path.Combine(HardcodedFirefoxPath, "firefox", "firefox.exe");
-        profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
-#else
+#if (!UNITY_EDITOR)
         if (string.IsNullOrEmpty(firefoxInstallPath))
         {
             throw new Exception(
                 "Could not determine Firefox installation path!");
         }
+#elif (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
+        firefoxExePath = Path.Combine(HardcodedFirefoxPath, "firefox", "firefox.exe");
+        profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
+#else
+        profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
 #endif
 
         Process launchProcess = new Process();
         launchProcess.StartInfo.FileName = firefoxExePath;
-        launchProcess.StartInfo.Arguments = string.Format("-profile {0} --fxr", profileDirectoryPath);
+        launchProcess.StartInfo.Arguments = string.Format("-profile \"{0}\" --fxr", profileDirectoryPath);
         return launchProcess.Start();
     }
 
