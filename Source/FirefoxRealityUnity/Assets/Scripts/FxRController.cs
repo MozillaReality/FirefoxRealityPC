@@ -140,7 +140,7 @@ public class FxRController : MonoBehaviour
 
         Process launchProcess = new Process();
         launchProcess.StartInfo.FileName = Path.Combine(firefoxInstallPath, "firefox", "firefox.exe");
-        launchProcess.StartInfo.Arguments = string.Format("-profile {0} --fxr", profileDirectoryPath);
+        launchProcess.StartInfo.Arguments = string.Format("-profile \"{0}\" --fxr", profileDirectoryPath);
         return launchProcess.Start();
     }
 
