@@ -8,6 +8,7 @@
  * provided per language.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -27,7 +28,11 @@ public class FxRLocalizedStringsLoader : MonoBehaviour
     public static string GetApplicationString(string key)
     {
         LoadedStrings.TryGetValue(key, out var applicationString);
-        return applicationString.Replace("\\n", "\n");
+        if (applicationString == null && !LoadedStrings.ContainsKey(key))
+        {
+            throw new Exception(string.Format("Missing localized string for key: '{0}'", key));
+        }
+        return applicationString?.Replace("\\n", "\n");
     }
 
     void Start()

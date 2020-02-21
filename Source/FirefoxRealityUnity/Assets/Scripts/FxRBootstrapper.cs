@@ -1,7 +1,7 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 
 public class FxRBootstrapper : MonoBehaviour
 {
@@ -12,7 +12,7 @@ public class FxRBootstrapper : MonoBehaviour
         {
             if (newVersionAvailable)
             {
-                SceneManager.LoadScene("LoadingScene");
+                StartCoroutine(LoadLoadingScene());
             }
             else
             {
@@ -20,5 +20,15 @@ public class FxRBootstrapper : MonoBehaviour
                 FxRController.Quit(0);
             }
         });
+    }
+
+    IEnumerator LoadLoadingScene()
+    {
+        yield return new WaitForEndOfFrame();
+        XRSettings.LoadDeviceByName("OpenVR");
+        yield return new WaitForEndOfFrame();
+        XRSettings.enabled = true;
+        yield return new WaitForEndOfFrame();
+        SceneManager.LoadSceneAsync("LoadingScene");
     }
 }
