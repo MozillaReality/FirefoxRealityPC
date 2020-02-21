@@ -5,7 +5,7 @@
 //
 // FxRController acts in the middle of bootstrapping Firefox Reality with desktop Firefox.
 
-// #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
+#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
 #if !UNITY_EDITOR
 using System;
