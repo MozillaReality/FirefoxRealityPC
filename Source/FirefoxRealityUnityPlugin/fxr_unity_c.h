@@ -163,11 +163,10 @@ FXR_EXTERN void fxrStartFx(PFN_WINDOWCREATIONREQUESTCOMPLETED windowCreationRequ
 
 FXR_EXTERN void fxrStopFx(void);
 
-// Set the paths where the plugin should look for resources. Should be full filesystem path without trailing slash.
+// Set the path in which the plugin should look for resources. Should be full filesystem path without trailing slash.
 // This should be called early on in the plugin lifecycle, typically from a Unity MonoBehaviour.OnEnable() event.
-// Normailly the firefox path will be the full path to the directory holding the firefox executable  
-// Normally the profile path would be the path to Unity's StreamingAssets folder, which holds unprocessed resources for use at runtime.
-FXR_EXTERN void fxrSetResourcePaths(const char *firefox_path, const char *profile_parent_path);
+// Normally this would be the path to Unity's StreamingAssets folder, which holds unprocessed resources for use at runtime.
+FXR_EXTERN void fxrSetResourcesPath(const char *path);
 
 FXR_EXTERN void fxrKeyEvent(int windowIndex, int keyCode);
 

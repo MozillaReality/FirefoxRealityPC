@@ -146,19 +146,4 @@
    
     <!-- This string labels a button in the error dialog, that the user presses to retry the install/udpate of FxR Desktop. -->
     <string name="desktop_installation_retry_button">Retry</string>
-
-    <!-- This string is displayed in the dialog title that appears when Firefox Reality is adding its configuration to Firefox Desktop. -->
-    <string name="desktop_installation_configuration_started_dialog_title">Check your computer to finish installing Firefox Reality.</string>
-
-    <!-- This string is displayed in the dialog body that appears when Firefox Reality is adding its configuration to Firefox Desktop.
-    INTENTIONALLY LEFT BLANK -->
-    <string name="desktop_installation_configuration_started_dialog_message"></string>
-
-    <!-- This string is displayed in the dialog title that appears if Firefox Reality cannot add its configuration to Firefox Desktop. -->
-    <string name="desktop_installation_configuration_failed_dialog_title">There was an issue configuring Firefox Reality.</string>
-
-    <!-- This string is displayed in the dialog body that appears if Firefox Reality cannot add its configuration to Firefox Desktop.
-    INTENTIONALLY LEFT BLANK -->
-    <string name="desktop_installation_configuration_failed_dialog_message">Firefox Reality will exit. Please restart Firefox Reality to try again.</string>
-
 </resources>

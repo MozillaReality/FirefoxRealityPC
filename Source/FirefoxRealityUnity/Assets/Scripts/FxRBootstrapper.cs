@@ -16,19 +16,8 @@ public class FxRBootstrapper : MonoBehaviour
             }
             else
             {
-                FxRFirefoxDesktopVersionChecker.Instance.CheckIfFirefoxInstallationOrConfigurationRequired(
-                    (installRequired, configurationRequired, firefoxInstallationRequirements) =>
-                    {
-                        if (installRequired || configurationRequired)
-                        {
-                            StartCoroutine(LoadLoadingScene());
-                        }
-                        else
-                        {
-                            FxRController.LaunchFirefoxDesktop();
-                            FxRController.Quit(0);
-                        }
-                    });
+                FxRController.LaunchFirefoxDesktop();
+                FxRController.Quit(0);
             }
         });
     }
