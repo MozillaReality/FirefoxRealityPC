@@ -1,4 +1,9 @@
-﻿using System;
+﻿// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+// If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) 2019, Mozilla.
+
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -30,9 +35,9 @@ public class FxRFirefoxRealityVersionChecker : Singleton<FxRFirefoxRealityVersio
 
         StartCoroutine(RetrieveLatestFirefoxRealityPCVersion((fxrPCWasSuccessful, serverVersionInfo) =>
         {
-            NewFirefoxRealityPCVersionCheckPerformed = true;
             if (fxrPCWasSuccessful)
             {
+                NewFirefoxRealityPCVersionCheckPerformed = true;
                 RetrievedFirefoxRealityPCVersions = serverVersionInfo;
                 // Retrieve installed JSON versions file from Streaming Assets
                 string localJSONPath = Path.Combine(Application.streamingAssetsPath, FXR_PC_VERSIONS_JSON_FILENAME);

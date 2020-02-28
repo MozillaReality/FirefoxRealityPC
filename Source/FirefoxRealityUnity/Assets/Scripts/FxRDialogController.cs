@@ -9,8 +9,17 @@ public class FxRDialogController : Singleton<FxRDialogController>
 {
     [SerializeField] protected FxRDialogBox DialogBoxPrefab;
     [SerializeField] protected Transform DialogParent;
+    [SerializeField] protected Camera DialogUICamera;
 
-    private FxRDialogBox currentlyOpenedDialog;
+    private void OnEnable()
+    {
+        FxRDialogBox.OnAllDialogBoxesCLosed += HandleAllDialogBoxesClosed;
+    }
+
+    private void OnDisable()
+    {
+        FxRDialogBox.OnAllDialogBoxesCLosed -= HandleAllDialogBoxesClosed;
+    }
 
     /*
      * Instantiate a dialog box at the proper location
@@ -22,7 +31,12 @@ public class FxRDialogController : Singleton<FxRDialogController>
         var dialogBox = Instantiate<FxRDialogBox>(DialogBoxPrefab, DialogParent.transform.position,
             DialogParent.transform.rotation, DialogParent);
         dialogBox.transform.localScale = Vector3.one;
-        currentlyOpenedDialog = dialogBox;
+        DialogUICamera.gameObject.SetActive(true);
         return dialogBox;
+    }
+
+    private void HandleAllDialogBoxesClosed()
+    {
+        DialogUICamera.gameObject.SetActive(false);
     }
 }
