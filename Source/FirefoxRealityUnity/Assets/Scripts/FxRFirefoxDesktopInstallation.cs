@@ -210,7 +210,11 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                         FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
                         () => { FxRController.Quit(1); },
                         FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors);
-                    installationErrorDialog.Show(installationErrorTitle, error, FirefoxIcon, okButton);
+                    installationErrorDialog.Show(installationErrorTitle,
+                        error + "\n" +
+                        FxRLocalizedStringsLoader.GetApplicationString(
+                            "desktop_installation_configuration_failed_dialog_message")
+                        , FirefoxIcon, okButton);
                 }
                 else
                 {
