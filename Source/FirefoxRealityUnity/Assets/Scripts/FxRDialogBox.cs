@@ -28,19 +28,22 @@ public class FxRDialogBox : MonoBehaviour
     // TODO: Do dialogs need to have an option to close them without pressing a button?
     public void Show(string title, string message, Sprite icon, params FxRButton.ButtonConfig[] buttonConfigs)
     {
-        foreach (var buttonConfig in buttonConfigs)
+        if (buttonConfigs != null)
         {
-            FxRButton button = Instantiate<FxRButton>(DialogButtonPrefab, ButtonContainer.position,
-                ButtonContainer.rotation, ButtonContainer);
-            button.transform.localScale = Vector3.one;
-
-            var action = buttonConfig.ButtonPressedAction;
-            buttonConfig.ButtonPressedAction = () =>
+            foreach (var buttonConfig in buttonConfigs)
             {
-                action?.Invoke();
-                Close();
-            };
-            button.Config = buttonConfig;
+                FxRButton button = Instantiate<FxRButton>(DialogButtonPrefab, ButtonContainer.position,
+                    ButtonContainer.rotation, ButtonContainer);
+                button.transform.localScale = Vector3.one;
+
+                var action = buttonConfig.ButtonPressedAction;
+                buttonConfig.ButtonPressedAction = () =>
+                {
+                    action?.Invoke();
+                    Close();
+                };
+                button.Config = buttonConfig;
+            }
         }
 
         TitleText.text = title;

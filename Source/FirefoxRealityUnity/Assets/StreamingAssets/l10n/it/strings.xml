@@ -111,18 +111,18 @@
     <string name="desktop_installation_install_now_button">Install Now</string>
    
     <!-- This string is displayed in the dialog title that appears if the user decides to install FxR Desktop now. -->
-    <string name="desktop_installation_install_started_dialog_title">Check your computer to finish installing Firefox</string>
+    <string name="desktop_installation_install_prompt_dialog_title">Check your computer to finish installing Firefox</string>
    
     <!-- This string is displayed in the dialog body that appears if the user decides to install FxR Desktop now.
     INTENTIONALLY LEFT BLANK -->
-    <string name="desktop_installation_install_started_dialog_message"></string>
+    <string name="desktop_installation_install_prompt_dialog_message"></string>
    
     <!-- This string is displayed in the dialog title that appears if the user decides to update FxR Desktop now. -->
-    <string name="desktop_installation_update_started_dialog_title">Check your computer to finish updating Firefox</string>
+    <string name="desktop_installation_update_prompt_dialog_title">Check your computer to finish updating Firefox</string>
    
     <!-- This string is displayed in the dialog body that appears if the user decides to update FxR Desktop now.
     INTENTIONALLY LEFT BLANK -->
-    <string name="desktop_installation_update_started_dialog_message"></string>
+    <string name="desktop_installation_update_prompt_dialog_message"></string>
    
     <!-- This string is displayed in the dialog title that appears once Firefox Desktop installation has finished. -->
     <string name="desktop_installation_install_finished_dialog_title">Firefox is up to date!</string>
