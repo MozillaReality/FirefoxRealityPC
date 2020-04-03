@@ -132,22 +132,43 @@ public class FxRController : MonoBehaviour
 
     public static bool LaunchFirefoxDesktop()
     {
-        string firefoxInstallPath = FxRFirefoxDesktopVersionChecker.GetFirefoxDesktopInstallationPath();
-        string firefoxExePath = Path.Combine(firefoxInstallPath, "firefox.exe");
-        string profileDirectoryPath = Path.Combine(Application.streamingAssetsPath, "fxr-profile");
+        string firefoxInstallPath;
+        string firefoxExePath;
+        string profileDirectoryPath;
+        if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
+            FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
+        {
+            // Embedded Firefox Desktop lives in streaming assets 
+            firefoxInstallPath = Application.streamingAssetsPath;
+#if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
+            firefoxInstallPath = HardcodedFirefoxPath;
+#endif
+            profileDirectoryPath = Path.Combine(firefoxInstallPath, "fxr-profile");
+
+            firefoxExePath = Path.Combine(firefoxInstallPath, "firefox", "firefox.exe");
+        }
+        else
+        {
+            // Downloaded Firefox Desktop lives in the standard installation location
+            firefoxInstallPath = FxRFirefoxDesktopVersionChecker.GetFirefoxDesktopInstallationPath();
+            firefoxExePath = Path.Combine(firefoxInstallPath, "firefox.exe");
+            
+            // We put the profile directory in the streaming assets folder, so it gets cleaned up on uninstall
+            profileDirectoryPath = Path.Combine(Application.streamingAssetsPath, "fxr-profile");
 
 #if (!UNITY_EDITOR)
-        if (string.IsNullOrEmpty(firefoxInstallPath))
-        {
-            throw new Exception(
-                "Could not determine Firefox installation path!");
-        }
+            if (string.IsNullOrEmpty(firefoxInstallPath))
+            {
+                throw new Exception(
+                    "Could not determine Firefox installation path!");
+            }
 #elif (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
-        firefoxExePath = Path.Combine(HardcodedFirefoxPath, "firefox", "firefox.exe");
-        profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
+            firefoxExePath = Path.Combine(HardcodedFirefoxPath, "firefox", "firefox.exe");
+            profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
 #else
-        profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
+            profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
 #endif
+        }
 
         Process launchProcess = new Process();
         launchProcess.StartInfo.FileName = firefoxExePath;

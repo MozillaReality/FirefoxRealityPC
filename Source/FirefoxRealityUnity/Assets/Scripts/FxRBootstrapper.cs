@@ -16,19 +16,28 @@ public class FxRBootstrapper : MonoBehaviour
             }
             else
             {
-                FxRFirefoxDesktopVersionChecker.Instance.CheckIfFirefoxInstallationOrConfigurationRequired(
-                    (installRequired, configurationRequired, firefoxInstallationRequirements) =>
-                    {
-                        if (installRequired || configurationRequired)
+                if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
+                    FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
+                {
+                    FxRController.LaunchFirefoxDesktop();
+                    FxRController.Quit(0);
+                }
+                else
+                {
+                    FxRFirefoxDesktopVersionChecker.Instance.CheckIfFirefoxInstallationOrConfigurationRequired(
+                        (installRequired, configurationRequired, firefoxInstallationRequirements) =>
                         {
-                            StartCoroutine(LoadLoadingScene());
-                        }
-                        else
-                        {
-                            FxRController.LaunchFirefoxDesktop();
-                            FxRController.Quit(0);
-                        }
-                    });
+                            if (installRequired || configurationRequired)
+                            {
+                                StartCoroutine(LoadLoadingScene());
+                            }
+                            else
+                            {
+                                FxRController.LaunchFirefoxDesktop();
+                                FxRController.Quit(0);
+                            }
+                        });
+                }
             }
         });
     }

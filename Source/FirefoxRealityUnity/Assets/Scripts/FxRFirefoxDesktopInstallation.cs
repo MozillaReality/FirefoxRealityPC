@@ -21,6 +21,14 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     [SerializeField] protected Sprite FirefoxIcon;
 
+    public enum InstallationType
+    {
+        EMBEDDED,
+        DOWNLOADED
+    }
+
+    public const InstallationType FxRDesktopInstallationType = InstallationType.DOWNLOADED;
+
     private static readonly string FXR_CONFIGURATION_DIRECTORY = "firefox";
 
     void Start()
@@ -55,7 +63,8 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                                 FxRLocalizedStringsLoader.GetApplicationString(
                                     "fxr_update_available_update_later_response_dialog_message"),
                                 FirefoxIcon,
-                                new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
+                                new FxRButton.ButtonConfig(
+                                    FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
                                     () => { EnsureFirefoxDesktopInstalled(); },
                                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
                         },
@@ -76,9 +85,16 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
                                 new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button"),
                                     () =>
                                     {
-                                        // TODO: what should we do when there is a new FxR version? Should we actually continue to ensure
-                                        // that we have the desktop version installed, or exit the app while they install, or???
-                                        EnsureFirefoxDesktopInstalled();
+                                        if (FxRDesktopInstallationType == InstallationType.EMBEDDED)
+                                        {
+                                            FxRController.Quit(0);
+                                        }
+                                        else
+                                        {
+                                            // TODO: what should we do when there is a new FxR version? Should we actually continue to ensure
+                                            // that we have the desktop version installed, or exit the app while they install, or???
+                                            EnsureFirefoxDesktopInstalled();
+                                        }
                                     },
                                     FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
                         },
@@ -96,20 +112,28 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private void EnsureFirefoxDesktopInstalled()
     {
-        FxRFirefoxDesktopVersionChecker.Instance.CheckIfFirefoxInstallationOrConfigurationRequired(
-            (installRequired, configurationRequired, firefoxInstallationRequirements) =>
-            {
-                if (installRequired)
+        // The embedded version of FxR already has FxR desktop installed locally, so we can just notify that we're complete
+        if (FxRDesktopInstallationType == InstallationType.EMBEDDED)
+        {
+            NotifyInstallationComplete();
+        }
+        else
+        {
+            FxRFirefoxDesktopVersionChecker.Instance.CheckIfFirefoxInstallationOrConfigurationRequired(
+                (installRequired, configurationRequired, firefoxInstallationRequirements) =>
                 {
-                    ContinueDesktopFirefoxInstall(firefoxInstallationRequirements.InstallationTypeRequired,
-                        firefoxInstallationRequirements.DownloadType,
-                        firefoxInstallationRequirements.InstallationScope);
-                }
-                else
-                {
-                    DesktopInstallationComplete();
-                }
-            });
+                    if (installRequired)
+                    {
+                        ContinueDesktopFirefoxInstall(firefoxInstallationRequirements.InstallationTypeRequired,
+                            firefoxInstallationRequirements.DownloadType,
+                            firefoxInstallationRequirements.InstallationScope);
+                    }
+                    else
+                    {
+                        DesktopInstallationComplete();
+                    }
+                });
+        }
     }
 
     private int retryCount = 0;
@@ -434,18 +458,24 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
 
     private void DesktopInstallationComplete()
     {
-        CopyFxRConfiguration((wasSuccessful, error) =>
+        if (FxRDesktopInstallationType == InstallationType.EMBEDDED)
         {
-            if (wasSuccessful && !installationCompleteNotificationSent)
+            NotifyInstallationComplete();
+        }
+        else
+        {
+            CopyFxRConfiguration((wasSuccessful, error) =>
             {
-                OnInstallationProcessComplete?.Invoke();
-                installationCompleteNotificationSent = true;
-            }
-            else
-            {
-                ShowConfigurationError();
-            }
-        });
+                if (wasSuccessful)
+                {
+                    NotifyInstallationComplete();
+                }
+                else
+                {
+                    ShowConfigurationError();
+                }
+            });
+        }
     }
 
 
@@ -538,5 +568,15 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
             , new FxRButton.ButtonConfig(FxRLocalizedStringsLoader.GetApplicationString("ok_button")
                 , () => { FxRController.Quit(1); }
                 , FxRConfiguration.Instance.ColorPalette.NormalBrowsingSecondaryDialogButtonColors));
+    }
+
+    private void NotifyInstallationComplete()
+    {
+        if (!installationCompleteNotificationSent)
+        {
+            OnInstallationProcessComplete?.Invoke();
+        }
+
+        installationCompleteNotificationSent = true;
     }
 }
