@@ -19,21 +19,30 @@ public class FxRBuild
     public static void BuildGame()
     {
         BuildSuccessfull = false;
-        // Get filename.
-        string nightlyBuildPath =
-            EditorUtility.OpenFolderPanel("Choose top-level folder of Nightly Build", "", "firefox");
-        if (string.IsNullOrEmpty(nightlyBuildPath)) return;
-        Debug.Log("Path to nightly build selected: " + nightlyBuildPath);
-        if (!File.Exists(Path.Combine(nightlyBuildPath, "firefox.exe")))
+
+        // Following are used only for the embedded version
+        // Declared here, as they are used later on if needed
+        string nightlyBuildPath;
+        string profilePath;
+        if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
+            FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
         {
-            Debug.LogError("No Firefox executable found in provided nightly build path!");
-            return;
+            // Get filename.
+            nightlyBuildPath =
+                EditorUtility.OpenFolderPanel("Choose top-level folder of Nightly Build", "", "firefox");
+            if (string.IsNullOrEmpty(nightlyBuildPath)) return;
+            Debug.Log("Path to nightly build selected: " + nightlyBuildPath);
+            if (!File.Exists(Path.Combine(nightlyBuildPath, "firefox.exe")))
+            {
+                Debug.LogError("No Firefox executable found in provided nightly build path!");
+                return;
+            }
+
+            profilePath =
+                EditorUtility.OpenFolderPanel("Choose profile directory to include (or cancel to not include one)", "",
+                    "fxr-profile");
         }
-
-        string profilePath =
-            EditorUtility.OpenFolderPanel("Choose profile directory to include (or cancel to not include one)", "",
-                "fxr-profile");
-
+        // Prompt user to choose output directory
         string saveFolder = EditorUtility.SaveFolderPanel("Choose folder to save built executable", "", "");
         if (string.IsNullOrEmpty(saveFolder)) return;
 //        string[] levels = new string[] {"Assets/Scene1.unity", "Assets/Scene2.unity"};
@@ -61,15 +70,29 @@ public class FxRBuild
 
             string streamingAssetsFirefoxDestination =
                 Path.Combine(streamingAssetsDestination, "firefox");
-            DirectoryCopy(nightlyBuildPath, streamingAssetsFirefoxDestination, true);
 
-            if (!string.IsNullOrEmpty(profilePath))
+            if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
+                FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
             {
-                string profileDestination =
-                    Path.Combine(streamingAssetsDestination, "fxr-profile");
-                DirectoryCopy(profilePath, profileDestination, true);
+                // Copy the embedded Firefox Desktop into the build path 
+                DirectoryCopy(nightlyBuildPath, streamingAssetsFirefoxDestination, true);
+                
+                if (!string.IsNullOrEmpty(profilePath))
+                {
+                    string profileDestination =
+                        Path.Combine(streamingAssetsDestination, "fxr-profile");
+                    DirectoryCopy(profilePath, profileDestination, true);
+                }
             }
+            else
+            {
+                // Copy the files that need to be copied during installation over to the installed Firefox into StreamingAssets
+                string firefoxDesktopOverlayPath = Path.Combine("..", "..", "tools", "bundle", "firefox", "overlay");
 
+                FxRUtilityFunctions.DirectoryCopy(firefoxDesktopOverlayPath, streamingAssetsFirefoxDestination, true, true,
+                    true);
+            }
+            
             // Copy the version file to StreamingAssets
             string versionsJSONFilePathSource = Path.Combine("..", "..", "docs",
                 FxRFirefoxRealityVersionChecker.FXR_PC_VERSIONS_JSON_FILENAME);

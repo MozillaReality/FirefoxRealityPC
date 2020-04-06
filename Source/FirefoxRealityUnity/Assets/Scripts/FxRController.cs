@@ -3,11 +3,13 @@
 //
 // Copyright (c) 2019, Mozilla.
 //
-// FxRController acts in the middle of bootstrapping Firefox
-// Reality with desktop Firefox.
+// FxRController acts in the middle of bootstrapping Firefox Reality with desktop Firefox.
 
 #define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
+#if !UNITY_EDITOR
+using System;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -130,16 +132,46 @@ public class FxRController : MonoBehaviour
 
     public static bool LaunchFirefoxDesktop()
     {
-        // Give the plugin a place to look for resources.
-        string firefoxInstallPath = Application.streamingAssetsPath;
-
+        string firefoxInstallPath;
+        string firefoxExePath;
+        string profileDirectoryPath;
+        if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
+            FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
+        {
+            // Embedded Firefox Desktop lives in streaming assets 
+            firefoxInstallPath = Application.streamingAssetsPath;
 #if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
-        firefoxInstallPath = HardcodedFirefoxPath;
+            firefoxInstallPath = HardcodedFirefoxPath;
 #endif
-        string profileDirectoryPath = Path.Combine(firefoxInstallPath, "fxr-profile");
+            profileDirectoryPath = Path.Combine(firefoxInstallPath, "fxr-profile");
+
+            firefoxExePath = Path.Combine(firefoxInstallPath, "firefox", "firefox.exe");
+        }
+        else
+        {
+            // Downloaded Firefox Desktop lives in the standard installation location
+            firefoxInstallPath = FxRFirefoxDesktopVersionChecker.GetFirefoxDesktopInstallationPath();
+            firefoxExePath = Path.Combine(firefoxInstallPath, "firefox.exe");
+            
+            // We put the profile directory in the streaming assets folder, so it gets cleaned up on uninstall
+            profileDirectoryPath = Path.Combine(Application.streamingAssetsPath, "fxr-profile");
+
+#if (!UNITY_EDITOR)
+            if (string.IsNullOrEmpty(firefoxInstallPath))
+            {
+                throw new Exception(
+                    "Could not determine Firefox installation path!");
+            }
+#elif (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
+            firefoxExePath = Path.Combine(HardcodedFirefoxPath, "firefox", "firefox.exe");
+            profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
+#else
+            profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
+#endif
+        }
 
         Process launchProcess = new Process();
-        launchProcess.StartInfo.FileName = Path.Combine(firefoxInstallPath, "firefox", "firefox.exe");
+        launchProcess.StartInfo.FileName = firefoxExePath;
         launchProcess.StartInfo.Arguments = string.Format("-profile \"{0}\" --fxr", profileDirectoryPath);
         return launchProcess.Start();
     }
