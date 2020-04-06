@@ -27,7 +27,7 @@ public class FxRFirefoxDesktopInstallation : MonoBehaviour
         DOWNLOADED
     }
 
-    public const InstallationType FxRDesktopInstallationType = InstallationType.DOWNLOADED;
+    public const InstallationType FxRDesktopInstallationType = InstallationType.EMBEDDED;
 
     private static readonly string FXR_CONFIGURATION_DIRECTORY = "firefox";
 
