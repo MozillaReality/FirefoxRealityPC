@@ -44,7 +44,7 @@ done
 
 # Test for web-ext presence.
 if ! npm list -g --depth=0 web-ext | grep -q web-ext; then
-  echo "npm module web-ext is required"
+  echo "npm module web-ext is required. You might be able to install it with \'npm install -g web-ext\'"
   exit 1
 fi
 
@@ -52,11 +52,11 @@ fi
 for i in "${webexts[@]}"
 do
     echo "Processing $i"
-    ARCHIVE=$(web-ext build --source-dir $i --artifacts-dir ${PWD} --overwrite-dest)
+    ARCHIVE=$(web-ext build --source-dir $i --artifacts-dir ${PWD})
     if [ $? -ne 0 ]; then
       echo "Error building web extension"
       exit 1
     fi
-    web-ext sign --source-dir $i --artifacts-dir ${PWD} --overwrite-dest --api-key "${AMO_API_KEY}" --api-secret "${AMO_API_SECRET}"
+    web-ext sign --source-dir $i --artifacts-dir ${PWD} --api-key "${AMO_API_KEY}" --api-secret "${AMO_API_SECRET}"
 done
 
