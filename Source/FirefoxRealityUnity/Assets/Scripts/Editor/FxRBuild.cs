@@ -42,6 +42,7 @@ public class FxRBuild
                 EditorUtility.OpenFolderPanel("Choose profile directory to include (or cancel to not include one)", "",
                     "fxr-profile");
         }
+
         // Prompt user to choose output directory
         string saveFolder = EditorUtility.SaveFolderPanel("Choose folder to save built executable", "", "");
         if (string.IsNullOrEmpty(saveFolder)) return;
@@ -76,7 +77,7 @@ public class FxRBuild
             {
                 // Copy the embedded Firefox Desktop into the build path 
                 DirectoryCopy(nightlyBuildPath, streamingAssetsFirefoxDestination, true);
-                
+
                 if (!string.IsNullOrEmpty(profilePath))
                 {
                     string profileDestination =
@@ -84,15 +85,13 @@ public class FxRBuild
                     DirectoryCopy(profilePath, profileDestination, true);
                 }
             }
-            else
-            {
-                // Copy the files that need to be copied during installation over to the installed Firefox into StreamingAssets
-                string firefoxDesktopOverlayPath = Path.Combine("..", "..", "tools", "bundle", "firefox", "overlay");
 
-                FxRUtilityFunctions.DirectoryCopy(firefoxDesktopOverlayPath, streamingAssetsFirefoxDestination, true, true,
-                    true);
-            }
-            
+            // Copy the files that need to be copied during installation over to the installed Firefox into StreamingAssets
+            string firefoxDesktopOverlayPath = Path.Combine("..", "..", "tools", "bundle", "firefox", "overlay");
+
+            FxRUtilityFunctions.DirectoryCopy(firefoxDesktopOverlayPath, streamingAssetsFirefoxDestination, true, true,
+                true);
+
             // Copy the version file to StreamingAssets
             string versionsJSONFilePathSource = Path.Combine("..", "..", "docs",
                 FxRFirefoxRealityVersionChecker.FXR_PC_VERSIONS_JSON_FILENAME);
