@@ -72,6 +72,9 @@ public class FxRBuild
             string streamingAssetsFirefoxDestination =
                 Path.Combine(streamingAssetsDestination, "firefox");
 
+            string profileDestination =
+                Path.Combine(streamingAssetsDestination, "fxr-profile");
+
             if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
                 FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
             {
@@ -80,8 +83,6 @@ public class FxRBuild
 
                 if (!string.IsNullOrEmpty(profilePath))
                 {
-                    string profileDestination =
-                        Path.Combine(streamingAssetsDestination, "fxr-profile");
                     DirectoryCopy(profilePath, profileDestination, true);
                 }
             }
@@ -90,6 +91,11 @@ public class FxRBuild
             string firefoxDesktopOverlayPath = Path.Combine("..", "..", "tools", "bundle", "firefox", "overlay");
 
             FxRUtilityFunctions.DirectoryCopy(firefoxDesktopOverlayPath, streamingAssetsFirefoxDestination, true, true,
+                true);
+
+            // TODO: Revisit how extensions should be installed when we switch from embeeded version to download version of FxR...  
+            string firefoxDesktopExgtensinosPath = Path.Combine("..", "..", "tools", "bundle", "firefox", "extensions");
+            FxRUtilityFunctions.DirectoryCopy(firefoxDesktopExgtensinosPath, Path.Combine(profileDestination, "extensions"), true, true,
                 true);
 
             // Copy the version file to StreamingAssets
