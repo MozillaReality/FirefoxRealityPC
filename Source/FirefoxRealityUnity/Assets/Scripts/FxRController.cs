@@ -16,6 +16,8 @@ using Debug = UnityEngine.Debug;
 using Hand = Valve.VR.InteractionSystem.Hand;
 using static FxRTelemetryService;
 using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 public class FxRController : MonoBehaviour
 {
@@ -26,6 +28,12 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private Transform EnvironmentOrigin;
     [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetActiveWindow();
+
+    [DllImport("user32.dll")]
+    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     private HashSet<FxRLaserPointer> LaserPointers
     {
@@ -169,6 +177,15 @@ public class FxRController : MonoBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
+        // TODO: Temporary workaround until Bug 1651340 is resolved.
+        // Hide the window when the main thread is going to sleep
+        // in order to avoid cluttering the desktop.
+        const int SW_HIDE = 0;
+        var hwnd = GetActiveWindow();
+        ShowWindow(hwnd, SW_HIDE);
+        // Sleep for 4000 ms to wait for the telemetry uploader finishes
+        // its tasks and avoid Glean.dll is unloaded by Application.Quit().
+        Thread.Sleep(4000);
         Application.Quit(exitCode);
 #endif
     }
