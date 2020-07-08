@@ -95,7 +95,7 @@ typedef void (FXR_CALLBACK *FXR_LOG_LOGGER_CALLBACK)(const char *logMessage);
 FXR_EXTERN void fxrLogSetLogger(FXR_LOG_LOGGER_CALLBACK callback, int callBackOnlyIfOnSameThread);
 
 #ifndef NDEBUG
-#  define FXRLOGd(...) fxrLog(NULL, AR_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#  define FXRLOGd(...) fxrLog(NULL, FXR_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #else
 #  define FXRLOGd(...)
 #endif
