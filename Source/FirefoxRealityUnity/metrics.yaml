@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+distribution:
+  channel_name:
+    type: string
+    description: >
+      The distribution channel name of this application.
+      We use this field to recognize Firefox Reality is
+      distributed to which channels, such as htc, etc.
+    send_in_pings:
+      - launch
+    bugs:
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/198
+    data_reviews:
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/198#issuecomment-657786864
+    notification_emails:
+      - fxr-telemetry@mozilla.com
+      - dmu@mozilla.com
+    expires: "2021-01-01"
+
+  install_from:
+    type: string
+    description: >
+      The way of users gets Firefox desktop for running with Firefox Reality,
+      such as embedded, downloaded, etc.
+    send_in_pings:
+      - launch
+    bugs:
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/198
+    data_reviews:
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/198#issuecomment-657786864
+    notification_emails:
+      - fxr-telemetry@mozilla.com
+      - dmu@mozilla.com
+    expires: "2021-01-01"
+
+launch:
+  entry_method:
+    type: string
+    send_in_pings:
+      - launch
+    description: >
+      Determining how a user launches Firefox Reality application, such as
+      system_button, library, gaze, etc.
+    bugs:
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/198
+    data_reviews:
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/198#issuecomment-657786864
+    notification_emails:
+      - fxr-telemetry@mozilla.com
+      - dmu@mozilla.com
+    expires: "2021-01-01"
