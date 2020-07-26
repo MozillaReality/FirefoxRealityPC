@@ -5,11 +5,8 @@
 //
 // FxRController acts in the middle of bootstrapping Firefox Reality with desktop Firefox.
 
-#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
+//#define USE_EDITOR_HARDCODED_FIREFOX_PATH // Comment this out to not use a hardcoded path in editor, but instead use StreamingAssets
 
-#if !UNITY_EDITOR
-using System;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,6 +14,10 @@ using UnityEngine;
 using Valve.VR.InteractionSystem;
 using Debug = UnityEngine.Debug;
 using Hand = Valve.VR.InteractionSystem.Hand;
+using static FxRTelemetryService;
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 public class FxRController : MonoBehaviour
 {
@@ -27,6 +28,12 @@ public class FxRController : MonoBehaviour
 
     [SerializeField] private Transform EnvironmentOrigin;
     [SerializeField] private FxREnvironmentSwitcher EnvironmentSwitcher;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetActiveWindow();
+
+    [DllImport("user32.dll")]
+    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     private HashSet<FxRLaserPointer> LaserPointers
     {
@@ -121,11 +128,64 @@ public class FxRController : MonoBehaviour
         }
     }
 
+    // Parsing user preferences from `prefs.js` in Firefox user profile folder
+    // if the flags are existing in `userPrefs` param.
+    private static Dictionary<string, string> ProcessFirefoxProfilePref(string folderPath,
+        string[] userPrefs)
+    {
+        Dictionary<string, string> pref = new Dictionary<string, string>();
+        string prefFilePath = folderPath + "/prefs.js";
+
+        if (!File.Exists(prefFilePath))
+        {
+            return pref;
+        }
+
+        // Read each line of the file into a string array. Each element
+        // of the array is one line of the file.
+        string[] lines = System.IO.File.ReadAllLines(prefFilePath);
+        int keyStartOffset = ("" + ('"')).Length;
+        int valueStartOffset = (", ").Length;
+
+        foreach (string line in lines)
+        {
+            if (line.IndexOf("user_pref(") < 0)
+            {
+                continue;
+            }
+
+            int start = line.IndexOf('"') + keyStartOffset;
+            int end = line.IndexOf('"', start);
+            string key = line.Substring(start, end - start);
+
+            if (!Array.Exists<string>(userPrefs, item => item.Equals(key))) {
+                continue;
+            }
+
+            start = line.IndexOf(", ") + valueStartOffset;
+            end = line.LastIndexOf(");");
+            string value = line.Substring(start, end - start);
+
+            pref.Add(key, value);
+        }
+
+        return pref;
+    }
+
     public static void Quit(int exitCode)
     {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
+        // TODO: Temporary workaround until Bug 1651340 is resolved.
+        // Hide the window when the main thread is going to sleep
+        // in order to avoid cluttering the desktop.
+        const int SW_HIDE = 0;
+        var hwnd = GetActiveWindow();
+        ShowWindow(hwnd, SW_HIDE);
+        // Sleep for 4000 ms to wait for the telemetry uploader finishes
+        // its tasks and avoid Glean.dll is unloaded by Application.Quit().
+        Thread.Sleep(4000);
         Application.Quit(exitCode);
 #endif
     }
@@ -138,6 +198,7 @@ public class FxRController : MonoBehaviour
         if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
             FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
         {
+            FxRTelemetryServiceInstance.SetInstallFrom(FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED);
             // Embedded Firefox Desktop lives in streaming assets 
             firefoxInstallPath = Application.streamingAssetsPath;
 #if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
@@ -149,6 +210,7 @@ public class FxRController : MonoBehaviour
         }
         else
         {
+            FxRTelemetryServiceInstance.SetInstallFrom(FxRFirefoxDesktopInstallation.InstallationType.DOWNLOADED);
             // Downloaded Firefox Desktop lives in the standard installation location
             firefoxInstallPath = FxRFirefoxDesktopVersionChecker.GetFirefoxDesktopInstallationPath();
             firefoxExePath = Path.Combine(firefoxInstallPath, "firefox.exe");
@@ -169,6 +231,23 @@ public class FxRController : MonoBehaviour
             profileDirectoryPath = Path.Combine(HardcodedFirefoxPath, "fxr-profile");
 #endif
         }
+        // "datareporting.healthreport.uploadEnabled" is the key of Firefox desktop
+        // legacy telemetry in preferences.
+        string telemetryKey = "datareporting.healthreport.uploadEnabled";
+        var pref = ProcessFirefoxProfilePref(profileDirectoryPath, new string[] { telemetryKey });
+        // Firefox telemetry is opt-out by default.
+        var telemeletryEnabled = true;
+
+        if (pref.ContainsKey(telemetryKey))
+        {
+            telemeletryEnabled = Convert.ToBoolean(pref["datareporting.healthreport.uploadEnabled"]);
+        }
+        FxRTelemetryServiceInstance.Initialize(telemeletryEnabled);
+        // TODO: we need to change this distribution type while we distribute our app
+        // to other channels.
+        FxRTelemetryServiceInstance.SetDistributionChannel(DistributionChannelType.HTC);
+        FxRTelemetryServiceInstance.SetEntryMethod(EntryMethod.LIBRARY);
+        FxRTelemetryServiceInstance.SubmitLaunchPings();
 
         Process launchProcess = new Process();
         launchProcess.StartInfo.FileName = firefoxExePath;

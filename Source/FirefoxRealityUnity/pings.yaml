@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+
+launch:
+  description: >
+    This ping is sent when Firefox Reality bootstrap finishes its task of asking
+    Firefox desktop to launch and before the bootstrap is quit.
+  include_client_id: true
+  bugs:
+    - https://github.com/MozillaReality/FirefoxRealityPC/pull/198
+  data_reviews:
+    - https://github.com/MozillaReality/FirefoxRealityPC/pull/198#issuecomment-657786864
+  notification_emails:
+    - fxr-telemetry@mozilla.com
+    - dmu@mozilla.com

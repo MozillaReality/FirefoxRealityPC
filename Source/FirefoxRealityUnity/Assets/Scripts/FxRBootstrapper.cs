@@ -8,6 +8,7 @@ public class FxRBootstrapper : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        FxRUnitySystemConsoleRedirector.Redirect();
         FxRFirefoxRealityVersionChecker.Instance.CheckForNewFirefoxRealityPC((newVersionAvailable, serverVersionInfo) =>
         {
             if (newVersionAvailable)
