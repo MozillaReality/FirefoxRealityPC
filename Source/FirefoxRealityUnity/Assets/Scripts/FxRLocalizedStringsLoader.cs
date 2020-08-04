@@ -1,7 +1,7 @@
 ﻿// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2020, Mozilla.
+// Copyright (c) 2019-2020, Mozilla.
 
 /*
  * This class is responsible for loading localized strings for a user locale from "strings.xml" files that are

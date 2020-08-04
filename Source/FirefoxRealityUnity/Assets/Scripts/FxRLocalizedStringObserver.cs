@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2020, Mozilla.
+// Copyright (c) 2019-2020, Mozilla.
 
 /*
  * This class can be attached to a TextMesh Pro text field, to keep its text contents updated based upon
