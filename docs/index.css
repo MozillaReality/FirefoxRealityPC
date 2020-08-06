@@ -21,25 +21,29 @@ a {
 }
 
 .site-wrapper {
-	display: -ms-flexbox;
 	display: flex;
-	-ms-flex-direction: column;
 	flex-direction: column;
 	min-height: 100vh;
 }
 
 .inner {
-	width: 100%;
-	max-width: 1000px;
+  width: 100%;  
   margin: 0 auto;
   
   xborder: 2px solid red;
 }
 
+.fxrlogo {
+  width: 100%;
+}
+
+.fxrblurb {
+  margin: 10px;
+}
+
 .navgrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-
+  grid-template-columns: repeat(1, 1fr); 
 }
 
 .navlink {
@@ -51,13 +55,18 @@ a {
 
   transition: all;
   transition-duration: 300ms;
-  border: 2px solid transparent;
+  border: 2px solid;
+  border-color: #3c484e;
   xborder-radius: 4px;
 }
 
 .navlink:hover {
   background-color: #FFDB0A;  
-  border: 2px solid black;
+  border-color: #3c484e;
+}
+
+.navlink:active {
+  background-color: #5489FF;
 }
 
 .navlink > a {
@@ -85,6 +94,22 @@ a {
   margin: auto;
 }
 
+/* make some properties for larger screens */
+@media (min-width: 1000px) {
+  .inner {
+    max-width: 1000px;
+  }
+
+  .navgrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .navlink {
+    border-color: transparent;
+  }
+}
+
+
 /* loosely based on footer at https://blog.mozvr.com/ */
 
 .footer {
@@ -94,16 +119,14 @@ a {
 }
 
 .footer__inner {
-	display: -ms-grid;
 	display: grid;
-	-ms-grid-columns: 2fr 2fr 1fr;
-	grid-template-columns: 2fr 2fr 1fr;
+	grid-template-rows: repeat(3, 1fr);
 	margin-left: auto;
 	margin-right: auto;
 }
 
 .footer__inner {
-	max-width: 1040px;
+	width: 100%
 }
 
 .footer__legal {
@@ -111,7 +134,7 @@ a {
 	border-top: 1px solid hsla(0,0%,100%,.4);
 	margin-top: 32px;
 	padding-top: 16px;
-	max-width: 1040px;
+	width: 100%;
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -122,12 +145,11 @@ a {
 }
 
 .footer__title {
-margin: 0;
-
+  margin: 0;
 	font-weight: 600;
 	letter-spacing: .5px;
 	display: block;
-	margin-top: 32px;
+	
 }
 
 .footer__list {
@@ -158,4 +180,20 @@ margin: 0;
 .footer__legal-list li {
 	float: left;
 	margin-right: 32px;
+}
+
+/* make some properties for larger screens */
+@media (min-width: 1000px) {
+  .footer__inner, .footer__legal {
+    max-width: 1000px;
+  }
+
+  .footer__inner {
+    grid-template-rows: unset;
+    grid-template-columns: 2fr 2fr 1fr;
+  }
+
+  .footer__title {
+    margin-top: 32px;
+  }
 }
