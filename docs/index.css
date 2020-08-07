@@ -219,6 +219,10 @@ main img {
 	transition: border-bottom .2s ease;
 }
 
+.footer__list a:hover {
+  border-bottom: 1px solid #fff;
+}
+
 .footer__legal-list {
   float: left;
 	margin: 0;
@@ -229,6 +233,7 @@ main img {
 
 .footer__legal-list a {
   color: #fff;
+  font-size: .69252rem;
 }
 
 .footer__legal-list li {
