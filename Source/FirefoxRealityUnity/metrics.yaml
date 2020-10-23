@@ -6,7 +6,7 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
 distribution:
-  channel_name:
+  fxr_channel_name:
     type: string
     description: >
       The distribution channel name of this application.
@@ -16,14 +16,16 @@ distribution:
       - launch
     bugs:
       - https://github.com/MozillaReality/FirefoxRealityPC/pull/198
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/203
     data_reviews:
       - https://github.com/MozillaReality/FirefoxRealityPC/pull/198#issuecomment-657786864
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/203#issuecomment-710564366
     notification_emails:
       - fxr-telemetry@mozilla.com
       - dmu@mozilla.com
     expires: "2021-01-01"
 
-  install_from:
+  ff_install_from:
     type: string
     description: >
       The way of users gets Firefox desktop for running with Firefox Reality,
@@ -32,8 +34,10 @@ distribution:
       - launch
     bugs:
       - https://github.com/MozillaReality/FirefoxRealityPC/pull/198
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/203
     data_reviews:
       - https://github.com/MozillaReality/FirefoxRealityPC/pull/198#issuecomment-657786864
+      - https://github.com/MozillaReality/FirefoxRealityPC/pull/203#issuecomment-710564366
     notification_emails:
       - fxr-telemetry@mozilla.com
       - dmu@mozilla.com
