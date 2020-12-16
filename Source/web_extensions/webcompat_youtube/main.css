@@ -1,5 +1,5 @@
 /* To hide harmless warnings. */
-.alert-with-button-renderer, .ytm-alert-with-button-renderer, ytm-alert-with-button-renderer, .whitelist-alert,
+.alert-with-button-renderer, .ytm-alert-with-button-renderer, ytm-alert-with-button-renderer,
 .ytp-ad-module, ytp-ad-module,
 .ytp-generic-popup, ytp-generic-popup {
   display: none;
@@ -59,4 +59,16 @@ div.ytp-fullscreen video, .fxr-vr-video {
 div.ytp-fullscreen video, .fxr-vr-video {
     height: 100% !important;
     position: relative !important;
+}
+
+
+/*
+   Force a fixed height so that Youtube mini player can have a scrollbar
+   for items in queue.
+*/
+div.miniplayer #card #items
+{
+	display: block;
+	height: 250px !important;
+	overflow-y:scroll;
 }
