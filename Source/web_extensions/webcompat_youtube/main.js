@@ -1,18 +1,22 @@
 'use strict';
-const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Linux; Android 7.1.1; Quest) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/7.0.13.186866463 SamsungBrowser/4.0 Chrome/77.0.3865.126 Mobile VR Safari/537.36';
+const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Linux; Android 7.1.1; Quest) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/11.1.0.1.64.238873877 SamsungBrowser/4.0 Chrome/84.0.4147.125 Mobile VR Safari/537.36';
 const LOGTAG = '[firefoxreality:webcompat:youtube]';
 const VIDEO_PROJECTION_PARAM = 'mozVideoProjection';
 const YT_SELECTORS = {
-  disclaimer: '.yt-alert-message, yt-alert-message',
   player: '#movie_player',
   embedPlayer: '.html5-video-player',
   largePlayButton: '.ytp-large-play-button',
   thumbnail: '.ytp-cued-thumbnail-overlay-image',
-  embedTitle: '.ytp-title-text'
+  embedTitle: 'title',
+  description: '.style-scope .ytd-expander',
+  queueHandle: 'ytd-playlist-panel-video-renderer',
+  playbackControls: '.ytp-chrome-bottom',
+  overlays: '.videowall-endscreen, .ytp-upnext, .ytp-ce-element'
 };
 const ENABLE_LOGS = true;
 const logDebug = (...args) => ENABLE_LOGS && console.log(LOGTAG, ...args);
 const logError = (...args) => ENABLE_LOGS && console.error(LOGTAG, ...args);
+const CHROME_CONTROLS_MIN_WIDTH = 480;
 
 class YoutubeExtension {
     // We set a custom UA to force Youtube to display the most optimal
@@ -73,9 +77,37 @@ class YoutubeExtension {
         return text.includes('360');
     }
 
+    is360Video() {
+        const targets = [
+            document.querySelector(YT_SELECTORS.embedTitle),
+            document.querySelector(YT_SELECTORS.description)
+        ];
+        return targets.some((node) => node && this.is360(node.textContent));
+    }
+
     isStereo(text) {
         const words = text.toLowerCase().split(/\s+|\./);
-        return words.includes('stereo') || words.includes('3d') || words.includes('vr');
+        return words.includes('stereo') || words.includes('3d');
+    }
+
+    isStereoVideo() {
+        const targets = [
+            document.querySelector(YT_SELECTORS.embedTitle),
+            document.querySelector(YT_SELECTORS.description)
+        ];
+        return targets.some((node) => node && this.isStereo(node.textContent));
+    }
+
+    isSBS(text) {
+        return text.toLowerCase().includes('sbs') || text.toLowerCase().includes('side by side');
+    }
+
+    isSBSVideo() {
+        const targets = [
+            document.querySelector(YT_SELECTORS.embedTitle),
+            document.querySelector(YT_SELECTORS.description)
+        ];
+        return targets.some((node) => node && this.isSBS(node.textContent));
     }
 
     // Automatically select a video projection if needed
@@ -92,14 +124,15 @@ class YoutubeExtension {
         }
         // There is no standard API to detect video projection yet.
         // Try to infer it from the video disclaimer or title for now.
-        const targets = [
-            document.querySelector(YT_SELECTORS.disclaimer),
-            document.querySelector(YT_SELECTORS.embedTitle)
-        ];
-        const is360 = targets.some((node) => node && this.is360(node.textContent));
-        if (is360) {
-            const stereo = targets.some((node) => node && this.isStereo(node.textContent));
-            qs.set('mozVideoProjection', stereo ? '360s_auto' : '360_auto');
+        let projection =  null;
+        if (this.isSBSVideo()) {
+            projection = '3d_auto';
+        } else if (this.is360Video()) {
+            projection = this.isStereoVideo() ? '360s_auto' : '360_auto';
+        }
+
+        if (projection !== null) {
+            qs.set('mozVideoProjection', projection);
             this.updateURL(qs);
             this.updateVideoStyle();
             logDebug(`Video projection set to: ${qs.get(VIDEO_PROJECTION_PARAM)}`);
@@ -136,10 +169,83 @@ class YoutubeExtension {
             player.requestFullscreen();
             // Force video play when entering immersive mode.
             setTimeout(() => this.retry("PlayVideo", () => {
-                player.playVideo();
-                return !this.getVideo().paused;
+                const paused = this.getVideo().paused;
+                if (paused) {
+                     player.playVideo();
+                }
+                return !paused;
             }), 200);
         }
+    }
+
+    // Fix for the draggable items to continue being draggable when a context menu is displayed.
+    // https://github.com/MozillaReality/FirefoxReality/issues/2611
+    queueContextMenuFix() {
+        logDebug('queueContextMenuFix');
+        const handles = document.querySelectorAll(YT_SELECTORS.queueHandle);
+        for (var i=0; i<handles.length; i++) {
+            handles[i].removeEventListener('contextmenu', this.onContextMenu);
+            handles[i].addEventListener('contextmenu', this.onContextMenu);
+        }
+    }
+
+    onContextMenu(event) {
+        setTimeout(() => {
+            var evt = document.createEvent("MouseEvents");
+            evt.initEvent("mouseup", true, true);
+            event.target.dispatchEvent(evt);
+        });
+
+        // This is supposed to prevent the context menu from showing but it doesn't seem to work
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        return false;
+    }
+
+    // Prevent the double click to reach the player to avoid double clicking
+    // to trigger a playback forward/backward event.
+    // https://github.com/MozillaReality/FirefoxReality/issues/2947
+    videoControlsForwardFix() {
+        logDebug('videoControlsForwardFix');
+        const playbackControls = document.querySelector(YT_SELECTORS.playbackControls);
+        playbackControls.removeEventListener("touchstart", this.videoControlsOnTouchStart);
+        playbackControls.addEventListener("touchstart", this.videoControlsOnTouchStart);
+        playbackControls.removeEventListener("touchend", this.videoControlsOnTouchEnd);
+        playbackControls.addEventListener("touchend", this.videoControlsOnTouchEnd);
+    }
+
+    videoControlsOnTouchStart(evt) {
+        evt.stopPropagation();
+        return false;
+    }
+
+    videoControlsOnTouchEnd(evt) {
+        evt.stopPropagation();
+        return false;
+    }
+
+    playerControlsMarginFix() {
+        if (youtube.isInFullscreen()) {
+            if (window.innerHeight < CHROME_CONTROLS_MIN_WIDTH) {
+              var of = CHROME_CONTROLS_MIN_WIDTH - window.innerHeight;
+              document.querySelector(".ytp-chrome-bottom").style.setProperty("margin-bottom", `${of}px`)
+            } else {
+              document.querySelector(".ytp-chrome-bottom").style.removeProperty("margin-bottom")
+            }
+
+        } else {
+            document.querySelector(".ytp-chrome-bottom").style.removeProperty("margin-bottom")
+        }
+    }
+
+    playerFixes() {
+        this.overrideVideoProjection();
+        this.overrideQualityRetry();
+        this.hideOverlaysFix();
+        this.queueContextMenuFix();
+        this.videoControlsForwardFix();
+        this.playerControlsMarginFix();
     }
 
     // Runs the callback when the video is ready (has loaded the first frame).
@@ -173,7 +279,10 @@ class YoutubeExtension {
 
     // Get's the preferred video qualities for the current device.
     getPreferredQualities() {
-        let all = ['hd2880', 'hd2160','hd1440', 'hd1080', 'hd720', 'large', 'medium'];
+        // Disable 5k video until issue can be resolved in Gecko Media Process
+        // see https://github.com/MozillaReality/FirefoxReality/issues/3193
+        // let all = ['hd2880', 'hd2160','hd1440', 'hd1080', 'hd720', 'large', 'medium'];
+        let all = ['hd2160','hd1440', 'hd1080', 'hd720', 'large', 'medium'];
         return all;
     }
 
@@ -197,13 +306,41 @@ class YoutubeExtension {
         return video && video.readyState >=2;
     }
 
+    // Hide overlays when in immersive mode
+    // https://github.com/MozillaReality/FirefoxReality/issues/2673
+    hideOverlaysFix() {
+        if (youtube.is360Video() || youtube.isStereoVideo()) {
+            logDebug('hideOverlaysFix');
+            var overlays = document.querySelectorAll(YT_SELECTORS.overlays);
+            var observer = new MutationObserver((mutations) => {
+                if (youtube.isInFullscreen()) {
+                    for (const mutation of mutations) {
+                        if (mutation.target) {
+                            mutation.target.style.display = 'none';
+                        }
+                    }
+                }
+            });
+            for(const overlay of overlays) {
+                observer.observe(overlay, { attributes: true });
+            }
+        }
+    }
+
+    isInFullscreen() {
+        return !((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
+         (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
+         (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
+         (document.webkitIsFullScreen !== undefined && !document.webkitIsFullScreen));
+    }
+
     // Utility function to retry tasks max n times until the execution is successful.
     retry(taskName, task, attempts = 10, interval = 200) {
         let succeeded = false;
         try {
             succeeded = task();
         } catch (ex) {
-            logError(`Got exception runnning ${taskName} task: ${ex}`);
+            logError(`Got exception running ${taskName} task: ${ex}`);
         }
         if (succeeded) {
             logDebug(`${taskName} succeeded`);
@@ -223,6 +360,8 @@ class YoutubeExtension {
         window.history.replaceState({}, document.title, newUrl);
         logDebug(`update URL to ${newUrl}`);
     }
+
+
 }
 
 logDebug(`Initializing youtube extension in frame: ${window.location.href}`);
@@ -231,15 +370,17 @@ youtube.overrideUA();
 youtube.overrideViewport();
 window.addEventListener('load', () => {
     logDebug('page load');
-    youtube.overrideVideoProjection();
     // Wait until video has loaded the first frame to force quality change.
     // This prevents the infinite spinner problem.
     // See https://github.com/MozillaReality/FirefoxReality/issues/1433
     if (youtube.isWatchingPage()) {
-        youtube.waitForVideoReady(() => youtube.overrideQualityRetry());
+        youtube.waitForVideoReady(() => youtube.playerFixes());
     }
 });
-
+window.addEventListener("resize", () => youtube.playerControlsMarginFix());
+document.addEventListener("fullscreenchange", () => youtube.playerControlsMarginFix());
 window.addEventListener('pushstate', () => youtube.overrideVideoProjection());
 window.addEventListener('popstate', () => youtube.overrideVideoProjection());
 window.addEventListener('click', event => youtube.overrideClick(event));
+window.addEventListener('mouseup', event => youtube.queueContextMenuFix());
+window.addEventListener("yt-navigate-finish", () => youtube.waitForVideoReady(() => youtube.playerFixes()));
