@@ -198,7 +198,6 @@ public class FxRController : MonoBehaviour
         if (FxRFirefoxDesktopInstallation.FxRDesktopInstallationType ==
             FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED)
         {
-            FxRTelemetryServiceInstance.SetInstallFrom(FxRFirefoxDesktopInstallation.InstallationType.EMBEDDED);
             // Embedded Firefox Desktop lives in streaming assets 
             firefoxInstallPath = Application.streamingAssetsPath;
 #if (UNITY_EDITOR && USE_EDITOR_HARDCODED_FIREFOX_PATH)
@@ -210,7 +209,6 @@ public class FxRController : MonoBehaviour
         }
         else
         {
-            FxRTelemetryServiceInstance.SetInstallFrom(FxRFirefoxDesktopInstallation.InstallationType.DOWNLOADED);
             // Downloaded Firefox Desktop lives in the standard installation location
             firefoxInstallPath = FxRFirefoxDesktopVersionChecker.GetFirefoxDesktopInstallationPath();
             firefoxExePath = Path.Combine(firefoxInstallPath, "firefox.exe");
@@ -243,11 +241,6 @@ public class FxRController : MonoBehaviour
             telemeletryEnabled = Convert.ToBoolean(pref["datareporting.healthreport.uploadEnabled"]);
         }
         FxRTelemetryServiceInstance.Initialize(telemeletryEnabled);
-        // TODO: we need to change this distribution type while we distribute our app
-        // to other channels.
-        FxRTelemetryServiceInstance.SetDistributionChannel(DistributionChannelType.HTC);
-        FxRTelemetryServiceInstance.SetEntryMethod(EntryMethod.LIBRARY);
-        FxRTelemetryServiceInstance.SubmitLaunchPings();
 
         Process launchProcess = new Process();
         launchProcess.StartInfo.FileName = firefoxExePath;

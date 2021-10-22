@@ -11,20 +11,6 @@ using static FxRInternalMetricsOuter;
 using UnityEngine;
 
 
-// This type is based on which distribution channel
-// is FxR downloaded.
-public enum DistributionChannelType
-{
-    HTC
-}
-
-public enum EntryMethod
-{
-    SYSTEM_BUTTON,
-    LIBRARY,
-    GAZE
-}
-
 // A wrapper of using Mozilla Glean telemetry library.
 // In the current usage of Firefox Reality PC, we only
 // define pings that are collected at the launch time.
@@ -59,21 +45,6 @@ public sealed class FxRTelemetryService
     public void SetEnabled(bool aEnabled)
     {
         GleanInstance.SetUploadEnabled(aEnabled);
-    }
-
-    public void SetDistributionChannel(DistributionChannelType aChannel)
-    {
-        FxRInternalMetrics.distributionChannel.Set(aChannel.ToString().ToLower());
-    }
-
-    public void SetInstallFrom(FxRFirefoxDesktopInstallation.InstallationType aInstallFrom)
-    {
-        FxRInternalMetrics.installFrom.Set(aInstallFrom.ToString().ToLower());
-    }
-
-    public void SetEntryMethod(EntryMethod aEntryMethod)
-    {
-        FxRInternalMetrics.entryMethod.Set(aEntryMethod.ToString().ToLower());
     }
 
     public void SubmitLaunchPings()

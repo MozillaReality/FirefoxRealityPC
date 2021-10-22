@@ -23,31 +23,4 @@ public sealed class FxRInternalMetricsOuter
             reasonCodes: null
         ));
     public PingType<NoReasonCodes> launchPing => launchPingLazy.Value;
-
-    private readonly Lazy<StringMetricType> distributionChannelLazy = new Lazy<StringMetricType>(() => new StringMetricType(
-            category: "distribution",
-            disabled: false,
-            lifetime: Lifetime.Application,
-            name: "fxr_channel_name",
-            sendInPings: new string[] { "launch" }
-        ));
-    public StringMetricType distributionChannel => distributionChannelLazy.Value;
-
-    private readonly Lazy<StringMetricType> installFromLazy = new Lazy<StringMetricType>(() => new StringMetricType(
-            category: "distribution",
-            disabled: false,
-            lifetime: Lifetime.Application,
-            name: "ff_install_from",
-            sendInPings: new string[] { "launch" }
-        ));
-    public StringMetricType installFrom => installFromLazy.Value;
-
-    private readonly Lazy<StringMetricType> entryMethodLazy = new Lazy<StringMetricType>(() => new StringMetricType(
-            category: "launch",
-            disabled: false,
-            lifetime: Lifetime.Application,
-            name: "entry_method",
-            sendInPings: new string[] { "launch" }
-        ));
-    public StringMetricType entryMethod => entryMethodLazy.Value;
 }
